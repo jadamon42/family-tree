@@ -43,8 +43,8 @@ public class PersonRepositoryTest {
 
     @Test
     public void testSave(@Autowired PersonRepository personRepository) {
-        Person person1 = new Person( UUID.randomUUID().toString(), "John", "Doe", List.of(), List.of());
-        personRepository.save(person1);
+        Person person1 = new Person( null, "John", "Doe", List.of(), List.of());
+        person1 = personRepository.save(person1);
         assertThat(personRepository.findAll()).hasSize(3);
         Partnership marriage = new Partnership(
                 UUID.randomUUID().toString(),
@@ -52,12 +52,12 @@ public class PersonRepositoryTest {
                 LocalDate.of(2023, 1, 1),
                 LocalDate.of(2023, 12, 31));
         person1 = person1.withPartnerships(List.of(marriage));
-        personRepository.save(person1);
+        person1 = personRepository.save(person1);
         assertThat(personRepository.findAll()).hasSize(3);
         assertThat(personRepository.findById(person1.getId()).get().getPartnerships()).hasSize(1);
 
-        Person person2 = new Person(UUID.randomUUID().toString(), "Jane", "Doe", List.of(marriage), List.of());
-        personRepository.save(person2);
+        Person person2 = new Person(null, "Jane", "Doe", List.of(marriage), List.of());
+        person2 = personRepository.save(person2);
         assertThat(personRepository.findAll()).hasSize(4);
         assertThat(personRepository.findById(person2.getId()).get().getPartnerships()).hasSize(1);
         assertThat(personRepository.findById(person1.getId()).get().getPartnerships().get(0).getId()).
