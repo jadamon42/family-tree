@@ -52,7 +52,7 @@ class PartnershipServiceTest {
     }
 
     @Test
-    void savePartnershipWithPersonIdsWhenPersonNotFound() {
+    void savePartnershipWithPersonIdsFailsWhenPersonNotFound() {
         UUID personId1 = UUID.randomUUID();
         UUID personId2 = UUID.randomUUID();
         Partnership partnership = new Partnership(null, "Marriage", null, null);

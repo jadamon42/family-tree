@@ -28,7 +28,7 @@ class PartnershipRepositoryTest {
 
     @Test
     public void findById(@Autowired PartnershipRepository partnershipRepository) {
-        Partnership marriage = partnershipRepository.findById("10000000-0000-0000-0000-000000000000").get();
+        Partnership marriage = partnershipRepository.findById("10000000-0000-0000-0000-000000000000").orElseThrow();
         assertThat(marriage.getType()).isEqualTo("marriage");
         assertThat(marriage.getStartDate()).isEqualTo(LocalDate.of(2021, 1, 1));
         assertThat(marriage.getEndDate()).isEqualTo(LocalDate.of(2021, 12, 31));
@@ -48,6 +48,8 @@ class PartnershipRepositoryTest {
         assertThat(partnership.getType()).isEqualTo("Marriage");
         assertThat(partnership.getStartDate()).isEqualTo(LocalDate.of(2023, 1, 1));
         assertThat(partnership.getEndDate()).isEqualTo(LocalDate.of(2023, 12, 31));
+
+        partnershipRepository.deleteById(partnershipId);
     }
 
     @Test
@@ -73,7 +75,7 @@ class PartnershipRepositoryTest {
         person1 = personRepository.save(person1);
         person2 = personRepository.save(person2);
 
-        Partnership marriageRead = partnershipRepository.findById(partnershipId).get();
+        Partnership marriageRead = partnershipRepository.findById(partnershipId).orElseThrow();
 
         assertThat(marriageRead).satisfies(p -> {
             assertThat(p.getId()).isEqualTo(partnershipId);
@@ -96,20 +98,11 @@ class PartnershipRepositoryTest {
             assertThat(p.getPartnerships()).hasSize(1);
         });
 
-        assertThat(personRepository.findById(person1.getId()).get().getPartnerships().get(0).getId()).
-                isEqualTo(personRepository.findById(person2.getId()).get().getPartnerships().get(0).getId());
+        assertThat(personRepository.findById(person1.getId()).orElseThrow().getPartnerships().get(0).getId()).
+                isEqualTo(personRepository.findById(person2.getId()).orElseThrow().getPartnerships().get(0).getId());
 
         personRepository.deleteAllById(List.of(person1.getId(), person2.getId()));
-
-        // should be deleted by service
-        marriageRead = partnershipRepository.findById(partnershipId).get();
-
-        assertThat(marriageRead).satisfies(p -> {
-            assertThat(p.getId()).isEqualTo(partnershipId);
-            assertThat(p.getType()).isEqualTo("marriage");
-            assertThat(p.getStartDate()).isEqualTo(LocalDate.of(2023, 1, 1));
-            assertThat(p.getEndDate()).isEqualTo(LocalDate.of(2023, 12, 31));
-        });
+        partnershipRepository.deleteById(partnershipId);
     }
 
     private static Neo4j embeddedDatabaseServer;

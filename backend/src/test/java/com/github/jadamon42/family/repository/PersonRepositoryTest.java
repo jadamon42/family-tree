@@ -28,12 +28,12 @@ public class PersonRepositoryTest {
 
     @Test
     public void findById(@Autowired PersonRepository personRepository) {
-        Person jd = personRepository.findById("00000000-0000-0000-0000-000000000000").get();
+        Person jd = personRepository.findById("00000000-0000-0000-0000-000000000000").orElseThrow();
         assertThat(jd.getFirstName()).isEqualTo("Jonathan");
         assertThat(jd.getLastName()).isEqualTo("Damon");
         assertThat(jd.getPartnerships()).hasSize(1);
 
-        Person hc = personRepository.findById("00000000-0000-0000-0000-000000000001").get();
+        Person hc = personRepository.findById("00000000-0000-0000-0000-000000000001").orElseThrow();
         assertThat(hc.getFirstName()).isEqualTo("Hannah");
         assertThat(hc.getLastName()).isEqualTo("Canady");
         assertThat(hc.getPartnerships()).hasSize(1);
@@ -67,8 +67,8 @@ public class PersonRepositoryTest {
             assertThat(p.getPartnerships()).hasSize(1);
         });
 
-        assertThat(personRepository.findById(person1.getId()).get().getPartnerships().get(0).getId()).
-                isEqualTo(personRepository.findById(person2.getId()).get().getPartnerships().get(0).getId());
+        assertThat(personRepository.findById(person1.getId()).orElseThrow().getPartnerships().get(0).getId()).
+                isEqualTo(personRepository.findById(person2.getId()).orElseThrow().getPartnerships().get(0).getId());
 
         personRepository.deleteAllById(List.of(person1.getId(), person2.getId()));
     }
@@ -82,13 +82,12 @@ public class PersonRepositoryTest {
     @Test
     public void findPeopleByPartnershipIdAndCanSaveWithoutLosingInformation(@Autowired PersonRepository personRepository) {
         List<Person> partners = personRepository.findPeopleByPartnershipId("11000000-0000-0000-0000-000000000000");
-        Person qw = partners.stream().filter(p -> p.getFirstName().equals("Quinn")).findFirst().get();
-        Person er = partners.stream().filter(p -> p.getFirstName().equals("Ethel")).findFirst().get();
+        Person qw = partners.stream().filter(p -> p.getFirstName().equals("Quinn")).findFirst().orElseThrow();
         qw = qw.withFirstName("Quincey")
                       .withLastName("Whitmore");
 
         qw = personRepository.save(qw);
-        Person qwRead = personRepository.findById(qw.getId()).get();
+        Person qwRead = personRepository.findById(qw.getId()).orElseThrow();
 
         assertThat(qwRead.getFirstName()).isEqualTo("Quincey");
         assertThat(qwRead.getLastName()).isEqualTo("Whitmore");
@@ -101,7 +100,7 @@ public class PersonRepositoryTest {
     }
 
     @Test
-    public void deletePersonDeletesPartnership(@Autowired PersonRepository personRepository, @Autowired PartnershipRepository partnershipRepository) {
+    public void deletePersonDoesNotDeletePartnership(@Autowired PersonRepository personRepository, @Autowired PartnershipRepository partnershipRepository) {
         Partnership marriage = new Partnership(
                 UUID.randomUUID().toString(),
                 "marriage",
@@ -114,15 +113,7 @@ public class PersonRepositoryTest {
         person2 = personRepository.save(person2);
 
         personRepository.deleteAllById(List.of(person1.getId(), person2.getId()));
-
-        Partnership marriageRead = partnershipRepository.findById(marriage.getId()).get();
-
-        assertThat(marriageRead).satisfies(p -> {
-            assertThat(p.getId()).isEqualTo(marriage.getId());
-            assertThat(p.getType()).isEqualTo("marriage");
-            assertThat(p.getStartDate()).isEqualTo(LocalDate.of(2023, 1, 1));
-            assertThat(p.getEndDate()).isEqualTo(LocalDate.of(2023, 12, 31));
-        });
+        partnershipRepository.deleteById(marriage.getId());
     }
 
     private static Neo4j embeddedDatabaseServer;

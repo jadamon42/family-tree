@@ -40,24 +40,24 @@ class PersonServiceTest {
     }
 
     @Test
-    void updatePersonBaseProperties() {
+    void updatePerson() {
         UUID id = UUID.randomUUID();
         Person person = new Person(id.toString(), "John", "Doe", null, null);
         when(personRepository.findById(id.toString())).thenReturn(Optional.of(person));
         when(personRepository.save(person)).thenReturn(person);
 
-        Optional<Person> result = personService.updatePersonBaseProperties(id, person);
+        Optional<Person> result = personService.updatePerson(id, person);
 
         assertThat(result).isEqualTo(Optional.of(person));
     }
 
     @Test
-    void updatePersonBasePropertiesWhenPersonNotFound() {
+    void updatePersonWhenPersonNotFound() {
         UUID id = UUID.randomUUID();
         Person person = new Person(id.toString(), "John", "Doe", null, null);
         when(personRepository.findById(id.toString())).thenReturn(Optional.empty());
 
-        Optional<Person> result = personService.updatePersonBaseProperties(id, person);
+        Optional<Person> result = personService.updatePerson(id, person);
 
         assertThat(result).isEmpty();
     }

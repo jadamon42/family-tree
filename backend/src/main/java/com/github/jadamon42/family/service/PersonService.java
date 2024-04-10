@@ -31,7 +31,7 @@ public class PersonService {
         return personRepository.save(person);
     }
 
-    public Optional<Person> updatePersonBaseProperties(UUID id, Person person) {
+    public Optional<Person> updatePerson(UUID id, Person person) {
         Person existingPerson = personRepository.findById(id.toString()).orElse(null);
         if (existingPerson != null) {
             existingPerson = personRepository.save(
@@ -57,9 +57,5 @@ public class PersonService {
                 partnershipRepository.deleteById(partnership.getId());
             }
         }
-    }
-
-    public List<Person> getPeopleInPartnership(UUID partnershipId) {
-        return personRepository.findPeopleByPartnershipId(partnershipId.toString());
     }
 }

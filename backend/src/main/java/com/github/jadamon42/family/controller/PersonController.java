@@ -32,7 +32,7 @@ public class PersonController {
 
     @PatchMapping("/{personId}")
     public ResponseEntity<Person> patchPerson(@PathVariable UUID personId, @RequestBody Person person) {
-        return personService.updatePersonBaseProperties(personId, person)
+        return personService.updatePerson(personId, person)
                             .map(ResponseEntity::ok)
                             .orElse(ResponseEntity.notFound().build());
     }

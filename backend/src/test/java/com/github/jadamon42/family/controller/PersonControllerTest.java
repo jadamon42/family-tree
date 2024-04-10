@@ -49,7 +49,7 @@ class PersonControllerTest {
     }
 
     @Test
-    void createPersonWithIdFails() throws Exception {
+    void createPersonWithIdReturns400() throws Exception {
         String personJson = """
         {
             "id": "00000000-0000-0000-0000-000000000000",
@@ -66,7 +66,7 @@ class PersonControllerTest {
     }
 
     @Test
-    void createPersonWithPartnershipsFails() throws Exception {
+    void createPersonWithPartnershipsReturns400() throws Exception {
         String personJson = """
         {
             "firstName": "John",
@@ -89,7 +89,7 @@ class PersonControllerTest {
     }
 
     @Test
-    void createPersonWithChildrenFails() throws Exception {
+    void createPersonWithChildrenReturns400() throws Exception {
         String personJson = """
         {
             "firstName": "John",
@@ -122,7 +122,7 @@ class PersonControllerTest {
         Person person = new Person(null, "John", "Doe", null, null);
         Person personWithId = person.withId(personId.toString());
 
-        when(personService.updatePersonBaseProperties(personId, person)).thenReturn(Optional.of(personWithId));
+        when(personService.updatePerson(personId, person)).thenReturn(Optional.of(personWithId));
 
         mockMvc.perform(patch("/api/person/" + personId)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -132,7 +132,7 @@ class PersonControllerTest {
     }
 
     @Test
-    void patchPersonFailsWhenPersonNotFound() throws Exception {
+    void patchPersonReturns404WhenPersonNotFound() throws Exception {
         String personJson = """
         {
             "firstName": "John",
@@ -142,7 +142,7 @@ class PersonControllerTest {
         UUID personId = UUID.randomUUID();
         Person person = new Person(null, "John", "Doe", null, null);
 
-        when(personService.updatePersonBaseProperties(personId, person)).thenReturn(Optional.empty());
+        when(personService.updatePerson(personId, person)).thenReturn(Optional.empty());
 
         mockMvc.perform(patch("/api/person/" + personId)
                 .contentType(MediaType.APPLICATION_JSON)
