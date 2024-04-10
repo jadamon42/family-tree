@@ -37,7 +37,12 @@ class PartnershipRepositoryTest {
     @Test
     public void save(@Autowired PartnershipRepository partnershipRepository) {
         String partnershipId = UUID.randomUUID().toString();
-        Partnership partnership = new Partnership(partnershipId, "Marriage", LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31));
+        Partnership partnership = Partnership.builder()
+                                             .id(partnershipId)
+                                             .type("Marriage")
+                                             .startDate(LocalDate.of(2023, 1, 1))
+                                             .endDate(LocalDate.of(2023, 12, 31))
+                                             .build();
         partnership = partnershipRepository.save(partnership);
         assertThat(partnership.getId()).isEqualTo(partnershipId);
         assertThat(partnership.getType()).isEqualTo("Marriage");
@@ -48,13 +53,22 @@ class PartnershipRepositoryTest {
     @Test
     public void savePersonSavesPartnership(@Autowired PartnershipRepository partnershipRepository, @Autowired PersonRepository personRepository) {
         String partnershipId = UUID.randomUUID().toString();
-        Partnership marriage = new Partnership(
-                partnershipId,
-                "marriage",
-                LocalDate.of(2023, 1, 1),
-                LocalDate.of(2023, 12, 31));
-        Person person1 = new Person( null, "John", "Doe", List.of(marriage), List.of());
-        Person person2 = new Person(null, "Jane", "Doe", List.of(marriage), List.of());
+        Partnership marriage = Partnership.builder()
+                                          .id(partnershipId)
+                                          .type("marriage")
+                                          .startDate(LocalDate.of(2023, 1, 1))
+                                          .endDate(LocalDate.of(2023, 12, 31))
+                                          .build();
+        Person person1 = Person.builder()
+                                 .firstName("John")
+                                 .lastName("Doe")
+                                 .partnerships(List.of(marriage))
+                                 .build();
+        Person person2 = Person.builder()
+                                 .firstName("Jane")
+                                 .lastName("Doe")
+                                 .partnerships(List.of(marriage))
+                                 .build();
 
         person1 = personRepository.save(person1);
         person2 = personRepository.save(person2);

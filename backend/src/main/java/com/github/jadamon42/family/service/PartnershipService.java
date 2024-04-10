@@ -28,11 +28,10 @@ public class PartnershipService {
         return partnershipRepository.findById(partnershipId.toString());
     }
 
-    public Partnership savePartnership(Partnership partnership) {
-        return partnershipRepository.save(partnership);
-    }
-
     public Partnership savePartnership(Partnership partnership, List<UUID> partnerIds) {
+        if (partnerIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one partner must be provided.");
+        }
         return savePartnershipAndUpdatePeople(partnership, partnerIds);
     }
 
@@ -46,9 +45,6 @@ public class PartnershipService {
         return Optional.ofNullable(existingPartnership);
     }
 
-    // if class a gets deleted, class b needs to be updated to no longer reference class a. class a updates class b
-    // if class b gets deleted, class a needs to delete the referenced instance of class a. class b deletes class a
-    // how should this be done?
     public void deletePartnership(UUID partnershipId) {
         personRepository.findPeopleByPartnershipId(partnershipId.toString())
                      .forEach(person -> personRepository.save(
@@ -89,8 +85,3 @@ public class PartnershipService {
         return partnershipWithId;
     }
 }
-
-// partnership service shouldn't talk to person service, a partnership doesnt knw what a person is
-// when a partnership is deleted, the person should be deleted in the db?
-
-// does the person still reference the partnership if the partnership is deleted?

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataNeo4jTest
 public class PersonRepositoryTest {
-
     @Test
     public void findAll(@Autowired PersonRepository personRepository) {
         List<Person> people = personRepository.findAll();

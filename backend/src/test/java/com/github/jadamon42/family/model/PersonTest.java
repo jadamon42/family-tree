@@ -8,7 +8,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PersonTest {
-
     @Test
     void withPartnershipWhenNoCurrentPartnerships() {
         Partnership partnership = new Partnership("1", "Marriage", null, null);

@@ -5,7 +5,7 @@ import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -19,17 +19,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PartnershipServiceTest {
-    private PartnershipRepository partnershipRepository;
-    private PartnershipService partnershipService;
-    private PersonRepository personRepository;
-
-    @BeforeEach
-    void setup() {
-        personRepository = Mockito.mock(PersonRepository.class);
-        partnershipRepository = Mockito.mock(PartnershipRepository.class);
-        partnershipService = new PartnershipService(partnershipRepository, personRepository);
-    }
-
     @Test
     void getPartnership() {
         UUID partnershipId = UUID.randomUUID();
@@ -40,15 +29,6 @@ class PartnershipServiceTest {
         Optional<Partnership> result = partnershipService.getPartnership(partnershipId);
 
         assertThat(result).isEqualTo(Optional.of(partnership));
-    }
-
-    @Test
-    void savePartnership() {
-        Partnership partnership = new Partnership(null, "Marriage", null, null);
-
-        partnershipService.savePartnership(partnership);
-
-        verify(partnershipRepository).save(partnership);
     }
 
     @Test
@@ -83,6 +63,15 @@ class PartnershipServiceTest {
         assertThatThrownBy(() -> partnershipService.savePartnership(partnership, List.of(personId1, personId2)))
             .isInstanceOf(PersonNotFoundException.class)
             .hasMessage("Person with id '" + personId1 + "' not found.");
+    }
+
+    @Test
+    void savePartnershipFailsWhenNoPartnersProvided() {
+        Partnership partnership = new Partnership(null, "Marriage", null, null);
+
+        assertThatThrownBy(() -> partnershipService.savePartnership(partnership, List.of()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("At least one partner must be provided.");
     }
 
     @Test
@@ -139,5 +128,16 @@ class PartnershipServiceTest {
         verify(personRepository).save(john.withPartnerships(List.of()));
         verify(personRepository).save(jane.withPartnerships(List.of()));
         verify(partnershipRepository).deleteById(partnershipId.toString());
+    }
+
+    static private PartnershipRepository partnershipRepository;
+    static private PartnershipService partnershipService;
+    static private PersonRepository personRepository;
+
+    @BeforeAll
+    static void setup() {
+        personRepository = Mockito.mock(PersonRepository.class);
+        partnershipRepository = Mockito.mock(PartnershipRepository.class);
+        partnershipService = new PartnershipService(partnershipRepository, personRepository);
     }
 }

@@ -37,10 +37,9 @@ public class PersonController {
                             .orElse(ResponseEntity.notFound().build());
     }
 
-//    @DeleteMapping("/{personId}")
-//    public ResponseEntity<Void> deletePerson(@PathVariable UUID personId) {
-//        personService.getPerson(personId)
-//                     .ifPresent(person -> personService.deletePerson(personId));
-//        return ResponseEntity.noContent().build();
-//    }
+    @DeleteMapping("/{personId}")
+    public ResponseEntity<Void> deletePerson(@PathVariable UUID personId) {
+        personService.deletePerson(personId);
+        return ResponseEntity.noContent().build();
+    }
 }

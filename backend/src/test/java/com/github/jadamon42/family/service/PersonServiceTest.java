@@ -17,17 +17,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PersonServiceTest {
-    private PersonService personService;
-    private PersonRepository personRepository;
-    private PartnershipRepository partnershipRepository;
-
-    @BeforeEach
-    void setup() {
-        personRepository = Mockito.mock(PersonRepository.class);
-        partnershipRepository = Mockito.mock(PartnershipRepository.class);
-        personService = new PersonService(personRepository, partnershipRepository);
-    }
-
     @Test
     void getPerson() {
         UUID id = UUID.randomUUID();
@@ -86,5 +75,16 @@ class PersonServiceTest {
 
         verify(personRepository).deleteById(id.toString());
         verify(partnershipRepository).deleteById(partnershipId.toString());
+    }
+
+    static private PersonService personService;
+    static private PersonRepository personRepository;
+    static private PartnershipRepository partnershipRepository;
+
+    @BeforeEach
+    void setup() {
+        personRepository = Mockito.mock(PersonRepository.class);
+        partnershipRepository = Mockito.mock(PartnershipRepository.class);
+        personService = new PersonService(personRepository, partnershipRepository);
     }
 }
