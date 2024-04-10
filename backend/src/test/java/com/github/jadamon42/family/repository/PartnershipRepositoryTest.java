@@ -19,32 +19,37 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataNeo4jTest
-public class PersonRepositoryTest {
-
+class PartnershipRepositoryTest {
     @Test
-    public void findAll(@Autowired PersonRepository personRepository) {
-        List<Person> people = personRepository.findAll();
-        assertThat(people).hasSize(5);
+    public void findAll(@Autowired PartnershipRepository partnershipRepository) {
+        List<Partnership> partnerships = partnershipRepository.findAll();
+        assertThat(partnerships).hasSize(3);
     }
 
     @Test
-    public void findById(@Autowired PersonRepository personRepository) {
-        Person jd = personRepository.findById("00000000-0000-0000-0000-000000000000").get();
-        assertThat(jd.getFirstName()).isEqualTo("Jonathan");
-        assertThat(jd.getLastName()).isEqualTo("Damon");
-        assertThat(jd.getPartnerships()).hasSize(1);
-
-        Person hc = personRepository.findById("00000000-0000-0000-0000-000000000001").get();
-        assertThat(hc.getFirstName()).isEqualTo("Hannah");
-        assertThat(hc.getLastName()).isEqualTo("Canady");
-        assertThat(hc.getPartnerships()).hasSize(1);
-        assertThat(hc.getPartnerships().get(0).getId()).isEqualTo(jd.getPartnerships().get(0).getId());
+    public void findById(@Autowired PartnershipRepository partnershipRepository) {
+        Partnership marriage = partnershipRepository.findById("10000000-0000-0000-0000-000000000000").get();
+        assertThat(marriage.getType()).isEqualTo("marriage");
+        assertThat(marriage.getStartDate()).isEqualTo(LocalDate.of(2021, 1, 1));
+        assertThat(marriage.getEndDate()).isEqualTo(LocalDate.of(2021, 12, 31));
     }
 
     @Test
-    public void save(@Autowired PersonRepository personRepository) {
+    public void save(@Autowired PartnershipRepository partnershipRepository) {
+        String partnershipId = UUID.randomUUID().toString();
+        Partnership partnership = new Partnership(partnershipId, "Marriage", LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31));
+        partnership = partnershipRepository.save(partnership);
+        assertThat(partnership.getId()).isEqualTo(partnershipId);
+        assertThat(partnership.getType()).isEqualTo("Marriage");
+        assertThat(partnership.getStartDate()).isEqualTo(LocalDate.of(2023, 1, 1));
+        assertThat(partnership.getEndDate()).isEqualTo(LocalDate.of(2023, 12, 31));
+    }
+
+    @Test
+    public void savePersonSavesPartnership(@Autowired PartnershipRepository partnershipRepository, @Autowired PersonRepository personRepository) {
+        String partnershipId = UUID.randomUUID().toString();
         Partnership marriage = new Partnership(
-                UUID.randomUUID().toString(),
+                partnershipId,
                 "marriage",
                 LocalDate.of(2023, 1, 1),
                 LocalDate.of(2023, 12, 31));
@@ -53,6 +58,15 @@ public class PersonRepositoryTest {
 
         person1 = personRepository.save(person1);
         person2 = personRepository.save(person2);
+
+        Partnership marriageRead = partnershipRepository.findById(partnershipId).get();
+
+        assertThat(marriageRead).satisfies(p -> {
+            assertThat(p.getId()).isEqualTo(partnershipId);
+            assertThat(p.getType()).isEqualTo("marriage");
+            assertThat(p.getStartDate()).isEqualTo(LocalDate.of(2023, 1, 1));
+            assertThat(p.getEndDate()).isEqualTo(LocalDate.of(2023, 12, 31));
+        });
 
         assertThat(person1).satisfies(p -> {
             assertThat(p.getId()).isNotNull();
@@ -72,54 +86,12 @@ public class PersonRepositoryTest {
                 isEqualTo(personRepository.findById(person2.getId()).get().getPartnerships().get(0).getId());
 
         personRepository.deleteAllById(List.of(person1.getId(), person2.getId()));
-    }
 
-    @Test
-    public void findPeopleByPartnershipId(@Autowired PersonRepository personRepository) {
-        List<Person> partners = personRepository.findPeopleByPartnershipId("10000000-0000-0000-0000-000000000000");
-        assertThat(partners).hasSize(2);
-    }
-
-    @Test
-    public void findPeopleByPartnershipIdAndCanSaveWithoutLosingInformation(@Autowired PersonRepository personRepository) {
-        List<Person> partners = personRepository.findPeopleByPartnershipId("11000000-0000-0000-0000-000000000000");
-        Person qw = partners.stream().filter(p -> p.getFirstName().equals("Quinn")).findFirst().get();
-        Person er = partners.stream().filter(p -> p.getFirstName().equals("Ethel")).findFirst().get();
-        qw = qw.withFirstName("Quincey")
-                      .withLastName("Whitmore");
-
-        qw = personRepository.save(qw);
-        Person qwRead = personRepository.findById(qw.getId()).get();
-
-        assertThat(qwRead.getFirstName()).isEqualTo("Quincey");
-        assertThat(qwRead.getLastName()).isEqualTo("Whitmore");
-        assertThat(qwRead.getPartnerships()).hasSize(2);
-        assertThat(qwRead.getPartnerships().stream().anyMatch(partnership -> partnership.getId().equals("11000000-0000-0000-0000-000000000000"))).isTrue();
-        assertThat(qwRead.getPartnerships().stream().anyMatch(partnership -> partnership.getId().equals("11100000-0000-0000-0000-000000000000"))).isTrue();
-        assertThat(qwRead.getChildren()).hasSize(1);
-        assertThat(qwRead.getChildren().get(0).getFirstName()).isEqualTo("Jonathan");
-        assertThat(qwRead.getChildren().get(0).getLastName()).isEqualTo("Damon");
-    }
-
-    @Test
-    public void deletePersonDeletesPartnership(@Autowired PersonRepository personRepository, @Autowired PartnershipRepository partnershipRepository) {
-        Partnership marriage = new Partnership(
-                UUID.randomUUID().toString(),
-                "marriage",
-                LocalDate.of(2023, 1, 1),
-                LocalDate.of(2023, 12, 31));
-        Person person1 = new Person( null, "John", "Doe", List.of(marriage), List.of());
-        Person person2 = new Person(null, "Jane", "Doe", List.of(marriage), List.of());
-
-        person1 = personRepository.save(person1);
-        person2 = personRepository.save(person2);
-
-        personRepository.deleteAllById(List.of(person1.getId(), person2.getId()));
-
-        Partnership marriageRead = partnershipRepository.findById(marriage.getId()).get();
+        // should be deleted by service
+        marriageRead = partnershipRepository.findById(partnershipId).get();
 
         assertThat(marriageRead).satisfies(p -> {
-            assertThat(p.getId()).isEqualTo(marriage.getId());
+            assertThat(p.getId()).isEqualTo(partnershipId);
             assertThat(p.getType()).isEqualTo("marriage");
             assertThat(p.getStartDate()).isEqualTo(LocalDate.of(2023, 1, 1));
             assertThat(p.getEndDate()).isEqualTo(LocalDate.of(2023, 12, 31));
@@ -131,8 +103,8 @@ public class PersonRepositoryTest {
     @BeforeAll
     static void initializeNeo4j() {
         embeddedDatabaseServer = Neo4jBuilders.newInProcessBuilder()
-            .withDisabledServer() // Don't need Neos HTTP server
-            .withFixture("""
+                                              .withDisabledServer() // Don't need Neos HTTP server
+                                              .withFixture("""
                                  CREATE (jd:Person {id: '00000000-0000-0000-0000-000000000000', firstName:'Jonathan', lastName: 'Damon'})
                                  CREATE (hc:Person {id: '00000000-0000-0000-0000-000000000001', firstName:'Hannah', lastName: 'Canady'})
                                  CREATE (pt:Partnership {id: '10000000-0000-0000-0000-000000000000', type: 'marriage', startDate: date('2021-01-01'), endDate: date('2021-12-31')})
@@ -149,8 +121,8 @@ public class PersonRepositoryTest {
                                                (ty)-[:PARTNER_IN]->(pt3),
                                                (qw)-[:PARENT_OF]->(jd)
                                  """
-            )
-            .build();
+                                              )
+                                              .build();
     }
 
     @AfterAll

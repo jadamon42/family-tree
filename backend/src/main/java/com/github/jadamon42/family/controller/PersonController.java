@@ -20,23 +20,13 @@ public class PersonController {
 
     @GetMapping("/{personId}")
     public ResponseEntity<Person> getPersonById(@PathVariable UUID personId) {
-        return personService.getPersonById(personId)
+        return personService.getPerson(personId)
                             .map(ResponseEntity::ok)
                             .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Person createPerson(@RequestBody Person person) {
-        return personService.savePerson(person);
-    }
-
-    @PutMapping("/{personId}")
-    public ResponseEntity<Person> updatePerson(@PathVariable UUID personId, @RequestBody Person person) {
-        if (person.getId() == null) {
-            person = person.withId(personId.toString());
-        } else if (!person.getId().equals(personId.toString())) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<Person> createPerson(@RequestBody Person person) {
         return ResponseEntity.ok(personService.savePerson(person));
     }
 
@@ -47,10 +37,10 @@ public class PersonController {
                             .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{personId}")
-    public ResponseEntity<Void> deletePerson(@PathVariable UUID personId) {
-        personService.getPersonById(personId)
-                     .ifPresent(person -> personService.deletePerson(personId));
-        return ResponseEntity.noContent().build();
-    }
+//    @DeleteMapping("/{personId}")
+//    public ResponseEntity<Void> deletePerson(@PathVariable UUID personId) {
+//        personService.getPerson(personId)
+//                     .ifPresent(person -> personService.deletePerson(personId));
+//        return ResponseEntity.noContent().build();
+//    }
 }
