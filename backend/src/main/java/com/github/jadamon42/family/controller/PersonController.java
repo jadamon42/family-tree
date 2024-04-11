@@ -1,6 +1,7 @@
 package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,14 @@ public class PersonController {
     @Autowired
     public PersonController(PersonService personService) {
         this.personService = personService;
+    }
+
+    @GetMapping
+    public ResponseEntity<Iterable<PersonProjection>> getPeople(@RequestParam Boolean rootNodesOnly){
+        if (!rootNodesOnly) {
+            throw new UnsupportedOperationException("Only root nodes are supported at this time.");
+        }
+        return ResponseEntity.ok(personService.getRootPeople());
     }
 
     @GetMapping("/{personId}")

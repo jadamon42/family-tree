@@ -2,6 +2,7 @@ package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
@@ -57,5 +58,9 @@ public class PersonService {
                 partnershipRepository.deleteById(partnership.getId());
             }
         }
+    }
+
+    public Iterable<PersonProjection> getRootPeople() {
+        return personRepository.findRootPeople();
     }
 }

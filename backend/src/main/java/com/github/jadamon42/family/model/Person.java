@@ -34,9 +34,6 @@ public class Person {
     @Relationship(value = "PARTNER_IN", direction = Relationship.Direction.OUTGOING)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     List<Partnership> partnerships;
-    @Relationship(value = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    List<Person> children;
 
     public Person withPartnership(Partnership partnership) {
         List<Partnership> updatedPartnerships = partnerships != null ? new ArrayList<>(partnerships) : new ArrayList<>();
@@ -47,17 +44,6 @@ public class Person {
         updatedPartnerships.add(partnership);
 
         return this.withPartnerships(updatedPartnerships);
-    }
-
-    public Person withChild(Person child) {
-        List<Person> updatedChildren = children != null ? new ArrayList<>(children) : new ArrayList<>();
-
-        updatedChildren = updatedChildren.stream()
-                                         .filter(c -> child.getId() == null || !c.getId().equals(child.getId()))
-                                         .collect(Collectors.toList());
-        updatedChildren.add(child);
-
-        return this.withChildren(updatedChildren);
     }
 
     @JsonCreator

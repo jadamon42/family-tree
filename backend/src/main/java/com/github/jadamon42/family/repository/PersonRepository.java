@@ -1,6 +1,7 @@
 package com.github.jadamon42.family.repository;
 
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 
@@ -14,4 +15,11 @@ public interface PersonRepository extends Neo4jRepository<Person, String> {
             RETURN p, collect(r), collect(n)
             """)
     List<Person> findPeopleByPartnershipId(String partnershipId);
+
+    @Query("""
+            MATCH (p:Person)-[r]->(n)
+            WHERE NOT (:Partnership)-[:BEGAT]->(p)
+            RETURN p, collect(r), collect(n)
+            """)
+    Iterable<PersonProjection> findRootPeople();
 }
