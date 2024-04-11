@@ -1,6 +1,6 @@
 package com.github.jadamon42.family.service;
 
-import com.github.jadamon42.family.model.Partnership;
+import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
@@ -24,8 +24,12 @@ public class PersonService {
         this.partnershipRepository = partnershipRepository;
     }
 
-    public Optional<PersonProjection> getPerson(UUID id) {
-        return personRepository.findProjectionById(id.toString());
+    public List<PersonProjection> getRootPersonProjections() {
+        return personRepository.findRootPeople();
+    }
+
+    public Optional<Person> getPerson(UUID id) {
+        return personRepository.findById(id.toString());
     }
 
     public PersonProjection savePerson(Person person) {
@@ -45,7 +49,7 @@ public class PersonService {
     }
 
     private void deleteDanglingPartnerships(PersonProjection person) {
-        for (Partnership partnership : person.getPartnerships()) {
+        for (PartnershipProjection partnership : person.getPartnerships()) {
             List<String> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
             // there's probably a better way to do this
             if (partners.size() == 1 && partners.get(0).equals(person.getId())) {

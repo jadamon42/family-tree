@@ -6,5 +6,5 @@ public interface PersonProjection {
     String getId();
     String getFirstName();
     String getLastName();
-    List<Partnership> getPartnerships();
+    List<PartnershipProjection> getPartnerships();
 }

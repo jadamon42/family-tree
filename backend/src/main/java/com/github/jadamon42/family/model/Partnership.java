@@ -11,9 +11,11 @@ import lombok.extern.jackson.Jacksonized;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Value
 @With
@@ -29,6 +31,10 @@ public class Partnership {
     LocalDate startDate;
     LocalDate endDate;
 
+    @Relationship(value = "BEGAT", direction = Relationship.Direction.OUTGOING)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    List<Person> children;
+
     @JsonCreator
     public static Partnership create(String type, LocalDate startDate, LocalDate endDate) {
         return Partnership.builder()
@@ -40,7 +46,7 @@ public class Partnership {
 
     public static class PartnershipBuilder {
         @JsonAnySetter
-        public Partnership.PartnershipBuilder unknown(String name, Object value) {
+        public Partnership.PartnershipBuilder unknown(String name, Object ignoredValue) {
             throw new IllegalArgumentException("Unknown property: " + name);
         }
     }

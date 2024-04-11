@@ -34,40 +34,6 @@ public class Person {
     @Relationship(value = "PARTNER_IN", direction = Relationship.Direction.OUTGOING)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     List<Partnership> partnerships;
-    @Relationship(value = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    List<Person> children;
-
-    public static Person fromProjection(PersonProjection personProjection) {
-        return Person.builder()
-                     .id(personProjection.getId())
-                     .firstName(personProjection.getFirstName())
-                     .lastName(personProjection.getLastName())
-                     .partnerships(personProjection.getPartnerships())
-                     .build();
-    }
-
-    public Person withPartnership(Partnership partnership) {
-        List<Partnership> updatedPartnerships = partnerships != null ? new ArrayList<>(partnerships) : new ArrayList<>();
-
-        updatedPartnerships = updatedPartnerships.stream()
-                                                 .filter(p -> p.getId() == null || !p.getId().equals(partnership.getId()))
-                                                 .collect(Collectors.toList());
-        updatedPartnerships.add(partnership);
-
-        return this.withPartnerships(updatedPartnerships);
-    }
-
-    public Person withChild(Person child) {
-        List<Person> updatedChildren = children != null ? new ArrayList<>(children) : new ArrayList<>();
-
-        updatedChildren = updatedChildren.stream()
-                                         .filter(c -> child.getId() == null || !c.getId().equals(child.getId()))
-                                         .collect(Collectors.toList());
-        updatedChildren.add(child);
-
-        return this.withChildren(updatedChildren);
-    }
 
     @JsonCreator
     public static Person create(String firstName, String lastName) {

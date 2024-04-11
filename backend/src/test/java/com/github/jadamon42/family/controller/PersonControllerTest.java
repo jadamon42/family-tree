@@ -25,27 +25,35 @@ class PersonControllerTest {
     @Test
     void getPersonById() throws Exception {
        UUID personId = UUID.randomUUID();
-       PersonProjection personProjection = new MockPersonProjection(personId.toString(), "John", "Doe", null);
-       when(personService.getPerson(personId)).thenReturn(Optional.of(personProjection));
+       Person person = Person.builder()
+                             .id(personId.toString())
+                             .firstName("John")
+                             .lastName("Doe")
+                             .build();
+       when(personService.getPerson(personId)).thenReturn(Optional.of(person));
 
        mockMvc.perform(get("/api/person/" + personId))
               .andExpect(status().isOk())
-              .andExpect(content().json(objectMapper.writeValueAsString(personProjection)));
+              .andExpect(content().json(objectMapper.writeValueAsString(person)));
     }
 
     @Test
     void createPerson() throws Exception {
         String personJson = "{\"firstName\":\"John\",\"lastName\":\"Doe\"}";
         UUID personId = UUID.randomUUID();
-        Person person = new Person(null, "John", "Doe", null, null);
-        PersonProjection personProjection = new MockPersonProjection(personId.toString(), "John", "Doe", null);
-        when(personService.savePerson(person)).thenReturn(personProjection);
+        Person person = new Person(null, "John", "Doe", null);
+        PersonProjection savedPerson = MockPersonProjection.builder()
+                                                                .id(personId.toString())
+                                                                .firstName("John")
+                                                                .lastName("Doe")
+                                                                .build();
+        when(personService.savePerson(person)).thenReturn(savedPerson);
 
         mockMvc.perform(post("/api/person")
                .contentType(MediaType.APPLICATION_JSON)
                .content(personJson))
                .andExpect(status().isOk())
-               .andExpect(content().json(objectMapper.writeValueAsString(personProjection)));
+               .andExpect(content().json(objectMapper.writeValueAsString(savedPerson)));
     }
 
     @Test
@@ -89,28 +97,6 @@ class PersonControllerTest {
     }
 
     @Test
-    void createPersonWithChildrenReturns400() throws Exception {
-        String personJson = """
-        {
-            "firstName": "John",
-            "lastName": "Doe",
-            "children": [
-                {
-                    "firstName": "Jane",
-                    "lastName": "Doe"
-                }
-            ]
-        }
-        """;
-
-        mockMvc.perform(post("/api/person")
-               .contentType(MediaType.APPLICATION_JSON)
-               .content(personJson))
-               .andExpect(status().isBadRequest())
-               .andExpect(content().string("Unknown property: children"));
-    }
-
-    @Test
     void patchPerson() throws Exception {
         String personJson = """
         {
@@ -119,9 +105,12 @@ class PersonControllerTest {
         }
         """;
         UUID personId = UUID.randomUUID();
-        Person person = new Person(null, "John", "Doe", null, null);
-        PersonProjection mockPersonProjection = new MockPersonProjection(personId.toString(), "John", "Doe", null);
-
+        Person person = new Person(null, "John", "Doe", null);
+        PersonProjection mockPersonProjection = MockPersonProjection.builder()
+                                                                    .id(personId.toString())
+                                                                    .firstName("John")
+                                                                    .lastName("Doe")
+                                                                    .build();
         when(personService.updatePerson(personId, person)).thenReturn(Optional.of(mockPersonProjection));
 
         mockMvc.perform(patch("/api/person/" + personId)
@@ -140,8 +129,10 @@ class PersonControllerTest {
         }
         """;
         UUID personId = UUID.randomUUID();
-        Person person = new Person(null, "John", "Doe", null, null);
-
+        Person person = Person.builder()
+                              .firstName("John")
+                              .lastName("Doe")
+                              .build();
         when(personService.updatePerson(personId, person)).thenReturn(Optional.empty());
 
         mockMvc.perform(patch("/api/person/" + personId)

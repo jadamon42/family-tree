@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -19,8 +20,16 @@ public class PersonController {
         this.personService = personService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<PersonProjection>> getPeople(@RequestParam Boolean rootsOnly) {
+        if (! rootsOnly) {
+            throw new UnsupportedOperationException("Only retrieval of root nodes is supported at this time.");
+        }
+        return ResponseEntity.ok(personService.getRootPersonProjections());
+    }
+
     @GetMapping("/{personId}")
-    public ResponseEntity<PersonProjection> getPersonById(@PathVariable UUID personId) {
+    public ResponseEntity<Person> getPersonById(@PathVariable UUID personId) {
         return personService.getPerson(personId)
                             .map(ResponseEntity::ok)
                             .orElse(ResponseEntity.notFound().build());

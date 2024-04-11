@@ -1,7 +1,9 @@
 package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jadamon42.family.model.MockPartnershipProjection;
 import com.github.jadamon42.family.model.Partnership;
+import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.service.PartnershipService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +28,12 @@ class PartnershipControllerTest {
     @Test
     void getPartnershipById() throws Exception {
         UUID partnershipId = UUID.randomUUID();
-        Partnership partnership = new Partnership(
-                partnershipId.toString(),
-                "marriage",
-                LocalDate.of(2021, 1, 1),
-                LocalDate.of(2021, 12, 31));
-
+        Partnership partnership = Partnership.builder()
+                                             .id(partnershipId.toString())
+                                             .type("marriage")
+                                             .startDate(LocalDate.of(2021, 1, 1))
+                                             .endDate(LocalDate.of(2021, 12, 31))
+                                             .build();
         when(partnershipService.getPartnership(partnershipId)).thenReturn(Optional.of(partnership));
 
         mockMvc.perform(get("/api/partnership/" + partnershipId))
@@ -41,30 +43,34 @@ class PartnershipControllerTest {
 
     @Test
     void addPartnership() throws Exception {
-        String partnershipJson = """
+        UUID personId1 = UUID.randomUUID();
+        UUID personId2 = UUID.randomUUID();
+
+        String partnershipJson = String.format("""
         {
             "partnership": {
                 "type": "marriage",
                 "startDate": "2021-01-01"
             },
-            "partnerIds": ["00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000001"]
+            "partnerIds": ["%s", "%s"]
         }
-        """;
-        UUID personId1 = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        UUID personId2 = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        Partnership partnership = new Partnership(
-                null,
-                "marriage",
-                LocalDate.of(2021, 1, 1),
-                null);
-
-        when(partnershipService.savePartnership(partnership, List.of(personId1, personId2))).thenReturn(partnership);
+        """, personId1, personId2);
+        Partnership partnership = Partnership.builder()
+                                             .type("marriage")
+                                             .startDate(LocalDate.of(2021, 1, 1))
+                                             .build();
+        PartnershipProjection savedPartnership = MockPartnershipProjection.builder()
+                                                                     .id(UUID.randomUUID().toString())
+                                                                     .type("marriage")
+                                                                     .startDate(LocalDate.of(2021, 1, 1))
+                                                                     .build();
+        when(partnershipService.savePartnership(partnership, List.of(personId1, personId2))).thenReturn(savedPartnership);
 
         mockMvc.perform(post("/api/partnership")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(partnershipJson))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(objectMapper.writeValueAsString(partnership)));
+                .andExpect(content().json(objectMapper.writeValueAsString(savedPartnership)));
     }
 
     @Test
@@ -78,12 +84,10 @@ class PartnershipControllerTest {
             "partnerIds": []
         }
         """;
-        Partnership partnership = new Partnership(
-                null,
-                "marriage",
-                LocalDate.of(2021, 1, 1),
-                null);
-
+        Partnership partnership = Partnership.builder()
+                                             .type("marriage")
+                                             .startDate(LocalDate.of(2021, 1, 1))
+                                             .build();
         when(partnershipService.savePartnership(partnership, List.of())).thenThrow(new IllegalArgumentException(""));
 
         mockMvc.perform(post("/api/partnership")
@@ -94,34 +98,38 @@ class PartnershipControllerTest {
 
     @Test
     void patchPartnership() throws Exception {
-        String partnershipJson = """
+        UUID personId1 = UUID.randomUUID();
+        UUID personId2 = UUID.randomUUID();
+        UUID partnershipId = UUID.randomUUID();
+        String partnershipJson = String.format("""
         {
             "partnership": {
                 "type": "marriage",
                 "startDate": "2021-01-01",
                 "endDate": "2021-12-31"
             },
-            "partnerIds": ["00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000001"]
+            "partnerIds": ["%s", "%s"]
         }
-        """;
-        UUID personId1 = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        UUID personId2 = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        UUID partnershipId = UUID.fromString("10000000-0000-0000-0000-000000000000");
-        Partnership partnership = new Partnership(
-                null,
-                "marriage",
-                LocalDate.of(2021, 1, 1),
-                LocalDate.of(2021, 12, 31));
-        Partnership partnershipWithId = partnership.withId(partnershipId.toString());
-
+        """, personId1, personId2);
+        Partnership partnership = Partnership.builder()
+                                             .type("marriage")
+                                             .startDate(LocalDate.of(2021, 1, 1))
+                                             .endDate(LocalDate.of(2021, 12, 31))
+                                             .build();
+        PartnershipProjection savedPartnership = MockPartnershipProjection.builder()
+                                                                           .id(partnershipId.toString())
+                                                                           .type("marriage")
+                                                                           .startDate(LocalDate.of(2021, 1, 1))
+                                                                           .endDate(LocalDate.of(2021, 12, 31))
+                                                                           .build();
         when(partnershipService.updatePartnership(partnershipId, partnership, List.of(personId1, personId2)))
-                .thenReturn(Optional.of(partnershipWithId));
+                .thenReturn(Optional.of(savedPartnership));
 
         mockMvc.perform(patch("/api/partnership/" + partnershipId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(partnershipJson))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(partnershipWithId)));
+                .andExpect(content().json(objectMapper.writeValueAsString(savedPartnership)));
     }
 
     @Test

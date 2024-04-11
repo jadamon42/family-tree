@@ -4,14 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @Value
 @AllArgsConstructor
 @Builder
-public class MockPersonProjection implements PersonProjection {
+public class MockPartnershipProjection implements PartnershipProjection {
     String id;
-    String firstName;
-    String lastName;
-    List<PartnershipProjection> partnerships;
+    String type;
+    LocalDate startDate;
+    LocalDate endDate;
 }

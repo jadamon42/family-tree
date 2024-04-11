@@ -2,7 +2,7 @@ package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.exception.PersonNotFoundException;
 import com.github.jadamon42.family.model.Partnership;
-import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
@@ -28,19 +28,23 @@ public class PartnershipService {
         return partnershipRepository.findById(partnershipId.toString());
     }
 
-    public Partnership savePartnership(Partnership partnership, List<UUID> partnerIds) {
+    public PartnershipProjection savePartnership(Partnership partnership, List<UUID> partnerIds) {
         if (partnerIds.isEmpty()) {
-            throw new IllegalArgumentException("At least one partner must be provided.");
+            throw new IllegalArgumentException("At least one partner ID must be provided.");
         }
-        return savePartnershipAndUpdatePeople(partnership, partnerIds);
+
+        PartnershipProjection partnershipWithId = partnershipRepository.saveAndReturnProjection(partnership);
+        updatePeopleInPartnership(partnershipWithId, partnerIds);
+        return partnershipWithId;
     }
 
-    public Optional<Partnership> updatePartnership(UUID partnershipId, Partnership partnership, List<UUID> partnerIds) {
-        Partnership existingPartnership = partnershipRepository.findById(partnershipId.toString()).orElse(null);
+    public Optional<PartnershipProjection> updatePartnership(UUID partnershipId, Partnership partnership, List<UUID> partnerIds) {
+        PartnershipProjection existingPartnership = partnershipRepository.findProjectionById(partnershipId.toString()).orElse(null);
 
         if (existingPartnership != null) {
             removePeopleNoLongerInThePartnership(partnershipId, partnerIds);
-            existingPartnership = savePartnershipAndUpdatePeople(partnership.withId(partnershipId.toString()), partnerIds);
+            existingPartnership = partnershipRepository.updateAndReturnProjection(partnershipId.toString(), partnership);
+            updatePeopleInPartnership(existingPartnership, partnerIds);
         }
         return Optional.ofNullable(existingPartnership);
     }
@@ -61,16 +65,20 @@ public class PartnershipService {
         return !partnerIds.contains(UUID.fromString(personId));
     }
 
-    private Partnership savePartnershipAndUpdatePeople(Partnership partnership, List<UUID> partnerIds) {
-        Partnership partnershipWithId = partnershipRepository.save(partnership);
+    private void updatePeopleInPartnership(PartnershipProjection partnership, List<UUID> partnerIds) {
         for(UUID partnerId : partnerIds) {
-            Optional<PersonProjection> optionalPerson = personRepository.findProjectionById(partnerId.toString());
-            if (optionalPerson.isEmpty()) {
-                throw new PersonNotFoundException(partnerId);
+            PersonProjection person = personRepository.findProjectionById(partnerId.toString())
+                                                      .orElseThrow(() -> new PersonNotFoundException(partnerId));
+
+            if (!isAlreadyInPartnership(person, partnership.getId())) {
+                personRepository.addToPartnership(partnerId.toString(), partnership.getId());
             }
-            Person person = Person.fromProjection(optionalPerson.get()).withPartnership(partnershipWithId);
-            personRepository.updateAndReturnProjection(person.getId(), person);
         }
-        return partnershipWithId;
+    }
+
+    private boolean isAlreadyInPartnership(PersonProjection person, String partnershipId) {
+        return person.getPartnerships()
+                     .stream()
+                     .anyMatch(p -> p.getId().equals(partnershipId));
     }
 }

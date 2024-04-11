@@ -1,6 +1,7 @@
 package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Partnership;
+import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.service.PartnershipService;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -32,8 +33,8 @@ public class PartnershipController {
     }
 
     @PostMapping
-    public ResponseEntity<Partnership> addPartnership(@RequestBody @Validated PartnershipRequest partnershipRequest) {
-        Partnership newPartnership = partnershipService.savePartnership(partnershipRequest.partnership, partnershipRequest.partnerIds);
+    public ResponseEntity<PartnershipProjection> addPartnership(@RequestBody @Validated PartnershipRequest partnershipRequest) {
+        PartnershipProjection newPartnership = partnershipService.savePartnership(partnershipRequest.partnership, partnershipRequest.partnerIds);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                                                   .path("/{id}")
                                                   .buildAndExpand(newPartnership.getId())
@@ -42,7 +43,7 @@ public class PartnershipController {
     }
 
     @PatchMapping("/{partnershipId}")
-    public ResponseEntity<Partnership> patchPartnership(@PathVariable UUID partnershipId, @RequestBody @Validated PartnershipRequest partnershipRequest) {
+    public ResponseEntity<PartnershipProjection> patchPartnership(@PathVariable UUID partnershipId, @RequestBody @Validated PartnershipRequest partnershipRequest) {
         return partnershipService.updatePartnership(partnershipId, partnershipRequest.partnership, partnershipRequest.partnerIds)
                                 .map(ResponseEntity::ok)
                                 .orElse(ResponseEntity.notFound().build());
