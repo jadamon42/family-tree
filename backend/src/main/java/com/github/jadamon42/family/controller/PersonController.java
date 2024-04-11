@@ -2,6 +2,7 @@ package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,13 +37,13 @@ public class PersonController {
     }
 
     @PostMapping
-    public ResponseEntity<PersonProjection> createPerson(@RequestBody Person person) {
-        return ResponseEntity.ok(personService.savePerson(person));
+    public ResponseEntity<PersonProjection> createPerson(@RequestBody PersonRequest request) {
+        return ResponseEntity.ok(personService.createPerson(request));
     }
 
     @PatchMapping("/{personId}")
-    public ResponseEntity<PersonProjection> patchPerson(@PathVariable UUID personId, @RequestBody Person person) {
-        return personService.updatePerson(personId, person)
+    public ResponseEntity<PersonProjection> patchPerson(@PathVariable UUID personId, @RequestBody PersonRequest request) {
+        return personService.updatePerson(personId, request)
                             .map(ResponseEntity::ok)
                             .orElse(ResponseEntity.notFound().build());
     }

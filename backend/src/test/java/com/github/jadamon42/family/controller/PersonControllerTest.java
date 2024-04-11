@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jadamon42.family.model.MockPersonProjection;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.service.PersonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +42,16 @@ class PersonControllerTest {
     void createPerson() throws Exception {
         String personJson = "{\"firstName\":\"John\",\"lastName\":\"Doe\"}";
         UUID personId = UUID.randomUUID();
-        Person person = new Person(null, "John", "Doe", null);
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
         PersonProjection savedPerson = MockPersonProjection.builder()
-                                                                .id(personId.toString())
-                                                                .firstName("John")
-                                                                .lastName("Doe")
-                                                                .build();
-        when(personService.savePerson(person)).thenReturn(savedPerson);
+                                                           .id(personId.toString())
+                                                           .firstName("John")
+                                                           .lastName("Doe")
+                                                           .build();
+        when(personService.createPerson(request)).thenReturn(savedPerson);
 
         mockMvc.perform(post("/api/person")
                .contentType(MediaType.APPLICATION_JSON)
@@ -105,13 +109,16 @@ class PersonControllerTest {
         }
         """;
         UUID personId = UUID.randomUUID();
-        Person person = new Person(null, "John", "Doe", null);
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
         PersonProjection mockPersonProjection = MockPersonProjection.builder()
                                                                     .id(personId.toString())
                                                                     .firstName("John")
                                                                     .lastName("Doe")
                                                                     .build();
-        when(personService.updatePerson(personId, person)).thenReturn(Optional.of(mockPersonProjection));
+        when(personService.updatePerson(personId, request)).thenReturn(Optional.of(mockPersonProjection));
 
         mockMvc.perform(patch("/api/person/" + personId)
                .contentType(MediaType.APPLICATION_JSON)
@@ -129,11 +136,11 @@ class PersonControllerTest {
         }
         """;
         UUID personId = UUID.randomUUID();
-        Person person = Person.builder()
-                              .firstName("John")
-                              .lastName("Doe")
-                              .build();
-        when(personService.updatePerson(personId, person)).thenReturn(Optional.empty());
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
+        when(personService.updatePerson(personId, request)).thenReturn(Optional.empty());
 
         mockMvc.perform(patch("/api/person/" + personId)
                .contentType(MediaType.APPLICATION_JSON)

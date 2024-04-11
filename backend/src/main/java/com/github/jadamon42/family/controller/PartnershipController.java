@@ -2,9 +2,8 @@ package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.PartnershipProjection;
+import com.github.jadamon42.family.model.PartnershipRequest;
 import com.github.jadamon42.family.service.PartnershipService;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -33,8 +31,8 @@ public class PartnershipController {
     }
 
     @PostMapping
-    public ResponseEntity<PartnershipProjection> addPartnership(@RequestBody @Validated PartnershipRequest partnershipRequest) {
-        PartnershipProjection newPartnership = partnershipService.savePartnership(partnershipRequest.partnership, partnershipRequest.partnerIds);
+    public ResponseEntity<PartnershipProjection> addPartnership(@RequestBody @Validated PartnershipRequest request) {
+        PartnershipProjection newPartnership = partnershipService.createPartnership(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                                                   .path("/{id}")
                                                   .buildAndExpand(newPartnership.getId())
@@ -43,20 +41,15 @@ public class PartnershipController {
     }
 
     @PatchMapping("/{partnershipId}")
-    public ResponseEntity<PartnershipProjection> patchPartnership(@PathVariable UUID partnershipId, @RequestBody @Validated PartnershipRequest partnershipRequest) {
-        return partnershipService.updatePartnership(partnershipId, partnershipRequest.partnership, partnershipRequest.partnerIds)
-                                .map(ResponseEntity::ok)
-                                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PartnershipProjection> patchPartnership(@PathVariable UUID partnershipId, @RequestBody @Validated PartnershipRequest request) {
+        return partnershipService.updatePartnership(partnershipId, request)
+                                 .map(ResponseEntity::ok)
+                                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{partnershipId}")
     public ResponseEntity<Void> deletePartnership(@PathVariable UUID partnershipId) {
         partnershipService.deletePartnership(partnershipId);
         return ResponseEntity.noContent().build();
-    }
-
-    public record PartnershipRequest(
-            @NotNull Partnership partnership,
-            @NotEmpty List<UUID> partnerIds) {
     }
 }

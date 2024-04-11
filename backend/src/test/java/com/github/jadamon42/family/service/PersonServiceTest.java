@@ -2,6 +2,7 @@ package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.junit.jupiter.api.AfterAll;
@@ -46,12 +47,12 @@ public class PersonServiceTest {
 
     @Test
     void savePerson() {
-        Person newPerson = Person.builder()
-                              .firstName("John")
-                              .lastName("Doe")
-                              .build();
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
 
-        PersonProjection savedPerson = personService.savePerson(newPerson);
+        PersonProjection savedPerson = personService.createPerson(request);
 
         assertThat(savedPerson.getId()).isNotNull();
         assertThat(savedPerson.getFirstName()).isEqualTo("John");
@@ -60,12 +61,12 @@ public class PersonServiceTest {
 
     @Test
     void updatePerson() {
-        Person personUpdate = Person.builder()
-                                     .firstName("John")
-                                     .lastName("Doe")
-                                     .build();
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
 
-        PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, personUpdate).orElseThrow();
+        PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
 
         assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId.toString());
         assertThat(updatedPerson.getFirstName()).isEqualTo("John");
@@ -80,14 +81,33 @@ public class PersonServiceTest {
 
     @Test
     void updatePersonDoesNothingWhenPersonNotFound() {
-        Person personUpdate = Person.builder()
-                                     .firstName("John")
-                                     .lastName("Doe")
-                                     .build();
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
 
-        Optional<PersonProjection> person = personService.updatePerson(UUID.randomUUID(), personUpdate);
+        Optional<PersonProjection> person = personService.updatePerson(UUID.randomUUID(), request);
 
         assertThat(person).isEmpty();
+    }
+
+    @Test
+    void updatePersonCorrectlyWhenOnlySpecifyingOneField() {
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("Jon"))
+                                             .build();
+
+        PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
+
+        assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId.toString());
+        assertThat(updatedPerson.getFirstName()).isEqualTo("Jon");
+        assertThat(updatedPerson.getLastName()).isEqualTo("Damon");
+        assertThat(updatedPerson.getPartnerships()).satisfies(partnerships -> {
+            assertThat(partnerships).hasSize(1);
+            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
+            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
+            assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
+        });
     }
 
     @Test

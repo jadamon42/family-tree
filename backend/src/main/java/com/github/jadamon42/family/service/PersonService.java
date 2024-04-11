@@ -3,6 +3,7 @@ package com.github.jadamon42.family.service;
 import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.github.jadamon42.family.service.PatchHelper.patch;
 
 @Service
 @Transactional
@@ -32,12 +35,18 @@ public class PersonService {
         return personRepository.findById(id.toString());
     }
 
-    public PersonProjection savePerson(Person person) {
-        return personRepository.saveAndReturnProjection(person);
+    public PersonProjection createPerson(PersonRequest request) {
+        return personRepository.saveAndReturnProjection(Person.fromRequest(request));
     }
 
-    public Optional<PersonProjection> updatePerson(UUID id, Person person) {
-        return personRepository.updateAndReturnProjection(id.toString(), person);
+    public Optional<PersonProjection> updatePerson(UUID id, PersonRequest request) {
+        PersonProjection existingPerson = personRepository.findProjectionById(id.toString()).orElse(null);
+
+        if (existingPerson != null) {
+            Person person = getPatchedPerson(existingPerson, request);
+            existingPerson = personRepository.updateAndReturnProjection(id.toString(), person);
+        }
+        return Optional.ofNullable(existingPerson);
     }
 
     public void deletePerson(UUID id) {
@@ -56,5 +65,12 @@ public class PersonService {
                 partnershipRepository.deleteById(partnership.getId());
             }
         }
+    }
+
+    private Person getPatchedPerson(PersonProjection existingPerson, PersonRequest request) {
+        Person.PersonBuilder builder = Person.builder();
+        patch(builder, Person.PersonBuilder::firstName, request.getFirstName(), existingPerson.getFirstName());
+        patch(builder, Person.PersonBuilder::lastName, request.getLastName(), existingPerson.getLastName());
+        return builder.build();
     }
 }

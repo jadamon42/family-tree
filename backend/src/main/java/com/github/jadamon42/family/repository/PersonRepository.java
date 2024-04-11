@@ -40,7 +40,7 @@ public interface PersonRepository extends Neo4jRepository<Person, String> {
                 p.lastName = :#{#person.getLastName()}
             RETURN p, collect(r), collect(pt)
             """)
-    Optional<PersonProjection> updateAndReturnProjection(String id, Person person);
+    PersonProjection updateAndReturnProjection(String id, Person person);
 
     @Query("""
             MATCH (p:Person)

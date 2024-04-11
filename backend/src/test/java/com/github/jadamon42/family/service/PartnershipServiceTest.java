@@ -2,6 +2,7 @@ package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.PartnershipProjection;
+import com.github.jadamon42.family.model.PartnershipRequest;
 import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
@@ -42,14 +43,14 @@ public class PartnershipServiceTest {
 
     @Test
     void savePartnership() {
-        Partnership partnership = Partnership.builder()
-                                             .type("marriage")
-                                             .startDate(LocalDate.of(2023, 1, 1))
-                                             .endDate(LocalDate.of(2023, 12, 31))
-                                             .build();
-        List<UUID> partnerIds = List.of(person1Id, person2Id);
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .type(Optional.of("marriage"))
+                                                       .startDate(Optional.of(LocalDate.of(2023, 1, 1)))
+                                                       .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
+                                                       .partnerIds(List.of(person1Id, person2Id))
+                                                       .build();
 
-        PartnershipProjection savedPartnership = partnershipService.savePartnership(partnership, partnerIds);
+        PartnershipProjection savedPartnership = partnershipService.createPartnership(request);
         PersonProjection person1 = personRepository.findProjectionById(person1Id.toString()).orElseThrow();
         PersonProjection person2 = personRepository.findProjectionById(person2Id.toString()).orElseThrow();
 
@@ -69,27 +70,27 @@ public class PartnershipServiceTest {
 
     @Test
     void savePartnershipFailsWhenNoPartnerIdsProvided() {
-        Partnership partnership = Partnership.builder()
-                                             .type("marriage")
-                                             .startDate(LocalDate.of(2023, 1, 1))
-                                             .endDate(LocalDate.of(2023, 12, 31))
-                                             .build();
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .type(Optional.of("marriage"))
+                                                       .startDate(Optional.of(LocalDate.of(2023, 1, 1)))
+                                                       .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
+                                                       .build();
 
-        assertThatThrownBy(() -> partnershipService.savePartnership(partnership, List.of()))
+        assertThatThrownBy(() -> partnershipService.createPartnership(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("At least one partner ID must be provided");
+                .hasMessage("At least one partner ID must be provided.");
     }
 
     @Test
     void updatePartnershipWithFields() {
-        Partnership partnership = Partnership.builder()
-                                             .type("marriage")
-                                             .startDate(LocalDate.of(2023, 1, 2))
-                                             .endDate(LocalDate.of(2023, 12, 31))
-                                             .build();
-        List<UUID> partnerIds = List.of(personInPartnershipId, otherPersonInPartnershipId);
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .type(Optional.of("marriage"))
+                                                       .startDate(Optional.of(LocalDate.of(2023, 1, 2)))
+                                                       .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
+                                                       .partnerIds(List.of(personInPartnershipId, otherPersonInPartnershipId))
+                                                       .build();
 
-        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(partnershipId, partnership, partnerIds).orElseThrow();
+        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(partnershipId, request).orElseThrow();
         PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId.toString()).orElseThrow();
         PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId.toString()).orElseThrow();
 
@@ -115,13 +116,13 @@ public class PartnershipServiceTest {
 
     @Test
     void updatePartnershipWithPartners() {
-        Partnership partnership = Partnership.builder()
-                                             .type("marriage")
-                                             .startDate(LocalDate.of(2023, 1, 1))
-                                             .build();
-        List<UUID> partnerIds = List.of(person1Id, person2Id);
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .type(Optional.of("marriage"))
+                                                       .startDate(Optional.of(LocalDate.of(2023, 1, 1)))
+                                                       .partnerIds(List.of(person1Id, person2Id))
+                                                       .build();
 
-        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, partnership, partnerIds).orElseThrow();
+        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
         PersonProjection person1 = personRepository.findProjectionById(person1Id.toString()).orElseThrow();
         PersonProjection person2 = personRepository.findProjectionById(person2Id.toString()).orElseThrow();
 
@@ -147,22 +148,41 @@ public class PartnershipServiceTest {
 
     @Test
     void updatePartnershipCorrectlyWhenOnlySpecifyingOneField() {
-        Partnership partnership = Partnership.builder()
-                                             .endDate(LocalDate.of(2023, 12, 31))
-                                             .build();
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
+                                                       .build();
 
-        // TODO
+        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
+
+        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId.toString());
+        assertThat(updatedPartnership.getType()).isEqualTo("marriage");
+        assertThat(updatedPartnership.getStartDate()).isEqualTo("2021-01-01");
+        assertThat(updatedPartnership.getEndDate()).isEqualTo("2023-12-31");
+    }
+
+    @Test
+    void updatePartnerWithNulledField() {
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .startDate(Optional.empty())
+                                                       .build();
+
+        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
+
+        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId.toString());
+        assertThat(updatedPartnership.getType()).isEqualTo("marriage");
+        assertThat(updatedPartnership.getStartDate()).isNull();
+        assertThat(updatedPartnership.getEndDate()).isNull();
     }
 
     @Test
     void updatePartnershipDoesNothingWhenPartnershipNotFound() {
-        Partnership partnership = Partnership.builder()
-                                             .type("marriage")
-                                             .startDate(LocalDate.of(2023, 1, 1))
-                                             .endDate(LocalDate.of(2023, 12, 31))
-                                             .build();
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .type(Optional.of("marriage"))
+                                                       .startDate(Optional.of(LocalDate.of(2023, 1, 1)))
+                                                       .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
+                                                       .build();
 
-        Optional<PartnershipProjection> partnershipProjection = partnershipService.updatePartnership(UUID.randomUUID(), partnership, List.of());
+        Optional<PartnershipProjection> partnershipProjection = partnershipService.updatePartnership(UUID.randomUUID(), request);
 
         assertThat(partnershipProjection).isEmpty();
     }
