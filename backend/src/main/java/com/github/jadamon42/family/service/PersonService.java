@@ -2,6 +2,7 @@ package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
@@ -23,37 +24,31 @@ public class PersonService {
         this.partnershipRepository = partnershipRepository;
     }
 
-    public Optional<Person> getPerson(UUID id) {
-        return personRepository.findById(id.toString());
+    public Optional<PersonProjection> getPerson(UUID id) {
+        return personRepository.findProjectionById(id.toString());
     }
 
-    public Person savePerson(Person person) {
-        return personRepository.save(person);
+    public PersonProjection savePerson(Person person) {
+        return personRepository.saveAndReturnProjection(person);
     }
 
-    public Optional<Person> updatePerson(UUID id, Person person) {
-        Person existingPerson = personRepository.findById(id.toString()).orElse(null);
-        if (existingPerson != null) {
-            existingPerson = personRepository.save(
-                    existingPerson.withFirstName(person.getFirstName())
-                                  .withLastName(person.getLastName()));
-        }
-        return Optional.ofNullable(existingPerson);
+    public Optional<PersonProjection> updatePerson(UUID id, Person person) {
+        return personRepository.updateAndReturnProjection(id.toString(), person);
     }
 
     public void deletePerson(UUID id) {
-        Optional<Person> person = personRepository.findById(id.toString());
+        Optional<PersonProjection> person = personRepository.findProjectionById(id.toString());
         if (person.isPresent()) {
             deleteDanglingPartnerships(person.get());
             personRepository.deleteById(id.toString());
         }
     }
 
-    private void deleteDanglingPartnerships(Person person) {
+    private void deleteDanglingPartnerships(PersonProjection person) {
         for (Partnership partnership : person.getPartnerships()) {
-            List<Person> partners = personRepository.findPeopleByPartnershipId(partnership.getId());
-            // theres a more efficient way to do this
-            if (partners.size() == 1) {
+            List<String> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
+            // there's probably a better way to do this
+            if (partners.size() == 1 && partners.get(0).equals(person.getId())) {
                 partnershipRepository.deleteById(partnership.getId());
             }
         }

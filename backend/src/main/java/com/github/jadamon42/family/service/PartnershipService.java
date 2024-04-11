@@ -3,6 +3,7 @@ package com.github.jadamon42.family.service;
 import com.github.jadamon42.family.exception.PersonNotFoundException;
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -46,41 +46,30 @@ public class PartnershipService {
     }
 
     public void deletePartnership(UUID partnershipId) {
-        personRepository.findPeopleByPartnershipId(partnershipId.toString())
-                     .forEach(person -> personRepository.save(
-                             getPersonWithPartnershipRemoved(person, partnershipId)));
+        personRepository.removeAllFromPartnership(partnershipId.toString());
         partnershipRepository.deleteById(partnershipId.toString());
     }
 
     private void removePeopleNoLongerInThePartnership(UUID partnershipId, List<UUID> partnerIds) {
-        List<Person> currentPartners = personRepository.findPeopleByPartnershipId(partnershipId.toString());
-        currentPartners.stream()
-                       .filter(person -> partnershipDoesNotContainPerson(partnerIds, person))
-                       .forEach(person -> personRepository.save(
-                                        getPersonWithPartnershipRemoved(person, partnershipId)));
+        List<String> currentPartnerIds = personRepository.findPersonIdsByPartnershipId(partnershipId.toString());
+        currentPartnerIds.stream()
+                         .filter(personId -> partnershipDoesNotContainPerson(partnerIds, personId))
+                         .forEach(personId -> personRepository.removeFromPartnership(personId, partnershipId.toString()));
     }
 
-    private static boolean partnershipDoesNotContainPerson(List<UUID> partnerIds, Person person) {
-        return !partnerIds.contains(UUID.fromString(person.getId()));
-    }
-
-    private static Person getPersonWithPartnershipRemoved(Person person, UUID partnershipId) {
-        return person.withPartnerships(
-                person.getPartnerships()
-                      .stream()
-                      .filter(p -> !p.getId().equals(partnershipId.toString()))
-                      .collect(Collectors.toList()));
+    private static boolean partnershipDoesNotContainPerson(List<UUID> partnerIds, String personId) {
+        return !partnerIds.contains(UUID.fromString(personId));
     }
 
     private Partnership savePartnershipAndUpdatePeople(Partnership partnership, List<UUID> partnerIds) {
         Partnership partnershipWithId = partnershipRepository.save(partnership);
         for(UUID partnerId : partnerIds) {
-            Optional<Person> optionalPerson = personRepository.findById(partnerId.toString());
+            Optional<PersonProjection> optionalPerson = personRepository.findProjectionById(partnerId.toString());
             if (optionalPerson.isEmpty()) {
                 throw new PersonNotFoundException(partnerId);
             }
-            Person person = optionalPerson.get().withPartnership(partnershipWithId);
-            personRepository.save(person);
+            Person person = Person.fromProjection(optionalPerson.get()).withPartnership(partnershipWithId);
+            personRepository.updateAndReturnProjection(person.getId(), person);
         }
         return partnershipWithId;
     }

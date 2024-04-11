@@ -38,6 +38,15 @@ public class Person {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     List<Person> children;
 
+    public static Person fromProjection(PersonProjection personProjection) {
+        return Person.builder()
+                     .id(personProjection.getId())
+                     .firstName(personProjection.getFirstName())
+                     .lastName(personProjection.getLastName())
+                     .partnerships(personProjection.getPartnerships())
+                     .build();
+    }
+
     public Person withPartnership(Partnership partnership) {
         List<Partnership> updatedPartnerships = partnerships != null ? new ArrayList<>(partnerships) : new ArrayList<>();
 
@@ -70,7 +79,7 @@ public class Person {
 
     public static class PersonBuilder {
         @JsonAnySetter
-        public PersonBuilder unknown(String name, Object value) {
+        public PersonBuilder unknown(String name, Object ignoredValue) {
             throw new IllegalArgumentException("Unknown property: " + name);
         }
     }

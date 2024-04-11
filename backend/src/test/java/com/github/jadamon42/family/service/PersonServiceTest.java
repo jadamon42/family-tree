@@ -1,7 +1,9 @@
 package com.github.jadamon42.family.service;
 
+import com.github.jadamon42.family.model.MockPersonProjection;
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,10 +22,10 @@ class PersonServiceTest {
     @Test
     void getPerson() {
         UUID id = UUID.randomUUID();
-        Person person = new Person(id.toString(), "John", "Doe", null, null);
-        when(personRepository.findById(id.toString())).thenReturn(Optional.of(person));
+        PersonProjection person = new MockPersonProjection(id.toString(), "John", "Doe", null);
+        when(personRepository.findProjectionById(id.toString())).thenReturn(Optional.of(person));
 
-        Optional<Person> result = personService.getPerson(id);
+        Optional<PersonProjection> result = personService.getPerson(id);
 
         assertThat(result).isEqualTo(Optional.of(person));
     }
@@ -31,33 +33,34 @@ class PersonServiceTest {
     @Test
     void savePerson() {
         UUID id = UUID.randomUUID();
-        Person person = new Person(id.toString(), "John", "Doe", null, null);
-        when(personRepository.save(person)).thenReturn(person);
+        Person person = new Person(null, "John", "Doe", null, null);
+        PersonProjection mockPersonProjection = new MockPersonProjection(id.toString(), "John", "Doe", null);
+        when(personRepository.saveAndReturnProjection(person)).thenReturn(mockPersonProjection);
 
-        Person result = personService.savePerson(person);
+        PersonProjection result = personService.savePerson(person);
 
-        assertThat(result).isEqualTo(person);
+        assertThat(result).isEqualTo(mockPersonProjection);
     }
 
     @Test
-    void updatePerson() {
+    void updatePersonReturnsExpectedPersonProjection() {
         UUID id = UUID.randomUUID();
-        Person person = new Person(id.toString(), "John", "Doe", null, null);
-        when(personRepository.findById(id.toString())).thenReturn(Optional.of(person));
-        when(personRepository.save(person)).thenReturn(person);
+        Person person = new Person(null, "John", "Doe", null, null);
+        PersonProjection mockPersonProjection = new MockPersonProjection(id.toString(), "John", "Doe", null);
+        when(personRepository.updateAndReturnProjection(id.toString(), person)).thenReturn(Optional.of(mockPersonProjection));
 
-        Optional<Person> result = personService.updatePerson(id, person);
+        Optional<PersonProjection> result = personService.updatePerson(id, person);
 
-        assertThat(result).isEqualTo(Optional.of(person));
+        assertThat(result).isEqualTo(Optional.of(mockPersonProjection));
     }
 
     @Test
-    void updatePersonWhenPersonNotFound() {
+    void updatePersonDoesNothingWhenPersonNotFound() {
         UUID id = UUID.randomUUID();
         Person person = new Person(id.toString(), "John", "Doe", null, null);
         when(personRepository.findById(id.toString())).thenReturn(Optional.empty());
 
-        Optional<Person> result = personService.updatePerson(id, person);
+        Optional<PersonProjection> result = personService.updatePerson(id, person);
 
         assertThat(result).isEmpty();
     }
@@ -67,9 +70,9 @@ class PersonServiceTest {
         UUID partnershipId = UUID.randomUUID();
         UUID id = UUID.randomUUID();
         Partnership partnership = new Partnership(partnershipId.toString(), "Marriage", null, null);
-        Person person = new Person(id.toString(), "John", "Doe", List.of(partnership), null);
-        when(personRepository.findById(id.toString())).thenReturn(Optional.of(person));
-        when(personRepository.findPeopleByPartnershipId(partnershipId.toString())).thenReturn(List.of(person));
+        PersonProjection person = new MockPersonProjection(id.toString(), "John", "Doe", List.of(partnership));
+        when(personRepository.findProjectionById(id.toString())).thenReturn(Optional.of(person));
+        when(personRepository.findPersonIdsByPartnershipId(partnershipId.toString())).thenReturn(List.of(id.toString()));
 
         personService.deletePerson(id);
 

@@ -1,7 +1,9 @@
 package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jadamon42.family.model.MockPersonProjection;
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.service.PersonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,30 +24,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PersonControllerTest {
     @Test
     void getPersonById() throws Exception {
-           UUID personId = UUID.randomUUID();
-           Person person = new Person(personId.toString(), "John", "Doe", null, null);
+       UUID personId = UUID.randomUUID();
+       PersonProjection personProjection = new MockPersonProjection(personId.toString(), "John", "Doe", null);
+       when(personService.getPerson(personId)).thenReturn(Optional.of(personProjection));
 
-            when(personService.getPerson(personId)).thenReturn(Optional.of(person));
-
-            mockMvc.perform(get("/api/person/" + personId))
-                    .andExpect(status().isOk())
-                    .andExpect(content().json(objectMapper.writeValueAsString(person)));
+       mockMvc.perform(get("/api/person/" + personId))
+              .andExpect(status().isOk())
+              .andExpect(content().json(objectMapper.writeValueAsString(personProjection)));
     }
 
     @Test
     void createPerson() throws Exception {
-            String personJson = "{\"firstName\":\"John\",\"lastName\":\"Doe\"}";
-            UUID personId = UUID.randomUUID();
-            Person person = new Person(null, "John", "Doe", null, null);
-            Person personWithId = person.withId(personId.toString());
+        String personJson = "{\"firstName\":\"John\",\"lastName\":\"Doe\"}";
+        UUID personId = UUID.randomUUID();
+        Person person = new Person(null, "John", "Doe", null, null);
+        PersonProjection personProjection = new MockPersonProjection(personId.toString(), "John", "Doe", null);
+        when(personService.savePerson(person)).thenReturn(personProjection);
 
-            when(personService.savePerson(person)).thenReturn(personWithId);
-
-            mockMvc.perform(post("/api/person")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(personJson))
-                    .andExpect(status().isOk())
-                    .andExpect(content().json(objectMapper.writeValueAsString(personWithId)));
+        mockMvc.perform(post("/api/person")
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(personJson))
+               .andExpect(status().isOk())
+               .andExpect(content().json(objectMapper.writeValueAsString(personProjection)));
     }
 
     @Test
@@ -59,8 +59,8 @@ class PersonControllerTest {
         """;
 
         mockMvc.perform(post("/api/person")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(personJson))
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(personJson))
                .andExpect(status().isBadRequest())
                .andExpect(content().string("Unknown property: id"));
     }
@@ -82,10 +82,10 @@ class PersonControllerTest {
         """;
 
         mockMvc.perform(post("/api/person")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(personJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Unknown property: partnerships"));
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(personJson))
+               .andExpect(status().isBadRequest())
+               .andExpect(content().string("Unknown property: partnerships"));
     }
 
     @Test
@@ -104,10 +104,10 @@ class PersonControllerTest {
         """;
 
         mockMvc.perform(post("/api/person")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(personJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Unknown property: children"));
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(personJson))
+               .andExpect(status().isBadRequest())
+               .andExpect(content().string("Unknown property: children"));
     }
 
     @Test
@@ -120,15 +120,15 @@ class PersonControllerTest {
         """;
         UUID personId = UUID.randomUUID();
         Person person = new Person(null, "John", "Doe", null, null);
-        Person personWithId = person.withId(personId.toString());
+        PersonProjection mockPersonProjection = new MockPersonProjection(personId.toString(), "John", "Doe", null);
 
-        when(personService.updatePerson(personId, person)).thenReturn(Optional.of(personWithId));
+        when(personService.updatePerson(personId, person)).thenReturn(Optional.of(mockPersonProjection));
 
         mockMvc.perform(patch("/api/person/" + personId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(personJson))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(personWithId)));
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(personJson))
+               .andExpect(status().isOk())
+               .andExpect(content().json(objectMapper.writeValueAsString(mockPersonProjection)));
     }
 
     @Test
@@ -145,15 +145,15 @@ class PersonControllerTest {
         when(personService.updatePerson(personId, person)).thenReturn(Optional.empty());
 
         mockMvc.perform(patch("/api/person/" + personId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(personJson))
-                .andExpect(status().isNotFound());
+               .contentType(MediaType.APPLICATION_JSON)
+               .content(personJson))
+               .andExpect(status().isNotFound());
     }
 
     @Test
     void deletePerson() throws Exception {
         mockMvc.perform(delete("/api/person/" + UUID.randomUUID()))
-                .andExpect(status().isNoContent());
+               .andExpect(status().isNoContent());
     }
 
     @Autowired

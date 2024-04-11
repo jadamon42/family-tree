@@ -1,8 +1,10 @@
 package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.exception.PersonNotFoundException;
+import com.github.jadamon42.family.model.MockPersonProjection;
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,20 +37,22 @@ class PartnershipServiceTest {
     void savePartnershipWithPersonIds() {
         UUID personId1 = UUID.randomUUID();
         UUID personId2 = UUID.randomUUID();
+        PersonProjection person1Projection = new MockPersonProjection(personId1.toString(), "John", "Doe", null);
+        PersonProjection person2Projection = new MockPersonProjection(personId2.toString(), "Jane", "Doe", null);
         Person person1 = new Person(personId1.toString(), "John", "Doe", null, null);
         Person person2 = new Person(personId2.toString(), "Jane", "Doe", null, null);
         Partnership partnership = new Partnership(null, "Marriage", null, null);
         Partnership expectedPartnership = new Partnership("1", "Marriage", null, null);
 
-        when(personRepository.findById(personId1.toString())).thenReturn(Optional.of(person1));
-        when(personRepository.findById(personId2.toString())).thenReturn(Optional.of(person2));
+        when(personRepository.findProjectionById(personId1.toString())).thenReturn(Optional.of(person1Projection));
+        when(personRepository.findProjectionById(personId2.toString())).thenReturn(Optional.of(person2Projection));
         when(partnershipRepository.save(partnership)).thenReturn(expectedPartnership);
 
         partnershipService.savePartnership(partnership, List.of(personId1, personId2));
 
         verify(partnershipRepository).save(partnership);
-        verify(personRepository).save(person1.withPartnership(expectedPartnership));
-        verify(personRepository).save(person2.withPartnership(expectedPartnership));
+        verify(personRepository).updateAndReturnProjection(personId1.toString(), person1.withPartnership(expectedPartnership));
+        verify(personRepository).updateAndReturnProjection(personId2.toString(), person2.withPartnership(expectedPartnership));
     }
 
     @Test
@@ -81,23 +85,25 @@ class PartnershipServiceTest {
         UUID janeId = UUID.randomUUID();
         UUID janetId = UUID.randomUUID();
         Partnership partnership = new Partnership(partnershipId.toString(), "Marriage", null, null);
+        PersonProjection johnProjection = new MockPersonProjection(johnId.toString(), "John", "Doe", List.of(partnership));
+        PersonProjection janeProjection = new MockPersonProjection(janeId.toString(), "Jane", "Doe", List.of(partnership));
+        PersonProjection janetProjection = new MockPersonProjection(janetId.toString(), "Janet", "Doe", null);
         Person john = new Person(johnId.toString(), "John", "Doe", List.of(partnership), null);
-        Person jane = new Person(janeId.toString(), "Jane", "Doe", List.of(partnership), null);
         Person janet = new Person(janetId.toString(), "Janet", "Doe", null, null);
 
-        when(personRepository.findById(johnId.toString())).thenReturn(Optional.of(john));
-        when(personRepository.findById(janeId.toString())).thenReturn(Optional.of(jane));
-        when(personRepository.findById(janetId.toString())).thenReturn(Optional.of(janet));
-        when(personRepository.findPeopleByPartnershipId(partnershipId.toString())).thenReturn(List.of(john, jane));
+        when(personRepository.findProjectionById(johnId.toString())).thenReturn(Optional.of(johnProjection));
+        when(personRepository.findProjectionById(janeId.toString())).thenReturn(Optional.of(janeProjection));
+        when(personRepository.findProjectionById(janetId.toString())).thenReturn(Optional.of(janetProjection));
+        when(personRepository.findPersonIdsByPartnershipId(partnershipId.toString())).thenReturn(List.of(johnId.toString(), janeId.toString()));
         when(partnershipRepository.findById(partnership.getId())).thenReturn(Optional.of(partnership));
         when(partnershipRepository.save(partnership)).thenReturn(partnership);
 
         partnershipService.updatePartnership(partnershipId, partnership, List.of(johnId, janetId));
 
         verify(partnershipRepository).save(partnership);
-        verify(personRepository).save(john);
-        verify(personRepository).save(jane.withPartnerships(List.of()));
-        verify(personRepository).save(janet.withPartnerships(List.of(partnership)));
+        verify(personRepository).removeFromPartnership(janeId.toString(), partnershipId.toString());
+        verify(personRepository).updateAndReturnProjection(johnId.toString(), john);
+        verify(personRepository).updateAndReturnProjection(janetId.toString(), janet.withPartnership(partnership));
     }
 
     @Test
@@ -117,16 +123,12 @@ class PartnershipServiceTest {
         UUID partnershipId = UUID.randomUUID();
         UUID johnId = UUID.randomUUID();
         UUID janeId = UUID.randomUUID();
-        Partnership partnership = new Partnership(partnershipId.toString(), "Marriage", null, null);
-        Person john = new Person(johnId.toString(), "John", "Doe", List.of(partnership), null);
-        Person jane = new Person(janeId.toString(), "Jane", "Doe", List.of(partnership), null);
 
-        when(personRepository.findPeopleByPartnershipId(partnershipId.toString())).thenReturn(List.of(john, jane));
+        when(personRepository.findPersonIdsByPartnershipId(partnershipId.toString())).thenReturn(List.of(johnId.toString(), janeId.toString()));
 
         partnershipService.deletePartnership(partnershipId);
 
-        verify(personRepository).save(john.withPartnerships(List.of()));
-        verify(personRepository).save(jane.withPartnerships(List.of()));
+        verify(personRepository).removeAllFromPartnership(partnershipId.toString());
         verify(partnershipRepository).deleteById(partnershipId.toString());
     }
 
