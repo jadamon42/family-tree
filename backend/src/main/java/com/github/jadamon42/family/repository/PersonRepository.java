@@ -10,8 +10,9 @@ import java.util.Optional;
 
 public interface PersonRepository extends Neo4jRepository<Person, String> {
     @Query("""
-        MATCH (p:Person)-[r]->(n)
-        WHERE NOT ()-[:BEGAT]->(p)
+        MATCH (p:Person)
+        WHERE NOT (:Partnership)-[:BEGAT]->(p)
+        OPTIONAL MATCH (p)-[r]->(n)
         RETURN p, collect(r), collect(n)
     """)
     List<PersonProjection> findRootPeople();

@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,7 +30,39 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PersonServiceTest {
     @Test
     void getRootPersonProjections() {
+        List<PersonProjection> people = personService.getRootPersonProjections();
 
+        assertThat(people).hasSize(5);
+        assertThat(people.get(0)).satisfies(person -> {
+            assertThat(person.getId()).isEqualTo(personInPartnershipId.toString());
+            assertThat(person.getFirstName()).isEqualTo("Jonathan");
+            assertThat(person.getLastName()).isEqualTo("Damon");
+        });
+        assertThat(people.get(1)).satisfies(person -> {
+            assertThat(person.getId()).isEqualTo(otherPersonInPartnershipId.toString());
+            assertThat(person.getFirstName()).isEqualTo("Hannah");
+            assertThat(person.getLastName()).isEqualTo("Canady");
+        });
+        assertThat(people.get(2)).satisfies(person -> {
+            assertThat(person.getId()).isEqualTo(personId.toString());
+            assertThat(person.getFirstName()).isEqualTo("Stray");
+            assertThat(person.getLastName()).isEqualTo("Person");
+        });
+        assertThat(people.get(3)).satisfies(person -> {
+            assertThat(person.getId()).isEqualTo(personInDanglingPartnershipId.toString());
+            assertThat(person.getFirstName()).isEqualTo("Stray");
+            assertThat(person.getLastName()).isEqualTo("Person");
+        });
+        assertThat(people.get(4)).satisfies(person -> {
+            assertThat(person.getId()).isNotNull();
+            assertThat(person.getFirstName()).isEqualTo("Spouse");
+            assertThat(person.getLastName()).isEqualTo("Of Child One");
+            assertThat(person.getPartnerships().get(0)).satisfies(partnership -> {
+                assertThat(partnership.getType()).isEqualTo("marriage");
+                assertThat(partnership.getStartDate()).isEqualTo("2021-01-01");
+                assertThat(partnership.getEndDate()).isEqualTo("2021-12-31");
+            });
+        });
     }
 
     @Test

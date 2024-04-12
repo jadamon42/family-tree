@@ -24,6 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PersonController.class)
 class PersonControllerTest {
     @Test
+    void getPeopleRootsOnly() throws Exception {
+        mockMvc.perform(get("/api/person?rootsOnly=true"))
+               .andExpect(status().isOk())
+               .andExpect(content().json("[]"));
+    }
+
+    @Test
     void getPersonById() throws Exception {
        UUID personId = UUID.randomUUID();
        Person person = Person.builder()
