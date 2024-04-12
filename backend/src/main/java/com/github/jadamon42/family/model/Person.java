@@ -10,6 +10,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.github.jadamon42.family.service.PatchHelper.set;
@@ -24,6 +25,9 @@ public class Person {
     String id;
     String firstName;
     String lastName;
+    String sex;
+    LocalDate birthDate;
+    LocalDate deathDate;
 
     @Relationship(value = "PARTNER_IN", direction = Relationship.Direction.OUTGOING)
     List<Partnership> partnerships;
@@ -32,6 +36,9 @@ public class Person {
         Person.PersonBuilder builder = Person.builder();
         set(builder, PersonBuilder::firstName, request.getFirstName());
         set(builder, PersonBuilder::lastName, request.getLastName());
+        set(builder, PersonBuilder::sex, request.getSex());
+        set(builder, PersonBuilder::birthDate, request.getBirthDate());
+        set(builder, PersonBuilder::deathDate, request.getDeathDate());
         return builder.build();
     }
 }

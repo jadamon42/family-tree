@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Value
@@ -15,6 +16,9 @@ import java.util.Optional;
 public class PersonRequest {
     Optional<String> firstName;
     Optional<String> lastName;
+    Optional<String> sex;
+    Optional<LocalDate> birthDate;
+    Optional<LocalDate> deathDate;
 
     public static class PersonRequestBuilder {
         @JsonAnySetter

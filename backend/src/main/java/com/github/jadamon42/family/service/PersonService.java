@@ -71,6 +71,9 @@ public class PersonService {
         Person.PersonBuilder builder = Person.builder();
         patch(builder, Person.PersonBuilder::firstName, request.getFirstName(), existingPerson.getFirstName());
         patch(builder, Person.PersonBuilder::lastName, request.getLastName(), existingPerson.getLastName());
+        patch(builder, Person.PersonBuilder::sex, request.getSex(), existingPerson.getSex());
+        patch(builder, Person.PersonBuilder::birthDate, request.getBirthDate(), existingPerson.getBirthDate());
+        patch(builder, Person.PersonBuilder::deathDate, request.getDeathDate(), existingPerson.getDeathDate());
         return builder.build();
     }
 }
