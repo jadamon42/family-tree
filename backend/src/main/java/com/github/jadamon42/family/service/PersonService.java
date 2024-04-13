@@ -1,15 +1,13 @@
 package com.github.jadamon42.family.service;
 
-import com.github.jadamon42.family.model.PartnershipProjection;
-import com.github.jadamon42.family.model.Person;
-import com.github.jadamon42.family.model.PersonProjection;
-import com.github.jadamon42.family.model.PersonRequest;
+import com.github.jadamon42.family.model.*;
+import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,14 +18,17 @@ import static com.github.jadamon42.family.service.PatchHelper.patch;
 public class PersonService {
     private final PersonRepository personRepository;
     private final PartnershipRepository partnershipRepository;
+    private final CustomCypherQueryExecutor customCypherQueryExecutor;
 
-
-    public PersonService(PersonRepository personRepository, PartnershipRepository partnershipRepository) {
+    public PersonService(PersonRepository personRepository,
+                         PartnershipRepository partnershipRepository,
+                         CustomCypherQueryExecutor customCypherQueryExecutor) {
         this.personRepository = personRepository;
         this.partnershipRepository = partnershipRepository;
+        this.customCypherQueryExecutor = customCypherQueryExecutor;
     }
 
-    public List<PersonProjection> getRootPersonProjections() {
+    public Collection<PersonProjection> getRootPersonProjections() {
         return personRepository.findRootPeople();
     }
 
@@ -57,11 +58,15 @@ public class PersonService {
         }
     }
 
+    public Optional<GenealogicalLink> getGenealogicalLink(UUID person1Id, UUID person2Id) {
+        return customCypherQueryExecutor.findLatestGenealogicalLink(person1Id.toString(), person2Id.toString());
+    }
+
     private void deleteDanglingPartnerships(PersonProjection person) {
         for (PartnershipProjection partnership : person.getPartnerships()) {
-            List<String> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
+            Collection<String> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
             // there's probably a better way to do this
-            if (partners.size() == 1 && partners.get(0).equals(person.getId())) {
+            if (partners.size() == 1 && partners.stream().anyMatch(id -> id.equals(person.getId()))) {
                 partnershipRepository.deleteById(partnership.getId());
             }
         }

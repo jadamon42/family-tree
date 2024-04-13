@@ -10,6 +10,7 @@ import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,7 +61,7 @@ public class PartnershipService {
     }
 
     private void removePeopleNoLongerInThePartnership(UUID partnershipId, List<UUID> partnerIds) {
-        List<String> currentPartnerIds = personRepository.findPersonIdsByPartnershipId(partnershipId.toString());
+        Collection<String> currentPartnerIds = personRepository.findPersonIdsByPartnershipId(partnershipId.toString());
         currentPartnerIds.stream()
                          .filter(personId -> partnershipDoesNotContainPerson(partnerIds, personId))
                          .forEach(personId -> personRepository.removeFromPartnership(personId, partnershipId.toString()));
