@@ -59,6 +59,9 @@ public class PersonService {
     }
 
     public Optional<GenealogicalLink> getGenealogicalLink(UUID person1Id, UUID person2Id) {
+        if (person1Id.equals(person2Id)) {
+            return Optional.of(GenealogicalLink.selfLink(person1Id.toString()));
+        }
         return customCypherQueryExecutor.findLatestGenealogicalLink(person1Id.toString(), person2Id.toString());
     }
 

@@ -8,4 +8,5 @@ import lombok.Value;
 public class Relation {
     int numberOfGenerationsToCommonAncestor;
     int numberOfGenerationsToOtherPerson;
+    boolean isRelatedByBlood;
 }
