@@ -1,4 +1,4 @@
-package com.github.jadamon42.family.service;
+package com.github.jadamon42.family.util;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;

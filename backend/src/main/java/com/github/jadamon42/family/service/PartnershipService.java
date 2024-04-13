@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.github.jadamon42.family.service.PatchHelper.patch;
+import static com.github.jadamon42.family.util.PatchHelper.patch;
 
 @Service
 @Transactional

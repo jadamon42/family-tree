@@ -1,5 +1,6 @@
 package com.github.jadamon42.family.model;
 
+import com.github.jadamon42.family.util.UUIDStringConverter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -15,7 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import static com.github.jadamon42.family.service.PatchHelper.set;
+import static com.github.jadamon42.family.util.PatchHelper.set;
 
 @Value
 @With

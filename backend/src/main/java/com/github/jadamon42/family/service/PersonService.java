@@ -1,7 +1,9 @@
 package com.github.jadamon42.family.service;
 
-import com.github.jadamon42.family.model.*;
-import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
+import com.github.jadamon42.family.model.PartnershipProjection;
+import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
@@ -11,7 +13,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.github.jadamon42.family.service.PatchHelper.patch;
+import static com.github.jadamon42.family.util.PatchHelper.patch;
 
 @Service
 @Transactional
