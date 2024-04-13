@@ -54,16 +54,16 @@ public class GenealogicalLinkPersonServiceTest {
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
     }
 
-//    @Test
-//    void getGenealogicalLinkOfSpouse() {
-//        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(spouseId)).orElseThrow();
-//        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-//
-//        assertThat(link.getCommonAncestorIds()).isNull();
-//        assertThat(link.getCommonAncestorsPartnershipId()).isEqualTo(spousePartnershipId);
-//        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
-//        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-//    }
+    @Test
+    void getGenealogicalLinkOfSpouse() {
+        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(spouseId)).orElseThrow();
+        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
+
+        assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
+        assertThat(link.getCommonAncestorsPartnershipId()).isEqualTo(parentPartnershipId);
+        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
+        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
+    }
 
     @Test
     void getGenealogicalLinkOfChild() {
@@ -395,16 +395,38 @@ public class GenealogicalLinkPersonServiceTest {
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
     }
 
-//    @Test
-//    void getGenealogicalLinkOfStepParent() {
-//        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(stepParentId)).orElseThrow();
-//        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-//
-//        assertThat(link.getCommonAncestorIds()).isNull();
-//        assertThat(link.getCommonAncestorsPartnershipId()).isNull();
-//        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-//        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-//    }
+    @Test
+    void getGenealogicalLinkOfStepParent() {
+        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(stepParentId)).orElseThrow();
+        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
+
+        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
+        assertThat(link.getCommonAncestorsPartnershipId()).isEqualTo(grandparentPartnershipId);
+        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
+        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
+    }
+
+    @Test
+    void stepParentToTheirParentInLaw() {
+        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(stepParentId), UUID.fromString(grandparentId)).orElseThrow();
+        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(stepParentId));
+
+        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
+        assertThat(link.getCommonAncestorsPartnershipId()).isEqualTo(grandparentPartnershipId);
+        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
+        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
+    }
+
+    @Test
+    void parentToTheirParent() {
+        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(parentId), UUID.fromString(grandparentId)).orElseThrow();
+        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(parentId));
+
+        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
+        assertThat(link.getCommonAncestorsPartnershipId()).isNull();
+        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
+        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
+    }
 
     @Test
     void getGenealogicalLinkOfHalfSiblings() {
@@ -429,8 +451,6 @@ public class GenealogicalLinkPersonServiceTest {
     private static Neo4j embeddedDatabaseServer;
     private static Driver neo4jDriver;
     private final PersonService personService;
-//    private final PartnershipRepository partnershipRepository;
-//    private final CustomCypherQueryExecutor executor;
     
     private final String personId = "00000000-0000-0000-0000-000000000000";
     private final String spouseId = "00000000-0000-0000-0000-000000000001";
@@ -503,9 +523,7 @@ public class GenealogicalLinkPersonServiceTest {
     GenealogicalLinkPersonServiceTest(PersonRepository personRepository,
                                       PartnershipRepository partnershipRepository,
                                       CustomCypherQueryExecutor customCypherQueryExecutor) {
-//        this.partnershipRepository = partnershipRepository;
         this.personService = new PersonService(personRepository, partnershipRepository, customCypherQueryExecutor);
-//        this.executor = customCypherQueryExecutor;
     }
 
     @BeforeAll

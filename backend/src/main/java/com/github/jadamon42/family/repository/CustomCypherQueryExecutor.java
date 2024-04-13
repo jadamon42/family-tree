@@ -17,8 +17,8 @@ public class CustomCypherQueryExecutor {
     public Optional<GenealogicalLink> findLatestGenealogicalLink(String person1Id, String person2Id) {
         return neo4jClient.query(("""
         MATCH (commonAncestor:Person), (p1:Person {id: $person1Id}), (p2:Person {id: $person2Id})
-            WHERE (((commonAncestor)-[*]->(p1) OR commonAncestor = p1)
-              AND ((commonAncestor)-[*]->(p2) OR commonAncestor = p2))
+            WHERE ((commonAncestor)-[*]->(p1) OR (commonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1) OR commonAncestor = p1)
+              AND ((commonAncestor)-[*]->(p2) OR (commonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2) OR commonAncestor = p2)
         WITH p1, p2, commonAncestor
            , CASE
                 WHEN commonAncestor = p1 THEN 0
@@ -32,14 +32,16 @@ public class CustomCypherQueryExecutor {
         LIMIT 1
         OPTIONAL MATCH (commonAncestorsPartnership:Partnership)
             WHERE (commonAncestor)-[:PARTNER_IN]->(commonAncestorsPartnership)
-              AND (commonAncestorsPartnership)-[*]->(p1)
-              AND (commonAncestorsPartnership)-[*]->(p2)
+              AND ((commonAncestorsPartnership)-[*]->(p1) OR (commonAncestorsPartnership)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1) OR commonAncestor = p1)
+              AND ((commonAncestorsPartnership)-[*]->(p2) OR (commonAncestorsPartnership)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2) OR commonAncestor = p2)
+              AND 
         OPTIONAL MATCH (otherCommonAncestor:Person)
             WHERE (otherCommonAncestor)-[:PARTNER_IN]->(commonAncestorsPartnership)
               AND otherCommonAncestor <> commonAncestor
         RETURN p1.id AS person1Id
              , p2.id AS person2Id
              , commonAncestorsPartnership.id AS commonAncestorsPartnershipId
+             , false AS relatedThroughMarriage
              , commonAncestor.id AS commonAncestorId
              , otherCommonAncestor.id AS otherCommonAncestorId
              , numberOfGenerationsToCommonAncestorForP1

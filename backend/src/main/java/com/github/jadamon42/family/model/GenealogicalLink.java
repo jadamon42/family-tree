@@ -19,6 +19,7 @@ public class GenealogicalLink {
     String person2Id;
     String commonAncestorsPartnershipId;
     Collection<String> commonAncestorIds;
+    Boolean relatedThroughMarriage;
     Relation relationFromPerspectiveOfPerson1;
     Relation relationFromPerspectiveOfPerson2;
 
@@ -37,6 +38,7 @@ public class GenealogicalLink {
             .person1Id(getString(record.get("person1Id")))
             .person2Id(getString(record.get("person2Id")))
             .commonAncestorsPartnershipId(getString(record.get("commonAncestorsPartnershipId")))
+            .relatedThroughMarriage(record.get("relatedThroughMarriage").asBoolean())
             .commonAncestorIds(Stream.of(
                     getString(record.get("commonAncestorId")),
                     getString(record.get("otherCommonAncestorId")))
