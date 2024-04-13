@@ -5,12 +5,13 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Value
 @AllArgsConstructor
 @Builder
 public class MockPartnershipProjection implements PartnershipProjection {
-    String id;
+    UUID id;
     String type;
     LocalDate startDate;
     LocalDate endDate;

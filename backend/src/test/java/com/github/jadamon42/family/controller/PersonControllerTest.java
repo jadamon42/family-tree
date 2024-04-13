@@ -34,7 +34,7 @@ class PersonControllerTest {
     void getPersonById() throws Exception {
        UUID personId = UUID.randomUUID();
        Person person = Person.builder()
-                             .id(personId.toString())
+                             .id(personId)
                              .firstName("John")
                              .lastName("Doe")
                              .build();
@@ -54,7 +54,7 @@ class PersonControllerTest {
                                              .lastName(Optional.of("Doe"))
                                              .build();
         PersonProjection savedPerson = MockPersonProjection.builder()
-                                                           .id(personId.toString())
+                                                           .id(personId)
                                                            .firstName("John")
                                                            .lastName("Doe")
                                                            .build();
@@ -121,7 +121,7 @@ class PersonControllerTest {
                                              .lastName(Optional.of("Doe"))
                                              .build();
         PersonProjection mockPersonProjection = MockPersonProjection.builder()
-                                                                    .id(personId.toString())
+                                                                    .id(personId)
                                                                     .firstName("John")
                                                                     .lastName("Doe")
                                                                     .build();

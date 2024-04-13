@@ -18,14 +18,11 @@ import static com.github.jadamon42.family.service.PatchHelper.patch;
 public class PersonService {
     private final PersonRepository personRepository;
     private final PartnershipRepository partnershipRepository;
-    private final CustomCypherQueryExecutor customCypherQueryExecutor;
 
     public PersonService(PersonRepository personRepository,
-                         PartnershipRepository partnershipRepository,
-                         CustomCypherQueryExecutor customCypherQueryExecutor) {
+                         PartnershipRepository partnershipRepository) {
         this.personRepository = personRepository;
         this.partnershipRepository = partnershipRepository;
-        this.customCypherQueryExecutor = customCypherQueryExecutor;
     }
 
     public Collection<PersonProjection> getRootPersonProjections() {
@@ -33,7 +30,7 @@ public class PersonService {
     }
 
     public Optional<Person> getPerson(UUID id) {
-        return personRepository.findById(id.toString());
+        return personRepository.findById(id);
     }
 
     public PersonProjection createPerson(PersonRequest request) {
@@ -41,33 +38,26 @@ public class PersonService {
     }
 
     public Optional<PersonProjection> updatePerson(UUID id, PersonRequest request) {
-        PersonProjection existingPerson = personRepository.findProjectionById(id.toString()).orElse(null);
+        PersonProjection existingPerson = personRepository.findProjectionById(id).orElse(null);
 
         if (existingPerson != null) {
             Person person = getPatchedPerson(existingPerson, request);
-            existingPerson = personRepository.updateAndReturnProjection(id.toString(), person);
+            existingPerson = personRepository.updateAndReturnProjection(id, person);
         }
         return Optional.ofNullable(existingPerson);
     }
 
     public void deletePerson(UUID id) {
-        Optional<PersonProjection> person = personRepository.findProjectionById(id.toString());
+        Optional<PersonProjection> person = personRepository.findProjectionById(id);
         if (person.isPresent()) {
             deleteDanglingPartnerships(person.get());
-            personRepository.deleteById(id.toString());
+            personRepository.deleteById(id);
         }
-    }
-
-    public Optional<GenealogicalLink> getGenealogicalLink(UUID person1Id, UUID person2Id) {
-        if (person1Id.equals(person2Id)) {
-            return Optional.of(GenealogicalLink.selfLink(person1Id.toString()));
-        }
-        return customCypherQueryExecutor.findLatestGenealogicalLink(person1Id.toString(), person2Id.toString());
     }
 
     private void deleteDanglingPartnerships(PersonProjection person) {
         for (PartnershipProjection partnership : person.getPartnerships()) {
-            Collection<String> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
+            Collection<UUID> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
             // there's probably a better way to do this
             if (partners.size() == 1 && partners.stream().anyMatch(id -> id.equals(person.getId()))) {
                 partnershipRepository.deleteById(partnership.getId());

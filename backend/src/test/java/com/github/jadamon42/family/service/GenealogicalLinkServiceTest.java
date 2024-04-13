@@ -3,8 +3,6 @@ package com.github.jadamon42.family.service;
 import com.github.jadamon42.family.model.GenealogicalLink;
 import com.github.jadamon42.family.model.Relation;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
-import com.github.jadamon42.family.repository.PartnershipRepository;
-import com.github.jadamon42.family.repository.PersonRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,24 +26,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataNeo4jTest
 @Import(CustomCypherQueryExecutor.class)
-public class GenealogicalLinkPersonServiceTest {
+public class GenealogicalLinkServiceTest {
     @Test
     void getGenealogicalLinkOfNonExistentPerson() {
-        Optional<GenealogicalLink> link = personService.getGenealogicalLink(UUID.randomUUID(), UUID.fromString(personId));
+        Optional<GenealogicalLink> link = genealogicalLinkService.getGenealogicalLink(UUID.randomUUID(), UUID.fromString(personId));
 
         assertThat(link).isEmpty();
     }
 
     @Test
     void getGenealogicalLinkOfUnrelatedPerson() {
-        Optional<GenealogicalLink> link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(unrelatedPersonId));
+        Optional<GenealogicalLink> link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(unrelatedPersonId));
 
         assertThat(link).isEmpty();
     }
     
     @Test
     void getGenealogicalLinkOfSelf() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(personId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(personId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(personId);
@@ -56,386 +54,398 @@ public class GenealogicalLinkPersonServiceTest {
 
     @Test
     void getGenealogicalLinkOfSpouse() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(spouseId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(spouseId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isRelatedByBlood()).isFalse();
+        assertThat(relation.isBloodRelation()).isFalse();
     }
 
     @Test
     void getGenealogicalLinkOfChild() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(childId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(childId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(personId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGrandchild() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(grandchildId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(grandchildId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(personId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandchild() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandchildId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandchildId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(personId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfParent() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(parentId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(parentId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(parentId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfSibling() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(siblingId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(siblingId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfNieceOrNephew() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(nieceOrNephewId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(nieceOrNephewId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatNieceOrNephew() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatNieceOrNephewId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatNieceOrNephewId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandNieceOrNephew() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandNieceOrNephewId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandNieceOrNephewId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGrandparent() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(grandparentId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(grandparentId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfAuntOrUncle() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(auntOrUncleId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(auntOrUncleId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousin() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinOnceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinOnceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinOnceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinTwiceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinTwiceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinTwiceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinThriceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinThriceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinThriceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandparent() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandparentId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandparentId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatAuntOrUncle() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatAuntOrUncleId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatAuntOrUncleId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinOnceRemovedThroughGreatGrandparents() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinOnceRemovedThroughGreatGrandparentsId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinOnceRemovedThroughGreatGrandparentsId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousin() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinOnceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinOnceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinOnceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinTwiceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinTwiceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinTwiceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinThriceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinThriceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinThriceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatGreatGrandparent() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGreatGrandparentId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGreatGrandparentId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(4);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandAuntOrUncle() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandAuntOrUncleId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandAuntOrUncleId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinTwiceRemovedThroughGreatGreatGrandparents() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinTwiceRemovedThroughGreatGreatGrandparentsId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinTwiceRemovedThroughGreatGreatGrandparentsId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinOnceRemovedThroughGreatGreatGrandparents() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinOnceRemovedThroughGreatGreatGrandparentsId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinOnceRemovedThroughGreatGreatGrandparentsId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousin() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinOnceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinOnceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinOnceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinTwiceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinTwiceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinTwiceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinThriceRemoved() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinThriceRemovedId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinThriceRemovedId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfOtherParent() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(otherParentId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(otherParentId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(otherParentId);
         assertThat(link.getSharedAncestralPartnershipId()).isNull();
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isRelatedByBlood()).isTrue();
+        assertThat(relation.isBloodRelation()).isTrue();
     }
 
     @Test
     void getGenealogicalLinkOfStepParent() {
-        GenealogicalLink link = personService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(stepParentId)).orElseThrow();
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(stepParentId)).orElseThrow();
         Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
 
         assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
         assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
         assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
         assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isRelatedByBlood()).isFalse();
+        assertThat(relation.isBloodRelation()).isFalse();
+    }
+
+    @Test
+    void getGenealogicalLinkOfSpouseToStepParent() {
+        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(spouseId), UUID.fromString(stepParentId)).orElseThrow();
+        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(spouseId));
+
+        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
+        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
+        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
+        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
+        assertThat(relation.isBloodRelation()).isFalse();
     }
 
     @Test
@@ -460,9 +470,7 @@ public class GenealogicalLinkPersonServiceTest {
 
     private static Neo4j embeddedDatabaseServer;
     private static Driver neo4jDriver;
-    private final PersonService personService;
-//    private final PartnershipRepository partnershipRepository;
-//    private final CustomCypherQueryExecutor executor;
+    private final GenealogicalLinkService genealogicalLinkService;
     
     private final String personId = "00000000-0000-0000-0000-000000000000";
     private final String spouseId = "00000000-0000-0000-0000-000000000001";
@@ -532,12 +540,8 @@ public class GenealogicalLinkPersonServiceTest {
     private final String parentSecondMarriagePartnershipId = "00000031-0000-0000-0000-000000000000";
 
     @Autowired
-    GenealogicalLinkPersonServiceTest(PersonRepository personRepository,
-                                      PartnershipRepository partnershipRepository,
-                                      CustomCypherQueryExecutor customCypherQueryExecutor) {
-//        this.partnershipRepository = partnershipRepository;
-        this.personService = new PersonService(personRepository, partnershipRepository, customCypherQueryExecutor);
-//        this.executor = customCypherQueryExecutor;
+    GenealogicalLinkServiceTest(CustomCypherQueryExecutor customCypherQueryExecutor) {
+        this.genealogicalLinkService = new GenealogicalLinkService(customCypherQueryExecutor);
     }
 
     @BeforeAll

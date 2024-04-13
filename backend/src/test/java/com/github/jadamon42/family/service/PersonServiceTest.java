@@ -36,19 +36,19 @@ public class PersonServiceTest {
         Collection<PersonProjection> people = personService.getRootPersonProjections();
 
         PersonProjection personInPartnership = people.stream()
-                                                     .filter(p -> p.getId().equals(personInPartnershipId.toString()))
+                                                     .filter(p -> p.getId().equals(personInPartnershipId))
                                                      .findFirst()
                                                      .orElseThrow();
         PersonProjection otherPersonInPartnership = people.stream()
-                                                          .filter(p -> p.getId().equals(otherPersonInPartnershipId.toString()))
+                                                          .filter(p -> p.getId().equals(otherPersonInPartnershipId))
                                                           .findFirst()
                                                           .orElseThrow();
         PersonProjection person = people.stream()
-                                        .filter(p -> p.getId().equals(personId.toString()))
+                                        .filter(p -> p.getId().equals(personId))
                                         .findFirst()
                                         .orElseThrow();
         PersonProjection personInDanglingPartnership = people.stream()
-                                                             .filter(p -> p.getId().equals(personInDanglingPartnershipId.toString()))
+                                                             .filter(p -> p.getId().equals(personInDanglingPartnershipId))
                                                              .findFirst()
                                                              .orElseThrow();
         PersonProjection spouseOfChild1 = people.stream()
@@ -121,7 +121,7 @@ public class PersonServiceTest {
 
         PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
 
-        assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId.toString());
+        assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId);
         assertThat(updatedPerson.getFirstName()).isEqualTo("John");
         assertThat(updatedPerson.getLastName()).isEqualTo("Doe");
         assertThat(updatedPerson.getPartnerships()).satisfies(partnerships -> {
@@ -152,7 +152,7 @@ public class PersonServiceTest {
 
         PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
 
-        assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId.toString());
+        assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId);
         assertThat(updatedPerson.getFirstName()).isEqualTo("Jon");
         assertThat(updatedPerson.getLastName()).isEqualTo("Damon");
         assertThat(updatedPerson.getPartnerships()).satisfies(partnerships -> {
@@ -175,7 +175,7 @@ public class PersonServiceTest {
         personService.deletePerson(personInDanglingPartnershipId);
 
         assertThat(personService.getPerson(personInDanglingPartnershipId)).isEmpty();
-        assertThat(partnershipRepository.findById(danglingPartnershipId.toString())).isEmpty();
+        assertThat(partnershipRepository.findById(danglingPartnershipId)).isEmpty();
     }
 
     private static Neo4j embeddedDatabaseServer;
@@ -194,10 +194,9 @@ public class PersonServiceTest {
 
     @Autowired
     PersonServiceTest(PersonRepository personRepository,
-                      PartnershipRepository partnershipRepository,
-                      CustomCypherQueryExecutor customCypherQueryExecutor) {
+                      PartnershipRepository partnershipRepository) {
         this.partnershipRepository = partnershipRepository;
-        this.personService = new PersonService(personRepository, partnershipRepository, customCypherQueryExecutor);
+        this.personService = new PersonService(personRepository, partnershipRepository);
     }
 
     @BeforeAll

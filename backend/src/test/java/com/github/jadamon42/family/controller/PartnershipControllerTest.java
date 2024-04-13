@@ -31,7 +31,7 @@ class PartnershipControllerTest {
     void getPartnershipById() throws Exception {
         UUID partnershipId = UUID.randomUUID();
         Partnership partnership = Partnership.builder()
-                                             .id(partnershipId.toString())
+                                             .id(partnershipId)
                                              .type("marriage")
                                              .startDate(LocalDate.of(2021, 1, 1))
                                              .endDate(LocalDate.of(2021, 12, 31))
@@ -61,7 +61,7 @@ class PartnershipControllerTest {
                                                        .partnerIds(List.of(personId1, personId2))
                                                        .build();
         PartnershipProjection savedPartnership = MockPartnershipProjection.builder()
-                                                                     .id(UUID.randomUUID().toString())
+                                                                     .id(UUID.randomUUID())
                                                                      .type("marriage")
                                                                      .startDate(LocalDate.of(2021, 1, 1))
                                                                      .build();
@@ -115,7 +115,7 @@ class PartnershipControllerTest {
                                                        .partnerIds(List.of(personId1, personId2))
                                                        .build();
         PartnershipProjection savedPartnership = MockPartnershipProjection.builder()
-                                                                          .id(partnershipId.toString())
+                                                                          .id(partnershipId)
                                                                           .type("marriage")
                                                                           .startDate(LocalDate.of(2021, 1, 1))
                                                                           .endDate(LocalDate.of(2021, 12, 31))

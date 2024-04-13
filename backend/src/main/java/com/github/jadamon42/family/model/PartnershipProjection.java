@@ -1,9 +1,10 @@
 package com.github.jadamon42.family.model;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public interface PartnershipProjection {
-    String getId();
+    UUID getId();
     String getType();
     LocalDate getStartDate();
     LocalDate getEndDate();

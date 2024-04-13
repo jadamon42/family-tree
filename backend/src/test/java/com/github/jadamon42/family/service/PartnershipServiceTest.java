@@ -35,7 +35,7 @@ public class PartnershipServiceTest {
     void getPartnership() {
         Partnership partnership = partnershipService.getPartnership(partnershipId).orElseThrow();
 
-        assertThat(partnership.getId()).isEqualTo(partnershipId.toString());
+        assertThat(partnership.getId()).isEqualTo(partnershipId);
         assertThat(partnership.getType()).isEqualTo("marriage");
         assertThat(partnership.getStartDate()).isEqualTo("2021-01-01");
         assertThat(partnership.getEndDate()).isNull();
@@ -51,8 +51,8 @@ public class PartnershipServiceTest {
                                                        .build();
 
         PartnershipProjection savedPartnership = partnershipService.createPartnership(request);
-        PersonProjection person1 = personRepository.findProjectionById(person1Id.toString()).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(person2Id.toString()).orElseThrow();
+        PersonProjection person1 = personRepository.findProjectionById(person1Id).orElseThrow();
+        PersonProjection person2 = personRepository.findProjectionById(person2Id).orElseThrow();
 
         assertThat(savedPartnership.getId()).isNotNull();
         assertThat(savedPartnership.getType()).isEqualTo("marriage");
@@ -91,23 +91,23 @@ public class PartnershipServiceTest {
                                                        .build();
 
         PartnershipProjection updatedPartnership = partnershipService.updatePartnership(partnershipId, request).orElseThrow();
-        PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId.toString()).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId.toString()).orElseThrow();
+        PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId).orElseThrow();
+        PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId).orElseThrow();
 
-        assertThat(updatedPartnership.getId()).isEqualTo(partnershipId.toString());
+        assertThat(updatedPartnership.getId()).isEqualTo(partnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isEqualTo("2023-01-02");
         assertThat(updatedPartnership.getEndDate()).isEqualTo("2023-12-31");
         assertThat(person1.getPartnerships()).satisfies(partnerships -> {
             assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(partnershipId.toString());
+            assertThat(partnerships.get(0).getId()).isEqualTo(partnershipId);
             assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-02");
             assertThat(partnerships.get(0).getEndDate()).isEqualTo("2023-12-31");
         });
         assertThat(person2.getPartnerships()).satisfies(partnerships -> {
             assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(partnershipId.toString());
+            assertThat(partnerships.get(0).getId()).isEqualTo(partnershipId);
             assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-02");
             assertThat(partnerships.get(0).getEndDate()).isEqualTo("2023-12-31");
@@ -123,23 +123,23 @@ public class PartnershipServiceTest {
                                                        .build();
 
         PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
-        PersonProjection person1 = personRepository.findProjectionById(person1Id.toString()).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(person2Id.toString()).orElseThrow();
+        PersonProjection person1 = personRepository.findProjectionById(person1Id).orElseThrow();
+        PersonProjection person2 = personRepository.findProjectionById(person2Id).orElseThrow();
 
-        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId.toString());
+        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isEqualTo("2023-01-01");
         assertThat(updatedPartnership.getEndDate()).isNull();
         assertThat(person1.getPartnerships()).satisfies(partnerships -> {
             assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(unattachedPartnershipId.toString());
+            assertThat(partnerships.get(0).getId()).isEqualTo(unattachedPartnershipId);
             assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-01");
             assertThat(partnerships.get(0).getEndDate()).isNull();
         });
         assertThat(person2.getPartnerships()).satisfies(partnerships -> {
             assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(unattachedPartnershipId.toString());
+            assertThat(partnerships.get(0).getId()).isEqualTo(unattachedPartnershipId);
             assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-01");
             assertThat(partnerships.get(0).getEndDate()).isNull();
@@ -154,7 +154,7 @@ public class PartnershipServiceTest {
 
         PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
 
-        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId.toString());
+        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isEqualTo("2021-01-01");
         assertThat(updatedPartnership.getEndDate()).isEqualTo("2023-12-31");
@@ -168,7 +168,7 @@ public class PartnershipServiceTest {
 
         PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
 
-        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId.toString());
+        assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isNull();
         assertThat(updatedPartnership.getEndDate()).isNull();
@@ -198,8 +198,8 @@ public class PartnershipServiceTest {
     @Test
     void deletePartnershipUpdatesPartners() {
         partnershipService.deletePartnership(partnershipId);
-        PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId.toString()).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId.toString()).orElseThrow();
+        PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId).orElseThrow();
+        PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId).orElseThrow();
 
         assertThat(person1.getPartnerships()).isEmpty();
         assertThat(person2.getPartnerships()).isEmpty();

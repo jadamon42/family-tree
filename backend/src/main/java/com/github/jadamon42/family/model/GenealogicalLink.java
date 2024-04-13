@@ -37,8 +37,8 @@ public class GenealogicalLink {
                                .person2Id(personId)
                                .sharedAncestralPartnershipId(null)
                                .commonAncestorIds(List.of(personId))
-                               .relationFromPerspectiveOfPerson1(Relation.builder().numberOfGenerationsToCommonAncestor(0).numberOfGenerationsToOtherPerson(0).isRelatedByBlood(true).build())
-                               .relationFromPerspectiveOfPerson2(Relation.builder().numberOfGenerationsToCommonAncestor(0).numberOfGenerationsToOtherPerson(0).isRelatedByBlood(true).build())
+                               .relationFromPerspectiveOfPerson1(Relation.builder().numberOfGenerationsToCommonAncestor(0).numberOfGenerationsToOtherPerson(0).isBloodRelation(true).build())
+                               .relationFromPerspectiveOfPerson2(Relation.builder().numberOfGenerationsToCommonAncestor(0).numberOfGenerationsToOtherPerson(0).isBloodRelation(true).build())
                                .build();
     }
 
@@ -80,7 +80,7 @@ public class GenealogicalLink {
         return Relation.builder()
                        .numberOfGenerationsToCommonAncestor(numberOfGenerationsToCommonAncestor)
                        .numberOfGenerationsToOtherPerson(numberOfGenerationsToCommonAncestor - otherNumberOfGenerationsToCommonAncestor)
-                       .isRelatedByBlood(!marriedIn && !otherMarriedIn)
+                       .isBloodRelation(!marriedIn && !otherMarriedIn)
                        .build();
     }
 }

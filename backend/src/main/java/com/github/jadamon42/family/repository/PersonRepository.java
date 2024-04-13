@@ -7,8 +7,9 @@ import org.springframework.data.neo4j.repository.query.Query;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface PersonRepository extends Neo4jRepository<Person, String> {
+public interface PersonRepository extends Neo4jRepository<Person, UUID> {
     @Query("""
         MATCH (p:Person)
         WHERE NOT (:Partnership)-[:BEGAT]->(p)
@@ -22,7 +23,7 @@ public interface PersonRepository extends Neo4jRepository<Person, String> {
             OPTIONAL MATCH (p)-[r:PARTNER_IN]->(pt:Partnership)
             RETURN p, collect(r), collect(pt)
             """)
-    Optional<PersonProjection> findProjectionById(String id);
+    Optional<PersonProjection> findProjectionById(UUID id);
 
     @Query("""
             CREATE (p:Person {
@@ -41,31 +42,31 @@ public interface PersonRepository extends Neo4jRepository<Person, String> {
                 p.lastName = :#{#person.getLastName()}
             RETURN p, collect(r), collect(pt)
             """)
-    PersonProjection updateAndReturnProjection(String id, Person person);
+    PersonProjection updateAndReturnProjection(UUID id, Person person);
 
     @Query("""
             MATCH (p:Person)
             WHERE (p)-[:PARTNER_IN]->(:Partnership {id: $partnershipId})
             RETURN p.id
             """)
-    Collection<String> findPersonIdsByPartnershipId(String partnershipId);
+    Collection<UUID> findPersonIdsByPartnershipId(UUID partnershipId);
 
     @Query("""
         MATCH (p:Person)-[r:PARTNER_IN]->(:Partnership {id: $partnershipId})
         DELETE r
     """)
-    void removeAllFromPartnership(String partnershipId);
+    void removeAllFromPartnership(UUID partnershipId);
 
     @Query("""
         MATCH (p:Person {id: $personId})-[r:PARTNER_IN]->(:Partnership {id: $partnershipId})
         DELETE r
     """)
-    void removeFromPartnership(String personId, String partnershipId);
+    void removeFromPartnership(UUID personId, UUID partnershipId);
 
     @Query("""
         MATCH (p:Person {id: $personId})
         MATCH (pt:Partnership {id: $partnershipId})
         CREATE (p)-[:PARTNER_IN]->(pt)
     """)
-    void addToPartnership(String personId, String partnershipId);
+    void addToPartnership(UUID personId, UUID partnershipId);
 }

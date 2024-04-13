@@ -29,7 +29,7 @@ public class PartnershipService {
     }
 
     public Optional<Partnership> getPartnership(UUID partnershipId) {
-        return partnershipRepository.findById(partnershipId.toString());
+        return partnershipRepository.findById(partnershipId);
     }
 
     public PartnershipProjection createPartnership(PartnershipRequest request) {
@@ -44,45 +44,45 @@ public class PartnershipService {
     }
 
     public Optional<PartnershipProjection> updatePartnership(UUID partnershipId, PartnershipRequest request) {
-        PartnershipProjection existingPartnership = partnershipRepository.findProjectionById(partnershipId.toString()).orElse(null);
+        PartnershipProjection existingPartnership = partnershipRepository.findProjectionById(partnershipId).orElse(null);
 
         if (existingPartnership != null) {
             removePeopleNoLongerInThePartnership(partnershipId, request.getPartnerIds());
             Partnership partnership = getPatchedPartnership(existingPartnership, request);
-            existingPartnership = partnershipRepository.updateAndReturnProjection(partnershipId.toString(), partnership);
+            existingPartnership = partnershipRepository.updateAndReturnProjection(partnershipId, partnership);
             updatePeopleInPartnership(existingPartnership, request.getPartnerIds());
         }
         return Optional.ofNullable(existingPartnership);
     }
 
     public void deletePartnership(UUID partnershipId) {
-        personRepository.removeAllFromPartnership(partnershipId.toString());
-        partnershipRepository.deleteById(partnershipId.toString());
+        personRepository.removeAllFromPartnership(partnershipId);
+        partnershipRepository.deleteById(partnershipId);
     }
 
     private void removePeopleNoLongerInThePartnership(UUID partnershipId, List<UUID> partnerIds) {
-        Collection<String> currentPartnerIds = personRepository.findPersonIdsByPartnershipId(partnershipId.toString());
+        Collection<UUID> currentPartnerIds = personRepository.findPersonIdsByPartnershipId(partnershipId);
         currentPartnerIds.stream()
                          .filter(personId -> partnershipDoesNotContainPerson(partnerIds, personId))
-                         .forEach(personId -> personRepository.removeFromPartnership(personId, partnershipId.toString()));
+                         .forEach(personId -> personRepository.removeFromPartnership(personId, partnershipId));
     }
 
-    private static boolean partnershipDoesNotContainPerson(List<UUID> partnerIds, String personId) {
-        return !partnerIds.contains(UUID.fromString(personId));
+    private static boolean partnershipDoesNotContainPerson(List<UUID> partnerIds, UUID personId) {
+        return !partnerIds.contains(personId);
     }
 
     private void updatePeopleInPartnership(PartnershipProjection partnership, List<UUID> partnerIds) {
         for(UUID partnerId : partnerIds) {
-            PersonProjection person = personRepository.findProjectionById(partnerId.toString())
+            PersonProjection person = personRepository.findProjectionById(partnerId)
                                                       .orElseThrow(() -> new PersonNotFoundException(partnerId));
 
             if (!isAlreadyInPartnership(person, partnership.getId())) {
-                personRepository.addToPartnership(partnerId.toString(), partnership.getId());
+                personRepository.addToPartnership(partnerId, partnership.getId());
             }
         }
     }
 
-    private boolean isAlreadyInPartnership(PersonProjection person, String partnershipId) {
+    private boolean isAlreadyInPartnership(PersonProjection person, UUID partnershipId) {
         return person.getPartnerships()
                      .stream()
                      .anyMatch(p -> p.getId().equals(partnershipId));
