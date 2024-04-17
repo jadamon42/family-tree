@@ -16,7 +16,7 @@ import java.util.Optional;
 public class PersonRequest {
     Optional<String> firstName;
     Optional<String> lastName;
-    Optional<String> sex;
+    Optional<Sex> sex;
     Optional<LocalDate> birthDate;
     Optional<LocalDate> deathDate;
 

@@ -15,7 +15,7 @@ public class MockPersonProjection implements PersonProjection {
     UUID id;
     String firstName;
     String lastName;
-    String sex;
+    Sex sex;
     LocalDate birthDate;
     LocalDate deathDate;
     List<PartnershipProjection> partnerships;

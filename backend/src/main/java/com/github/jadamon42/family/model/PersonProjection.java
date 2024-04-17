@@ -8,7 +8,7 @@ public interface PersonProjection {
     UUID getId();
     String getFirstName();
     String getLastName();
-    String getSex();
+    Sex getSex();
     LocalDate getBirthDate();
     LocalDate getDeathDate();
     List<PartnershipProjection> getPartnerships();

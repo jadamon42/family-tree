@@ -1,5 +1,6 @@
 package com.github.jadamon42.family.model;
 
+import com.github.jadamon42.family.util.SexConverter;
 import com.github.jadamon42.family.util.UUIDStringConverter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +30,11 @@ public class Person {
     UUID id;
     String firstName;
     String lastName;
-    String sex;
     LocalDate birthDate;
     LocalDate deathDate;
+    @ConvertWith(converter = SexConverter.class)
+    @Builder.Default
+    Sex sex = Sex.UNKNOWN;
 
     @Relationship(value = "PARTNER_IN", direction = Relationship.Direction.OUTGOING)
     List<Partnership> partnerships;

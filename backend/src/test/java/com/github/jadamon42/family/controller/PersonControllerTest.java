@@ -1,10 +1,7 @@
 package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jadamon42.family.model.MockPersonProjection;
-import com.github.jadamon42.family.model.Person;
-import com.github.jadamon42.family.model.PersonProjection;
-import com.github.jadamon42.family.model.PersonRequest;
+import com.github.jadamon42.family.model.*;
 import com.github.jadamon42.family.service.PersonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +10,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -63,6 +61,42 @@ class PersonControllerTest {
         mockMvc.perform(post("/api/person")
                .contentType(MediaType.APPLICATION_JSON)
                .content(personJson))
+               .andExpect(status().isOk())
+               .andExpect(content().json(objectMapper.writeValueAsString(savedPerson)));
+    }
+
+    @Test
+    void createPersonWithAllFields() throws Exception {
+        String personJson = """
+                {
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "birthDate": "2000-01-01",
+                    "deathDate": "2020-01-01",
+                    "sex": "male"
+                }
+                """;
+        UUID personId = UUID.randomUUID();
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .birthDate(Optional.of(LocalDate.of(2000, 1, 1)))
+                                             .deathDate(Optional.of(LocalDate.of(2020, 1, 1)))
+                                             .sex(Optional.of(Sex.MALE))
+                                             .build();
+        PersonProjection savedPerson = MockPersonProjection.builder()
+                                                           .id(personId)
+                                                           .firstName("John")
+                                                           .lastName("Doe")
+                                                           .birthDate(LocalDate.of(2000, 1, 1))
+                                                           .deathDate(LocalDate.of(2020, 1, 1))
+                                                           .sex(Sex.MALE)
+                                                           .build();
+        when(personService.createPerson(request)).thenReturn(savedPerson);
+
+        mockMvc.perform(post("/api/person")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(personJson))
                .andExpect(status().isOk())
                .andExpect(content().json(objectMapper.writeValueAsString(savedPerson)));
     }

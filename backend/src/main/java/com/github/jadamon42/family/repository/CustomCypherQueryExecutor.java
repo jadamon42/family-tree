@@ -5,6 +5,7 @@ import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class CustomCypherQueryExecutor {
@@ -14,8 +15,22 @@ public class CustomCypherQueryExecutor {
         this.neo4jClient = neo4jClient;
     }
 
-    public Optional<GenealogicalLink> findLatestGenealogicalLink(String person1Id, String person2Id) {
+    public Optional<GenealogicalLink> findLatestGenealogicalLink(UUID person1Id, UUID person2Id) {
         return neo4jClient.query(("""
+        MATCH (p1:Person {id: $person1Id})
+        WHERE p1.id = $person2Id
+        RETURN p1.id AS person1Id
+             , p1.id AS person2Id
+             , p1.sex AS person1Sex
+             , p1.sex AS person2Sex
+             , false AS person1MarriedIn
+             , false AS person2MarriedIn
+             , p1.id AS commonAncestorId
+             , null AS otherCommonAncestorId
+             , null AS sharedAncestralPartnershipId
+             , 0 AS person1NumberOfPersonNodesToCommonAncestor
+             , 0 AS person2NumberOfPersonNodesToCommonAncestor
+    UNION
         MATCH (p1:Person {id: $person1Id})-[*]-(p2:Person {id: $person2Id})
         OPTIONAL MATCH (directCommonAncestor:Person)
             WHERE ((directCommonAncestor)-[*]->(p1) OR directCommonAncestor = p1)
@@ -30,8 +45,8 @@ public class CustomCypherQueryExecutor {
             WHERE (onlyMarriageCommonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1)
               AND (onlyMarriageCommonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2)
         WITH p1, p2
-           , directCommonAncestor IS NULL AND (p1CommonAncestorThroughMarriage IS NOT NULL OR onlyMarriageCommonAncestor IS NOT NULL) AS p2MarriedIn
-           , directCommonAncestor IS NULL AND (p2CommonAncestorThroughMarriage IS NOT NULL OR onlyMarriageCommonAncestor IS NOT NULL) AS p1MarriedIn
+           , directCommonAncestor IS NULL AND (p1CommonAncestorThroughMarriage IS NOT NULL OR onlyMarriageCommonAncestor IS NOT NULL) AS person2MarriedIn
+           , directCommonAncestor IS NULL AND (p2CommonAncestorThroughMarriage IS NOT NULL OR onlyMarriageCommonAncestor IS NOT NULL) AS person1MarriedIn
            , CASE
                 WHEN directCommonAncestor IS NOT NULL THEN directCommonAncestor
                 WHEN p1CommonAncestorThroughMarriage IS NOT NULL THEN p1CommonAncestorThroughMarriage
@@ -40,17 +55,17 @@ public class CustomCypherQueryExecutor {
              END AS commonAncestor
         WITH p1, p2
            , commonAncestor
-           , p1MarriedIn
-           , p2MarriedIn
+           , person1MarriedIn
+           , person2MarriedIn
            , CASE
                 WHEN commonAncestor = p1 THEN 0
                 ELSE SIZE([n IN nodes(shortestPath((commonAncestor)-[*]-(p1))) WHERE n:Person]) - 1
-             END AS p1NumberOfPersonNodesToCommonAncestor
+             END AS person1NumberOfPersonNodesToCommonAncestor
            , CASE
                 WHEN commonAncestor = p2 THEN 0
                 ELSE SIZE([n IN nodes(shortestPath((commonAncestor)-[*]-(p2))) WHERE n:Person]) - 1
-             END AS p2NumberOfPersonNodesToCommonAncestor
-        ORDER BY (NOT (p1MarriedIn OR p2MarriedIn)) DESC, p1NumberOfPersonNodesToCommonAncestor ASC, commonAncestor.sex DESC
+             END AS person2NumberOfPersonNodesToCommonAncestor
+        ORDER BY (NOT (person1MarriedIn OR person2MarriedIn)) DESC, person1NumberOfPersonNodesToCommonAncestor ASC, commonAncestor.sex DESC
         LIMIT 1
         OPTIONAL MATCH (sharedAncestralPartnership:Partnership)
             WHERE (commonAncestor)-[:PARTNER_IN]->(sharedAncestralPartnership)
@@ -61,16 +76,17 @@ public class CustomCypherQueryExecutor {
               AND otherCommonAncestor <> commonAncestor
         RETURN p1.id AS person1Id
              , p2.id AS person2Id
+             , p1.sex AS person1Sex
+             , p2.sex AS person2Sex
+             , person1MarriedIn
+             , person2MarriedIn
              , commonAncestor.id AS commonAncestorId
              , otherCommonAncestor.id AS otherCommonAncestorId
              , sharedAncestralPartnership.id AS sharedAncestralPartnershipId
-             , p1NumberOfPersonNodesToCommonAncestor
-             , p2NumberOfPersonNodesToCommonAncestor
-             , p1MarriedIn
-             , p2MarriedIn
-        """))
-                          .bind(person1Id).to("person1Id")
-                          .bind(person2Id).to("person2Id")
+             , person1NumberOfPersonNodesToCommonAncestor
+             , person2NumberOfPersonNodesToCommonAncestor"""))
+                          .bind(person1Id.toString()).to("person1Id")
+                          .bind(person2Id.toString()).to("person2Id")
                           .fetchAs(GenealogicalLink.class)
                           .mappedBy(GenealogicalLink::fromRecord)
                           .one();

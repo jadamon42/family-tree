@@ -15,11 +15,13 @@ public class GenealogicalLinkService {
         this.customCypherQueryExecutor = customCypherQueryExecutor;
     }
 
+    public String getRelationshipLabel(UUID personIdFrom, UUID personIdTo) {
+        Optional<GenealogicalLink> genealogicalLink = customCypherQueryExecutor.findLatestGenealogicalLink(personIdFrom, personIdTo);
+        return "";
+    }
+
     // should be private. This service should return user-friendly names for the relationships
     public Optional<GenealogicalLink> getGenealogicalLink(UUID person1Id, UUID person2Id) {
-        if (person1Id.equals(person2Id)) {
-            return Optional.of(GenealogicalLink.selfLink(person1Id.toString()));
-        }
-        return customCypherQueryExecutor.findLatestGenealogicalLink(person1Id.toString(), person2Id.toString());
+        return customCypherQueryExecutor.findLatestGenealogicalLink(person1Id, person2Id);
     }
 }
