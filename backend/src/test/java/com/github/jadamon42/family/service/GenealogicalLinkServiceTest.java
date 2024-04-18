@@ -1,11 +1,9 @@
 package com.github.jadamon42.family.service;
 
-import com.github.jadamon42.family.model.GenealogicalLink;
-import com.github.jadamon42.family.model.Relation;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
@@ -19,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,635 +28,699 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GenealogicalLinkServiceTest {
     @Test
     void getGenealogicalLinkOfNonExistentPerson() {
-        Optional<GenealogicalLink> link = genealogicalLinkService.getGenealogicalLink(UUID.randomUUID(), UUID.fromString(personId));
-
-        assertThat(link).isEmpty();
+        Optional<String> relationshipLabel = genealogicalLinkService.getRelationshipLabel(UUID.randomUUID(), personId);
+        assertThat(relationshipLabel).isEmpty();
     }
 
     @Test
     void getGenealogicalLinkOfUnrelatedPerson() {
-        Optional<GenealogicalLink> link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(unrelatedPersonId));
-
-        assertThat(link).isEmpty();
+        Optional<String> relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, unrelatedPersonId);
+        assertThat(relationshipLabel).isEmpty();
     }
     
     @Test
     void getGenealogicalLinkOfSelf() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(personId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(personId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, personId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Self");
     }
 
     @Test
     void getGenealogicalLinkOfSpouse() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(spouseId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isBloodRelation()).isFalse();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, spouseId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Wife");
     }
 
     @Test
-    void getGenealogicalLinkOfChild() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(childId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(personId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfSon() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, sonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Son");
     }
 
     @Test
-    void getGenealogicalLinkOfGrandchild() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(grandchildId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(personId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfDaughterInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, daughterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Daughter-in-Law");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatGrandchild() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandchildId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(personId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(0);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfDaughter() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, daughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Daughter");
     }
 
     @Test
-    void getGenealogicalLinkOfParent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(parentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(parentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfSonInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, sonInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Son-in-Law");
     }
 
     @Test
-    void getGenealogicalLinkOfSibling() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(siblingId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfStepSon() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepSonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Son");
     }
 
     @Test
-    void getGenealogicalLinkOfNieceOrNephew() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(nieceOrNephewId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfStepDaughter() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepDaughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Daughter");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatNieceOrNephew() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatNieceOrNephewId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfGrandson() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, grandsonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandson");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatGrandNieceOrNephew() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandNieceOrNephewId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(parentId, otherParentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(parentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfGranddaughterInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, granddaughterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Granddaughter-in-Law");
     }
 
     @Test
-    void getGenealogicalLinkOfGrandparent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(grandparentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfGranddaughter() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, granddaughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Granddaughter");
     }
 
     @Test
-    void getGenealogicalLinkOfAuntOrUncle() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(auntOrUncleId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
+    void getGenealogicalLinkOfGrandsonInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, grandsonInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandson-in-Law");
+    }
 
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isTrue();
+    @Test
+    void getGenealogicalLinkOfGreatGrandson() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandsonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandson");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGranddaughterInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGranddaughterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Granddaughter-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGranddaughter() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGranddaughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Granddaughter");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandsonInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandsonInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandson-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, fatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Father");
+    }
+
+    @Test
+    void getGenealogicalLinkOfMother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, motherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Mother");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepFather() {
+        // make a null person node be the root for all non-begat persons
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepFatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Father");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepMother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepMotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Mother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfBrother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, brotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Brother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSister() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, sisterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Sister");
+    }
+
+    @Test
+    void getGenealogicalLinkOfHalfBrother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, halfBrotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Half-Brother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfHalfSister() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, halfSisterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Half-Sister");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepBrother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepBrotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Brother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepSister() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepSisterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Sister");
+    }
+
+    @Test
+    void getGenealogicalLinkOfBrotherInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, brotherInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Brother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSisterInLaw() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, sisterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Sister-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfNiece() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, nieceId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Niece");
+    }
+
+    @Test
+    void getGenealogicalLinkOfNephew() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, nephewId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Nephew");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatNiece() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatNieceId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Niece");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatNephew() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatNephewId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Nephew");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandNiece() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandNieceId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Niece");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandNephew() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandNephewId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Nephew");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGrandfather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, grandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandfather");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGrandmother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, grandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandmother");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGrandfather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Grandfather");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepGrandmother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Grandmother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfUncle() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, uncleId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Uncle");
+    }
+
+    @Test
+    void getGenealogicalLinkOfAunt() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, auntId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Aunt");
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousin() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin");
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinOnceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinOnceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinOnceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin Once Removed");
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinTwiceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinTwiceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin Twice Removed");
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinThriceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinThriceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinThriceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin Thrice Removed");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatGrandparent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandparentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(3);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfGreatGrandfather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandfather");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatAuntOrUncle() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatAuntOrUncleId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
+    void getGenealogicalLinkOfGreatGrandmother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandmother");
+    }
 
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
-        assertThat(relation.isBloodRelation()).isTrue();
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGreatGrandfather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepGreatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Grandfather");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepGreatGrandmother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepGreatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Grandmother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatUncle() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatUncleId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Uncle");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatAunt() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatAuntId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Aunt");
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinOnceRemovedThroughGreatGrandparents() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinOnceRemovedThroughGreatGrandparentsId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinOnceRemovedThroughGreatGrandparentsId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin Once Removed");
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousin() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin");
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinOnceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinOnceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinOnceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin Once Removed");
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinTwiceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinTwiceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin Twice Removed");
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinThriceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinThriceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(3);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinThriceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin Thrice Removed");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatGreatGrandparent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGreatGrandparentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(4);
-        assertThat(relation.isBloodRelation()).isTrue();
+    void getGenealogicalLinkOfGreatGreatGrandfather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGreatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Great-Grandfather");
     }
 
     @Test
-    void getGenealogicalLinkOfGreatGrandAuntOrUncle() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(greatGrandAuntOrUncleId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
+    void getGenealogicalLinkOfGreatGreatGrandmother() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGreatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Great-Grandmother");
+    }
 
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(3);
-        assertThat(relation.isBloodRelation()).isTrue();
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGreatGreatGrandfather() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepGreatGreatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Great-Grandfather");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGreatGreatGrandmother() {
+        // need null object for this too
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepGreatGreatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Great-Grandmother");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandUncle() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandUncleId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Uncle");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandAunt() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandAuntId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Aunt");
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinTwiceRemovedThroughGreatGreatGrandparents() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(firstCousinTwiceRemovedThroughGreatGreatGrandparentsId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(2);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinTwiceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin Twice Removed");
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinOnceRemovedThroughGreatGreatGrandparents() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(secondCousinOnceRemovedThroughGreatGreatGrandparentsId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinOnceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin Once Removed");
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousin() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(0);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin");
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinOnceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinOnceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-1);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinOnceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin Once Removed");
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinTwiceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinTwiceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-2);
-        assertThat(relation.isBloodRelation()).isTrue();
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin Twice Removed");
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinThriceRemoved() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(thirdCousinThriceRemovedId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(greatGreatGrandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(greatGreatGrandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(4);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(-3);
-        assertThat(relation.isBloodRelation()).isTrue();
-    }
-
-    @Test
-    void getGenealogicalLinkOfOtherParent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(otherParentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(otherParentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isNull();
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(1);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isTrue();
-    }
-
-    @Test
-    void getGenealogicalLinkOfStepParent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(personId), UUID.fromString(stepParentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(personId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isFalse();
-    }
-
-    @Test
-    void getGenealogicalLinkOfSpouseToStepParent() {
-        GenealogicalLink link = genealogicalLinkService.getGenealogicalLink(UUID.fromString(spouseId), UUID.fromString(stepParentId)).orElseThrow();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(UUID.fromString(spouseId));
-
-        assertThat(link.getCommonAncestorIds()).containsExactly(grandparentId);
-        assertThat(link.getSharedAncestralPartnershipId()).isEqualTo(grandparentPartnershipId);
-        assertThat(relation.getNumberOfGenerationsToCommonAncestor()).isEqualTo(2);
-        assertThat(relation.getNumberOfGenerationsToOtherPerson()).isEqualTo(1);
-        assertThat(relation.isBloodRelation()).isFalse();
-    }
-
-    @Test
-    void getGenealogicalLinkOfHalfSiblings() {
-
-    }
-
-    @Test
-    void getGenealogicalLinkOfHalfCousins() {
-
-    }
-
-    @Test
-    void getGenealogicalLinkOfHalfAuntOrUncleAndNieceOrNephew() {
-
-    }
-
-    @Test
-    void getGenealogicalLinkOfHalfGrandparentAndGrandchild() {
-
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinThriceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin Thrice Removed");
     }
 
     private static Neo4j embeddedDatabaseServer;
     private static Driver neo4jDriver;
     private final GenealogicalLinkService genealogicalLinkService;
     
-    private final String personId = "00000000-0000-0000-0000-000000000000";
-    private final String spouseId = "00000000-0000-0000-0000-000000000001";
-    private final String childId = "00000000-0000-0000-0000-000000000002";
-    private final String grandchildId = "00000000-0000-0000-0000-000000000003";
-    private final String greatGrandchildId = "00000000-0000-0000-0000-000000000004";
-    private final String parentId = "00000000-0000-0000-0000-000000000005";
-    private final String siblingId = "00000000-0000-0000-0000-000000000006";
-    private final String nieceOrNephewId = "00000000-0000-0000-0000-000000000007";
-    private final String greatNieceOrNephewId = "00000000-0000-0000-0000-000000000008";
-    private final String greatGrandNieceOrNephewId = "00000000-0000-0000-0000-000000000009";
-    private final String grandparentId = "00000000-0000-0000-0000-000000000010";
-    private final String auntOrUncleId = "00000000-0000-0000-0000-000000000011";
-    private final String firstCousinId = "00000000-0000-0000-0000-000000000012";
-    private final String firstCousinOnceRemovedId = "00000000-0000-0000-0000-000000000013";
-    private final String firstCousinTwiceRemovedId = "00000000-0000-0000-0000-000000000014";
-    private final String firstCousinThriceRemovedId = "00000000-0000-0000-0000-000000000015";
-    private final String greatGrandparentId = "00000000-0000-0000-0000-000000000016";
-    private final String greatAuntOrUncleId = "00000000-0000-0000-0000-000000000017";
-    private final String firstCousinOnceRemovedThroughGreatGrandparentsId = "00000000-0000-0000-0000-000000000018";
-    private final String secondCousinId = "00000000-0000-0000-0000-000000000019";
-    private final String secondCousinOnceRemovedId = "00000000-0000-0000-0000-000000000020";
-    private final String secondCousinTwiceRemovedId = "00000000-0000-0000-0000-000000000021";
-    private final String secondCousinThriceRemovedId = "00000000-0000-0000-0000-000000000022";
-    private final String greatGreatGrandparentId = "00000000-0000-0000-0000-000000000023";
-    private final String greatGrandAuntOrUncleId = "00000000-0000-0000-0000-000000000024";
-    private final String firstCousinTwiceRemovedThroughGreatGreatGrandparentsId = "00000000-0000-0000-0000-000000000025";
-    private final String secondCousinOnceRemovedThroughGreatGreatGrandparentsId = "00000000-0000-0000-0000-000000000026";
-    private final String thirdCousinId = "00000000-0000-0000-0000-000000000027";
-    private final String thirdCousinOnceRemovedId = "00000000-0000-0000-0000-000000000028";
-    private final String thirdCousinTwiceRemovedId = "00000000-0000-0000-0000-000000000029";
-    private final String thirdCousinThriceRemovedId = "00000000-0000-0000-0000-000000000030";
-    private final String unrelatedPersonId = "00000000-0000-0000-0000-000000000031";
-    private final String otherParentId = "00000000-0000-0000-0000-000000000032";
-    private final String stepParentId = "00000000-0000-0000-0000-000000000033";
-
-    private final String spousePartnershipId = "00000001-0000-0000-0000-000000000000";
-    private final String childPartnershipId = "00000002-0000-0000-0000-000000000000";
-    private final String grandchildPartnershipId = "00000003-0000-0000-0000-000000000000";
-    private final String greatGrandchildPartnershipId = "00000004-0000-0000-0000-000000000000";
-    private final String parentPartnershipId = "00000005-0000-0000-0000-000000000000";
-    private final String siblingPartnershipId = "00000006-0000-0000-0000-000000000000";
-    private final String nieceOrNephewPartnershipId = "00000007-0000-0000-0000-000000000000";
-    private final String greatNieceOrNephewPartnershipId = "00000008-0000-0000-0000-000000000000";
-    private final String greatGrandNieceOrNephewPartnershipId = "00000009-0000-0000-0000-000000000000";
-    private final String grandparentPartnershipId = "00000010-0000-0000-0000-000000000000";
-    private final String auntOrUnclePartnershipId = "00000011-0000-0000-0000-000000000000";
-    private final String firstCousinPartnershipId = "00000012-0000-0000-0000-000000000000";
-    private final String firstCousinOnceRemovedPartnershipId = "00000013-0000-0000-0000-000000000000";
-    private final String firstCousinTwiceRemovedPartnershipId = "00000014-0000-0000-0000-000000000000";
-    private final String firstCousinThriceRemovedPartnershipId = "00000015-0000-0000-0000-000000000000";
-    private final String greatGrandparentPartnershipId = "00000016-0000-0000-0000-000000000000";
-    private final String greatAuntOrUnclePartnershipId = "00000017-0000-0000-0000-000000000000";
-    private final String firstCousinOnceRemovedThroughGreatGrandparentsPartnershipId = "00000018-0000-0000-0000-000000000000";
-    private final String secondCousinPartnershipId = "00000019-0000-0000-0000-000000000000";
-    private final String secondCousinOnceRemovedPartnershipId = "00000020-0000-0000-0000-000000000000";
-    private final String secondCousinTwiceRemovedPartnershipId = "00000021-0000-0000-0000-000000000000";
-    private final String secondCousinThriceRemovedPartnershipId = "00000022-0000-0000-0000-000000000000";
-    private final String greatGreatGrandparentPartnershipId = "00000023-0000-0000-0000-000000000000";
-    private final String greatGrandAuntOrUnclePartnershipId = "00000024-0000-0000-0000-000000000000";
-    private final String firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnershipId = "00000025-0000-0000-0000-000000000000";
-    private final String secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnershipId = "00000026-0000-0000-0000-000000000000";
-    private final String thirdCousinPartnershipId = "00000027-0000-0000-0000-000000000000";
-    private final String thirdCousinOnceRemovedPartnershipId = "00000028-0000-0000-0000-000000000000";
-    private final String thirdCousinTwiceRemovedPartnershipId = "00000029-0000-0000-0000-000000000000";
-    private final String thirdCousinThriceRemovedPartnershipId = "00000030-0000-0000-0000-000000000000";
-    private final String parentSecondMarriagePartnershipId = "00000031-0000-0000-0000-000000000000";
-
+    private static final UUID personId = UUID.randomUUID();
+    private static final UUID spouseId = UUID.randomUUID();
+    private static final UUID sonId = UUID.randomUUID();
+    private static final UUID daughterInLawId = UUID.randomUUID();
+    private static final UUID daughterId = UUID.randomUUID();
+    private static final UUID sonInLawId = UUID.randomUUID();
+    private static final UUID otherSpouseId = UUID.randomUUID();
+    private static final UUID stepSonId = UUID.randomUUID();
+    private static final UUID stepDaughterId = UUID.randomUUID();
+    private static final UUID grandsonId = UUID.randomUUID();
+    private static final UUID granddaughterInLawId = UUID.randomUUID();
+    private static final UUID granddaughterId = UUID.randomUUID();
+    private static final UUID grandsonInLawId = UUID.randomUUID();
+    private static final UUID greatGrandsonId = UUID.randomUUID();
+    private static final UUID greatGranddaughterInLawId = UUID.randomUUID();
+    private static final UUID greatGranddaughterId = UUID.randomUUID();
+    private static final UUID greatGrandsonInLawId = UUID.randomUUID();
+    private static final UUID fatherId = UUID.randomUUID();
+    private static final UUID motherId = UUID.randomUUID();
+    private static final UUID stepFatherId = UUID.randomUUID();
+    private static final UUID stepMotherId = UUID.randomUUID();
+    private static final UUID brotherId = UUID.randomUUID();
+    private static final UUID sisterId = UUID.randomUUID();
+    private static final UUID halfBrotherId = UUID.randomUUID();
+    private static final UUID halfSisterId = UUID.randomUUID();
+    private static final UUID stepBrotherId = UUID.randomUUID();
+    private static final UUID stepSisterId = UUID.randomUUID();
+    private static final UUID brotherInLawId = UUID.randomUUID();
+    private static final UUID sisterInLawId = UUID.randomUUID();
+    private static final UUID nieceId = UUID.randomUUID();
+    private static final UUID nephewId = UUID.randomUUID();
+    private static final UUID greatNieceId = UUID.randomUUID();
+    private static final UUID greatNephewId = UUID.randomUUID();
+    private static final UUID greatGrandNieceId = UUID.randomUUID();
+    private static final UUID greatGrandNephewId = UUID.randomUUID();
+    private static final UUID grandfatherId = UUID.randomUUID();
+    private static final UUID grandmotherId = UUID.randomUUID();
+    private static final UUID stepGrandfatherId = UUID.randomUUID();
+    private static final UUID stepGrandmotherId = UUID.randomUUID();
+    private static final UUID uncleId = UUID.randomUUID();
+    private static final UUID auntId = UUID.randomUUID();
+    private static final UUID firstCousinId = UUID.randomUUID();
+    private static final UUID firstCousinOnceRemovedId = UUID.randomUUID();
+    private static final UUID firstCousinTwiceRemovedId = UUID.randomUUID();
+    private static final UUID firstCousinThriceRemovedId = UUID.randomUUID();
+    private static final UUID greatGrandfatherId = UUID.randomUUID();
+    private static final UUID greatGrandmotherId = UUID.randomUUID();
+    private static final UUID stepGreatGrandfatherId = UUID.randomUUID();
+    private static final UUID stepGreatGrandmotherId = UUID.randomUUID();
+    private static final UUID greatUncleId = UUID.randomUUID();
+    private static final UUID greatAuntId = UUID.randomUUID();
+    private static final UUID firstCousinOnceRemovedThroughGreatGrandparentsId = UUID.randomUUID();
+    private static final UUID secondCousinId = UUID.randomUUID();
+    private static final UUID secondCousinOnceRemovedId = UUID.randomUUID();
+    private static final UUID secondCousinTwiceRemovedId = UUID.randomUUID();
+    private static final UUID secondCousinThriceRemovedId = UUID.randomUUID();
+    private static final UUID greatGreatGrandfatherId = UUID.randomUUID();
+    private static final UUID greatGreatGrandmotherId = UUID.randomUUID();
+    private static final UUID stepGreatGreatGrandfatherId = UUID.randomUUID();
+    private static final UUID stepGreatGreatGrandmotherId = UUID.randomUUID();
+    private static final UUID greatGrandUncleId = UUID.randomUUID();
+    private static final UUID greatGrandAuntId = UUID.randomUUID();
+    private static final UUID firstCousinTwiceRemovedThroughGreatGreatGrandparentsId = UUID.randomUUID();
+    private static final UUID secondCousinOnceRemovedThroughGreatGreatGrandparentsId = UUID.randomUUID();
+    private static final UUID thirdCousinId = UUID.randomUUID();
+    private static final UUID thirdCousinOnceRemovedId = UUID.randomUUID();
+    private static final UUID thirdCousinTwiceRemovedId = UUID.randomUUID();
+    private static final UUID thirdCousinThriceRemovedId = UUID.randomUUID();
+    private static final UUID unrelatedPersonId = UUID.randomUUID();
+    
     @Autowired
     GenealogicalLinkServiceTest(CustomCypherQueryExecutor customCypherQueryExecutor) {
         this.genealogicalLinkService = new GenealogicalLinkService(customCypherQueryExecutor);
     }
 
+    static String createMan(UUID id, String label) {
+        return String.format("CREATE (%s:Person {id: '%s', firstName: '%s', lastName: '%s', sex: 'Male'})", label, id, label, label);
+    }
+
+    static String createWoman(UUID id, String label) {
+        return String.format("CREATE (%s:Person {id: '%s', firstName: '%s', lastName: '%s', sex: 'Female'})", label, id, label, label);
+    }
+
+    static String createPartnership(UUID personId, List<UUID> childrenIds) {
+        StringBuilder query = new StringBuilder();
+        query.append(String.format("""
+        MATCH (p1:Person {id: '%s'})
+        CREATE (p1)-[:PARTNER_IN]->(p:Partnership {id: '%s'})
+        """, personId, UUID.randomUUID()));
+
+        if (!childrenIds.isEmpty()) {
+            query.append("\nWITH p\n");
+        }
+
+        for (int i = 0; i < childrenIds.size(); i++) {
+            query.append(
+                    String.format("""
+                    MATCH (p%s:Person {id: '%s'})
+                    CREATE (p)-[:BEGAT]->(p%s)
+                    """, i+2, childrenIds.get(i), i+2));
+            if (i != childrenIds.size() - 1) {
+                query.append("\nWITH p\n");
+            }
+        }
+
+        return query.toString();
+    }
+    
+    static String createPartnership(UUID person1Id, UUID person2Id) {
+        return String.format("""
+        MATCH (p1:Person {id: '%s'})
+        OPTIONAL MATCH (p2:Person {id: '%s'})
+        CREATE (p1)-[:PARTNER_IN]->(p:Partnership {id: '%s'})<-[:PARTNER_IN]-(p2)
+        """, person1Id, person2Id, UUID.randomUUID());
+    }
+
+    static String createPartnership(UUID person1Id, UUID person2Id, List<UUID> childrenIds) {
+        StringBuilder query = new StringBuilder();
+        query.append(String.format("""
+        MATCH (p1:Person {id: '%s'})
+        OPTIONAL MATCH (p2:Person {id: '%s'})
+        CREATE (p1)-[:PARTNER_IN]->(p:Partnership {id: '%s'})<-[:PARTNER_IN]-(p2)
+        """, person1Id, person2Id, UUID.randomUUID()));
+
+        if (!childrenIds.isEmpty()) {
+            query.append("\nWITH p\n");
+        }
+
+
+        for (int i = 0; i < childrenIds.size(); i++) {
+            query.append(
+                    String.format("""
+                    MATCH (p%s:Person {id: '%s'})
+                    CREATE (p)-[:BEGAT]->(p%s)
+                    """, i+2, childrenIds.get(i), i+2));
+            if (i != childrenIds.size() - 1) {
+                query.append("\nWITH p\n");
+            }
+        }
+
+        return query.toString();
+    }
+
     @BeforeAll
-    static void initializeNeo4j() {
+    static void setUp() {
         embeddedDatabaseServer = Neo4jBuilders.newInProcessBuilder()
                                               .withDisabledServer()
                                               .build();
         neo4jDriver = GraphDatabase.driver(embeddedDatabaseServer.boltURI(), AuthTokens.none());
-    }
 
-    @BeforeEach
-    void setUp() {
         try (Session session = neo4jDriver.session()) {
             session.run("MATCH (n) DETACH DELETE n");
-            session.run("""
-            CREATE (person: Person {id: '00000000-0000-0000-0000-000000000000', firstName: 'Person', lastName: 'Person'})
-            CREATE (spouse: Person {id: '00000000-0000-0000-0000-000000000001', firstName: 'Spouse', lastName: 'Spouse'})
-            CREATE (child: Person {id: '00000000-0000-0000-0000-000000000002', firstName: 'Child', lastName: 'Child'})
-            CREATE (grandchild: Person {id: '00000000-0000-0000-0000-000000000003', firstName: 'Grandchild', lastName: 'Grandchild'})
-            CREATE (greatGrandchild: Person {id: '00000000-0000-0000-0000-000000000004', firstName: 'GreatGrandchild', lastName: 'GreatGrandchild'})
-            CREATE (parent: Person {id: '00000000-0000-0000-0000-000000000005', firstName: 'Parent', lastName: 'Parent'})
-            CREATE (sibling: Person {id: '00000000-0000-0000-0000-000000000006', firstName: 'Sibling', lastName: 'Sibling'})
-            CREATE (nieceOrNephew: Person {id: '00000000-0000-0000-0000-000000000007', firstName: 'NieceOrNephew', lastName: 'NieceOrNephew'})
-            CREATE (greatNieceOrNephew: Person {id: '00000000-0000-0000-0000-000000000008', firstName: 'GreatNieceOrNephew', lastName: 'GreatNieceOrNephew'})
-            CREATE (greatGrandNieceOrNephew: Person {id: '00000000-0000-0000-0000-000000000009', firstName: 'GreatGrandNieceOrNephew', lastName: 'GreatGrandNieceOrNephew'})
-            CREATE (grandparent: Person {id: '00000000-0000-0000-0000-000000000010', firstName: 'Grandparent', lastName: 'Grandparent'})
-            CREATE (auntOrUncle: Person {id: '00000000-0000-0000-0000-000000000011', firstName: 'AuntOrUncle', lastName: 'AuntOrUncle'})
-            CREATE (firstCousin: Person {id: '00000000-0000-0000-0000-000000000012', firstName: 'FirstCousin', lastName: 'FirstCousin'})
-            CREATE (firstCousinOnceRemoved: Person {id: '00000000-0000-0000-0000-000000000013', firstName: 'FirstCousinOnceRemoved', lastName: 'FirstCousinOnceRemoved'})
-            CREATE (firstCousinTwiceRemoved: Person {id: '00000000-0000-0000-0000-000000000014', firstName: 'FirstCousinTwiceRemoved', lastName: 'FirstCousinTwiceRemoved'})
-            CREATE (firstCousinThriceRemoved: Person {id: '00000000-0000-0000-0000-000000000015', firstName: 'FirstCousinThriceRemoved', lastName: 'FirstCousinThriceRemoved'})
-            CREATE (greatGrandparent: Person {id: '00000000-0000-0000-0000-000000000016', firstName: 'GreatGrandparent', lastName: 'GreatGrandparent'})
-            CREATE (greatAuntOrUncle: Person {id: '00000000-0000-0000-0000-000000000017', firstName: 'GreatAuntOrUncle', lastName: 'GreatAuntOrUncle'})
-            CREATE (firstCousinOnceRemovedThroughGreatGrandparents: Person {id: '00000000-0000-0000-0000-000000000018', firstName: 'FirstCousinOnceRemovedThroughGreatGrandparents', lastName: 'FirstCousinOnceRemovedThroughGreatGrandparents'})
-            CREATE (secondCousin: Person {id: '00000000-0000-0000-0000-000000000019', firstName: 'SecondCousin', lastName: 'SecondCousin'})
-            CREATE (secondCousinOnceRemoved: Person {id: '00000000-0000-0000-0000-000000000020', firstName: 'SecondCousinOnceRemoved', lastName: 'SecondCousinOnceRemoved'})
-            CREATE (secondCousinTwiceRemoved: Person {id: '00000000-0000-0000-0000-000000000021', firstName: 'SecondCousinTwiceRemoved', lastName: 'SecondCousinTwiceRemoved'})
-            CREATE (secondCousinThriceRemoved: Person {id: '00000000-0000-0000-0000-000000000022', firstName: 'SecondCousinThriceRemoved', lastName: 'SecondCousinThriceRemoved'})
-            CREATE (greatGreatGrandparent: Person {id: '00000000-0000-0000-0000-000000000023', firstName: 'GreatGreatGrandparent', lastName: 'GreatGreatGrandparent'})
-            CREATE (greatGrandAuntOrUncle: Person {id: '00000000-0000-0000-0000-000000000024', firstName: 'GreatGrandAuntOrUncle', lastName: 'GreatGrandAuntOrUncle'})
-            CREATE (firstCousinTwiceRemovedThroughGreatGreatGrandparents: Person {id: '00000000-0000-0000-0000-000000000025', firstName: 'FirstCousinTwiceRemovedThroughGreatGreatGrandparents', lastName: 'FirstCousinTwiceRemovedThroughGreatGreatGrandparents'})
-            CREATE (secondCousinOnceRemovedThroughGreatGreatGrandparents: Person {id: '00000000-0000-0000-0000-000000000026', firstName: 'SecondCousinOnceRemovedThroughGreatGreatGrandparents', lastName: 'SecondCousinOnceRemovedThroughGreatGreatGrandparents'})
-            CREATE (thirdCousin: Person {id: '00000000-0000-0000-0000-000000000027', firstName: 'ThirdCousin', lastName: 'ThirdCousin'})
-            CREATE (thirdCousinOnceRemoved: Person {id: '00000000-0000-0000-0000-000000000028', firstName: 'ThirdCousinOnceRemoved', lastName: 'ThirdCousinOnceRemoved'})
-            CREATE (thirdCousinTwiceRemoved: Person {id: '00000000-0000-0000-0000-000000000029', firstName: 'ThirdCousinTwiceRemoved', lastName: 'ThirdCousinTwiceRemoved'})
-            CREATE (thirdCousinThriceRemoved: Person {id: '00000000-0000-0000-0000-000000000030', firstName: 'ThirdCousinThriceRemoved', lastName: 'ThirdCousinThriceRemoved'})
-            CREATE (unrelated: Person {id: '00000000-0000-0000-0000-000000000031', firstName: 'Unrelated', lastName: 'Unrelated', sex: 'female'})
-            CREATE (otherParent: Person {id: '00000000-0000-0000-0000-000000000032', firstName: 'Spouse1OfParent', lastName: 'Spouse1OfParent'})
-            CREATE (stepParent: Person {id: '00000000-0000-0000-0000-000000000033', firstName: 'Spouse2OfParent', lastName: 'Spouse2OfParent'})
-            
-            // Common Ancestor 0
-            CREATE (person)-[:PARTNER_IN]->(spousePartnership:Partnership {id: '00000001-0000-0000-0000-000000000000'})
-            CREATE (spouse)-[:PARTNER_IN]->(spousePartnership)
-            CREATE (spousePartnership)-[:BEGAT]->(child)
-            CREATE (child)-[:PARTNER_IN]->(childPartnership:Partnership {id: '00000002-0000-0000-0000-000000000000'})
-            CREATE (childPartnership)-[:BEGAT]->(grandchild)
-            CREATE (grandchild)-[:PARTNER_IN]->(grandchildPartnership:Partnership {id: '00000003-0000-0000-0000-000000000000'})
-            CREATE (grandchildPartnership)-[:BEGAT]->(greatGrandchild)
-            
-            // Common Ancestor 1
-            CREATE (parent)-[:PARTNER_IN]->(parentPartnership:Partnership {id: '00000005-0000-0000-0000-000000000000'})<-[:PARTNER_IN]-(otherParent)
-            CREATE (parent)-[:PARTNER_IN]->(parentSecondMarriagePartnership:Partnership {id: '00000031-0000-0000-0000-000000000000'})<-[:PARTNER_IN]-(stepParent)
-            CREATE (parentPartnership)-[:BEGAT]->(person)
-            CREATE (parentPartnership)-[:BEGAT]->(sibling)
-            CREATE (sibling)-[:PARTNER_IN]->(siblingPartnership:Partnership {id: '00000006-0000-0000-0000-000000000000'})
-            CREATE (siblingPartnership)-[:BEGAT]->(nieceOrNephew)
-            CREATE (nieceOrNephew)-[:PARTNER_IN]->(nieceOrNephewPartnership:Partnership {id: '00000007-0000-0000-0000-000000000000'})
-            CREATE (nieceOrNephewPartnership)-[:BEGAT]->(greatNieceOrNephew)
-            CREATE (greatNieceOrNephew)-[:PARTNER_IN]->(greatNieceOrNephewPartnership:Partnership {id: '00000008-0000-0000-0000-000000000000'})
-            CREATE (greatNieceOrNephewPartnership)-[:BEGAT]->(greatGrandNieceOrNephew)
-            
-            // Common Ancestor 2
-            CREATE (grandparent)-[:PARTNER_IN]->(grandparentPartnership:Partnership {id: '00000010-0000-0000-0000-000000000000'})
-            CREATE (grandparentPartnership)-[:BEGAT]->(parent)
-            CREATE (grandparentPartnership)-[:BEGAT]->(auntOrUncle)
-            CREATE (auntOrUncle)-[:PARTNER_IN]->(auntOrUnclePartnership:Partnership {id: '00000011-0000-0000-0000-000000000000'})
-            CREATE (auntOrUnclePartnership)-[:BEGAT]->(firstCousin)
-            CREATE (firstCousin)-[:PARTNER_IN]->(firstCousinPartnership:Partnership {id: '00000012-0000-0000-0000-000000000000'})
-            CREATE (firstCousinPartnership)-[:BEGAT]->(firstCousinOnceRemoved)
-            CREATE (firstCousinOnceRemoved)-[:PARTNER_IN]->(firstCousinOnceRemovedPartnership:Partnership {id: '00000013-0000-0000-0000-000000000000'})
-            CREATE (firstCousinOnceRemovedPartnership)-[:BEGAT]->(firstCousinTwiceRemoved)
-            CREATE (firstCousinTwiceRemoved)-[:PARTNER_IN]->(firstCousinTwiceRemovedPartnership:Partnership {id: '00000014-0000-0000-0000-000000000000'})
-            CREATE (firstCousinTwiceRemovedPartnership)-[:BEGAT]->(firstCousinThriceRemoved)
-            
-            // Common Ancestor 3
-            CREATE (greatGrandparent)-[:PARTNER_IN]->(greatGrandparentPartnership:Partnership {id: '00000016-0000-0000-0000-000000000000'})
-            CREATE (greatGrandparentPartnership)-[:BEGAT]->(grandparent)
-            CREATE (greatGrandparentPartnership)-[:BEGAT]->(greatAuntOrUncle)
-            CREATE (greatAuntOrUncle)-[:PARTNER_IN]->(greatAuntOrUnclePartnership:Partnership {id: '00000017-0000-0000-0000-000000000000'})
-            CREATE (greatAuntOrUnclePartnership)-[:BEGAT]->(firstCousinOnceRemovedThroughGreatGrandparents)
-            CREATE (firstCousinOnceRemovedThroughGreatGrandparents)-[:PARTNER_IN]->(firstCousinOnceRemovedThroughGreatGrandparentsPartnership:Partnership {id: '00000018-0000-0000-0000-000000000000'})
-            CREATE (firstCousinOnceRemovedThroughGreatGrandparentsPartnership)-[:BEGAT]->(secondCousin)
-            CREATE (secondCousin)-[:PARTNER_IN]->(secondCousinPartnership:Partnership {id: '00000019-0000-0000-0000-000000000000'})
-            CREATE (secondCousinPartnership)-[:BEGAT]->(secondCousinOnceRemoved)
-            CREATE (secondCousinOnceRemoved)-[:PARTNER_IN]->(secondCousinOnceRemovedPartnership:Partnership {id: '00000020-0000-0000-0000-000000000000'})
-            CREATE (secondCousinOnceRemovedPartnership)-[:BEGAT]->(secondCousinTwiceRemoved)
-            CREATE (secondCousinTwiceRemoved)-[:PARTNER_IN]->(secondCousinTwiceRemovedPartnership:Partnership {id: '00000021-0000-0000-0000-000000000000'})
-            CREATE (secondCousinTwiceRemovedPartnership)-[:BEGAT]->(secondCousinThriceRemoved)
-            
-            // Common Ancestor 4
-            CREATE (greatGreatGrandparent)-[:PARTNER_IN]->(greatGreatGrandparentPartnership:Partnership {id: '00000023-0000-0000-0000-000000000000'})
-            CREATE (greatGreatGrandparentPartnership)-[:BEGAT]->(greatGrandparent)
-            CREATE (greatGreatGrandparentPartnership)-[:BEGAT]->(greatGrandAuntOrUncle)
-            CREATE (greatGrandAuntOrUncle)-[:PARTNER_IN]->(greatGrandAuntOrUnclePartnership:Partnership {id: '00000024-0000-0000-0000-000000000000'})
-            CREATE (greatGrandAuntOrUnclePartnership)-[:BEGAT]->(firstCousinTwiceRemovedThroughGreatGreatGrandparents)
-            CREATE (firstCousinTwiceRemovedThroughGreatGreatGrandparents)-[:PARTNER_IN]->(firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnership:Partnership {id: '00000025-0000-0000-0000-000000000000'})
-            CREATE (firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnership)-[:BEGAT]->(secondCousinOnceRemovedThroughGreatGreatGrandparents)
-            CREATE (secondCousinOnceRemovedThroughGreatGreatGrandparents)-[:PARTNER_IN]->(secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnership:Partnership {id: '00000026-0000-0000-0000-000000000000'})
-            CREATE (secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnership)-[:BEGAT]->(thirdCousin)
-            CREATE (thirdCousin)-[:PARTNER_IN]->(thirdCousinPartnership:Partnership {id: '00000027-0000-0000-0000-000000000000'})
-            CREATE (thirdCousinPartnership)-[:BEGAT]->(thirdCousinOnceRemoved)
-            CREATE (thirdCousinOnceRemoved)-[:PARTNER_IN]->(thirdCousinOnceRemovedPartnership:Partnership {id: '00000028-0000-0000-0000-000000000000'})
-            CREATE (thirdCousinOnceRemovedPartnership)-[:BEGAT]->(thirdCousinTwiceRemoved)
-            CREATE (thirdCousinTwiceRemoved)-[:PARTNER_IN]->(thirdCousinTwiceRemovedPartnership:Partnership {id: '00000029-0000-0000-0000-000000000000'})
-            CREATE (thirdCousinTwiceRemovedPartnership)-[:BEGAT]->(thirdCousinThriceRemoved)
-            """);
+            // 0
+            session.run(createMan(personId, "person"));
+            session.run(createWoman(spouseId, "spouse"));
+            session.run(createMan(sonId, "son"));
+            session.run(createWoman(daughterInLawId, "daughterInLaw"));
+            session.run(createWoman(daughterId, "daughter"));
+            session.run(createMan(sonInLawId, "sonInLaw"));
+            session.run(createWoman(otherSpouseId, "otherSpouse"));
+            session.run(createMan(stepSonId, "stepSon"));
+            session.run(createWoman(stepDaughterId, "stepDaughter"));
+            session.run(createMan(grandsonId, "grandson"));
+            session.run(createWoman(granddaughterInLawId, "granddaughterInLaw"));
+            session.run(createWoman(granddaughterId, "granddaughter"));
+            session.run(createMan(grandsonInLawId, "grandsonInLaw"));
+            session.run(createMan(greatGrandsonId, "greatGrandson"));
+            session.run(createWoman(greatGranddaughterInLawId, "greatGranddaughterInLaw"));
+            session.run(createWoman(greatGranddaughterId, "greatGranddaughter"));
+            session.run(createMan(greatGrandsonInLawId, "greatGrandson"));
+            // 1
+            session.run(createMan(fatherId, "father"));
+            session.run(createWoman(motherId, "mother"));
+            session.run(createMan(stepFatherId, "stepFather"));
+            session.run(createWoman(stepMotherId, "stepMother"));
+            session.run(createMan(brotherId, "brother"));
+            session.run(createWoman(sisterId, "sister"));
+            session.run(createMan(halfBrotherId, "halfBrother"));
+            session.run(createWoman(halfSisterId, "halfSister"));
+            session.run(createMan(stepBrotherId, "stepBrother"));
+            session.run(createWoman(stepSisterId, "stepSister"));
+            session.run(createMan(brotherInLawId, "brotherInLaw"));
+            session.run(createWoman(sisterInLawId, "sisterInLaw"));
+            session.run(createWoman(nieceId, "niece"));
+            session.run(createMan(nephewId, "nephew"));
+            session.run(createWoman(greatNieceId, "greatNiece"));
+            session.run(createMan(greatNephewId, "greatNephew"));
+            session.run(createWoman(greatGrandNieceId, "greatGrandNiece"));
+            session.run(createMan(greatGrandNephewId, "greatGrandNephew"));
+            // 2
+            session.run(createMan(grandfatherId, "grandfather"));
+            session.run(createWoman(grandmotherId, "grandmother"));
+            session.run(createMan(stepGrandfatherId, "stepGrandfather"));
+            session.run(createWoman(stepGrandmotherId, "stepGrandmother"));
+            session.run(createMan(uncleId, "uncle"));
+            session.run(createWoman(auntId, "aunt"));
+            session.run(createMan(firstCousinId, "firstCousin"));
+            session.run(createWoman(firstCousinOnceRemovedId, "firstCousinOnceRemoved"));
+            session.run(createMan(firstCousinTwiceRemovedId, "firstCousinTwiceRemoved"));
+            session.run(createWoman(firstCousinThriceRemovedId, "firstCousinThriceRemoved"));
+            // 3
+            session.run(createMan(greatGrandfatherId, "greatGrandfather"));
+            session.run(createWoman(greatGrandmotherId, "greatGrandmother"));
+            session.run(createMan(stepGreatGrandfatherId, "stepGreatGrandfather"));
+            session.run(createWoman(stepGreatGrandmotherId, "stepGreatGrandmother"));
+            session.run(createMan(greatUncleId, "greatUncle"));
+            session.run(createWoman(greatAuntId, "greatAunt"));
+            session.run(createMan(firstCousinOnceRemovedThroughGreatGrandparentsId, "firstCousinOnceRemovedThroughGreatGrandparents"));
+            session.run(createMan(secondCousinId, "secondCousin"));
+            session.run(createWoman(secondCousinOnceRemovedId, "secondCousinOnceRemoved"));
+            session.run(createMan(secondCousinTwiceRemovedId, "secondCousinTwiceRemoved"));
+            session.run(createWoman(secondCousinThriceRemovedId, "secondCousinThriceRemoved"));
+            // 4
+            session.run(createMan(greatGreatGrandfatherId, "greatGreatGrandfather"));
+            session.run(createWoman(greatGreatGrandmotherId, "greatGreatGrandmother"));
+            session.run(createMan(stepGreatGreatGrandfatherId, "stepGreatGreatGrandfather"));
+            session.run(createWoman(stepGreatGreatGrandmotherId, "stepGreatGreatGrandmother"));
+            session.run(createMan(greatGrandUncleId, "greatGrandUncle"));
+            session.run(createWoman(greatGrandAuntId, "greatGrandAunt"));
+            session.run(createMan(firstCousinTwiceRemovedThroughGreatGreatGrandparentsId, "firstCousinTwiceRemovedThroughGreatGreatGrandparents"));
+            session.run(createMan(secondCousinOnceRemovedThroughGreatGreatGrandparentsId, "secondCousinOnceRemovedThroughGreatGreatGrandparents"));
+            session.run(createMan(thirdCousinId, "thirdCousin"));
+            session.run(createWoman(thirdCousinOnceRemovedId, "thirdCousinOnceRemoved"));
+            session.run(createMan(thirdCousinTwiceRemovedId, "thirdCousinTwiceRemoved"));
+            session.run(createWoman(thirdCousinThriceRemovedId, "thirdCousinThriceRemoved"));
+            session.run(createMan(unrelatedPersonId, "unrelatedPerson"));
+            // Common Ancestor 0 - Partnerships
+            session.run(createPartnership(personId, spouseId, List.of(sonId, daughterId)));
+            session.run(createPartnership(sonId, daughterInLawId, List.of(grandsonId)));
+            session.run(createPartnership(daughterId, sonInLawId, List.of(granddaughterId)));
+            session.run(createPartnership(otherSpouseId, List.of(stepSonId, stepDaughterId)));
+            session.run(createPartnership(personId, otherSpouseId));
+            session.run(createPartnership(grandsonId, granddaughterInLawId, List.of(greatGrandsonId)));
+            session.run(createPartnership(granddaughterId, grandsonInLawId, List.of(greatGranddaughterId)));
+            session.run(createPartnership(greatGrandsonId, greatGranddaughterInLawId));
+            session.run(createPartnership(greatGranddaughterId, greatGrandsonInLawId));
+            // Common Ancestor 1 - Partnerships
+            session.run(createPartnership(fatherId, motherId, List.of(personId, brotherId, sisterId)));
+            session.run(createPartnership(stepFatherId, List.of(stepBrotherId)));
+            session.run(createPartnership(stepMotherId, List.of(stepSisterId)));
+            session.run(createPartnership(fatherId, stepMotherId, List.of(halfBrotherId)));
+            session.run(createPartnership(motherId, stepFatherId, List.of(halfSisterId)));
+            session.run(createPartnership(brotherId, sisterInLawId, List.of(nephewId)));
+            session.run(createPartnership(sisterId, brotherInLawId, List.of(nieceId)));
+            session.run(createPartnership(nephewId, List.of(greatNephewId)));
+            session.run(createPartnership(nieceId, List.of(greatNieceId)));
+            session.run(createPartnership(greatNephewId, List.of(greatGrandNephewId)));
+            session.run(createPartnership(greatNieceId, List.of(greatGrandNieceId)));
+            // Common Ancestor 2 - Partnerships
+            session.run(createPartnership(grandfatherId, grandmotherId, List.of(fatherId, uncleId, auntId)));
+            session.run(createPartnership(grandfatherId, stepGrandmotherId));
+            session.run(createPartnership(grandmotherId, stepGrandfatherId));
+            session.run(createPartnership(uncleId, List.of(firstCousinId)));
+            session.run(createPartnership(firstCousinId, List.of(firstCousinOnceRemovedId)));
+            session.run(createPartnership(firstCousinOnceRemovedId, List.of(firstCousinTwiceRemovedId)));
+            session.run(createPartnership(firstCousinTwiceRemovedId, List.of(firstCousinThriceRemovedId)));
+            // Common Ancestor 3 - Partnerships
+            session.run(createPartnership(greatGrandfatherId, greatGrandmotherId, List.of(grandfatherId, greatUncleId, greatAuntId)));
+            session.run(createPartnership(greatGrandfatherId, stepGreatGrandmotherId));
+            session.run(createPartnership(greatGrandmotherId, stepGreatGrandfatherId));
+            session.run(createPartnership(greatUncleId, List.of(firstCousinOnceRemovedThroughGreatGrandparentsId)));
+            session.run(createPartnership(firstCousinOnceRemovedThroughGreatGrandparentsId, List.of(secondCousinId)));
+            session.run(createPartnership(secondCousinId, List.of(secondCousinOnceRemovedId)));
+            session.run(createPartnership(secondCousinOnceRemovedId, List.of(secondCousinTwiceRemovedId)));
+            session.run(createPartnership(secondCousinTwiceRemovedId, List.of(secondCousinThriceRemovedId)));
+            // Common Ancestor 4 - Partnerships
+            session.run(createPartnership(greatGreatGrandfatherId, greatGreatGrandmotherId, List.of(greatGrandfatherId, greatGrandUncleId)));
+            session.run(createPartnership(greatGreatGrandfatherId, stepGreatGreatGrandmotherId));
+            session.run(createPartnership(greatGreatGrandmotherId, stepGreatGreatGrandfatherId));
+            session.run(createPartnership(greatGrandUncleId, greatGrandAuntId, List.of(firstCousinTwiceRemovedThroughGreatGreatGrandparentsId)));
+            session.run(createPartnership(firstCousinTwiceRemovedThroughGreatGreatGrandparentsId, List.of(secondCousinOnceRemovedThroughGreatGreatGrandparentsId)));
+            session.run(createPartnership(secondCousinOnceRemovedThroughGreatGreatGrandparentsId, List.of(thirdCousinId)));
+            session.run(createPartnership(thirdCousinId, List.of(thirdCousinOnceRemovedId)));
+            session.run(createPartnership(thirdCousinOnceRemovedId, List.of(thirdCousinTwiceRemovedId)));
+            session.run(createPartnership(thirdCousinTwiceRemovedId, List.of(thirdCousinThriceRemovedId)));
         }
     }
 

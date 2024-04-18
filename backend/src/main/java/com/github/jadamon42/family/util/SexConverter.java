@@ -1,6 +1,5 @@
 package com.github.jadamon42.family.util;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -31,13 +30,12 @@ public class SexConverter extends JsonDeserializer<Sex> implements Neo4jPersiste
         return convert(jsonParser.getText());
     }
 
-    private Sex convert(@NonNull String source) {
-        if (source.matches("(?i)m|male")) {
+    public Sex convert(String source) {
+        if (source != null && source.matches("(?i)m|male")) {
             return Sex.MALE;
-        }
-        if (source.matches("(?i)f|female")) {
+        } else if (source != null && source.matches("(?i)f|female")) {
             return Sex.FEMALE;
         }
-        throw new IllegalArgumentException("Invalid sex: " + source + ". Expected 'Male' or 'Female'.");
+        return Sex.UNKNOWN;
     }
 }

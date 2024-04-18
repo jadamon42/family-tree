@@ -1,6 +1,7 @@
 package com.github.jadamon42.family.model;
 
 import com.github.jadamon42.family.exception.PersonNotFoundException;
+import com.github.jadamon42.family.util.SexConverter;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.neo4j.driver.types.TypeSystem;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,37 +19,26 @@ import java.util.stream.Stream;
 @Value
 @Builder
 public class GenealogicalLink {
-    @Getter(AccessLevel.NONE)
-    String person1Id;
-    @Getter(AccessLevel.NONE)
-    String person2Id;
-    @Getter(AccessLevel.NONE)
-    String person1Sex;
-    @Getter(AccessLevel.NONE)
-    String person2Sex;
+    private static SexConverter sexConverter = new SexConverter();
+
+    UUID sharedAncestralPartnershipId;
+    Collection<UUID> commonAncestorIds;
+    UUID personFromId;
+    UUID personToId;
+    Sex personFromSex;
+    Sex personToSex;
+    Boolean personFromMarriedIn;
+    Boolean personToMarriedIn;
     @Getter(AccessLevel.NONE)
     Relation relationFromPerspectiveOfPerson1;
     @Getter(AccessLevel.NONE)
     Relation relationFromPerspectiveOfPerson2;
 
-    String sharedAncestralPartnershipId;
-    Collection<String> commonAncestorIds;
-
     public Relation getRelationFromPerspectiveOfPerson(UUID personId) {
-        if (personId.toString().equals(person1Id)) {
+        if (personId.equals(personFromId)) {
             return relationFromPerspectiveOfPerson1;
-        } else if (personId.toString().equals(person2Id)) {
+        } else if (personId.equals(personToId)) {
             return relationFromPerspectiveOfPerson2;
-        } else {
-            throw new PersonNotFoundException(personId);
-        }
-    }
-
-    public String getSexOfPerson(UUID personId) throws PersonNotFoundException {
-        if (personId.toString().equals(person1Id)) {
-            return person1Sex;
-        } else if (personId.toString().equals(person2Id)) {
-            return person2Sex;
         } else {
             throw new PersonNotFoundException(personId);
         }
@@ -55,22 +46,24 @@ public class GenealogicalLink {
 
     public static GenealogicalLink fromRecord(TypeSystem ignored, Record record) {
         return GenealogicalLink.builder()
-                               .person1Id(getString(record.get("person1Id")))
-                               .person2Id(getString(record.get("person2Id")))
-                               .person1Sex(getString(record.get("person1Sex")))
-                               .person2Sex(getString(record.get("person2Sex")))
-                               .sharedAncestralPartnershipId(getString(record.get("sharedAncestralPartnershipId")))
+                               .personFromId(getUUID(record.get("person1Id")))
+                               .personToId(getUUID(record.get("person2Id")))
+                               .personFromSex(sexConverter.convert(getString(record.get("person1Sex"))))
+                               .personToSex(sexConverter.convert(getString(record.get("person2Sex"))))
+                               .personFromMarriedIn(record.get("person1MarriedIn").asBoolean())
+                               .personToMarriedIn(record.get("person2MarriedIn").asBoolean())
+                               .sharedAncestralPartnershipId(getUUID(record.get("sharedAncestralPartnershipId")))
                                .commonAncestorIds(getCommonAncestorIds(record))
                                .relationFromPerspectiveOfPerson1(buildRelation(record, "person1"))
                                .relationFromPerspectiveOfPerson2(buildRelation(record, "person2"))
                                .build();
     }
 
-    private static List<String> getCommonAncestorIds(Record record) {
+    private static List<UUID> getCommonAncestorIds(Record record) {
         return Stream.of(
-                        getString(record.get("commonAncestorId")),
-                        getString(record.get("otherCommonAncestorId")))
-                     .filter(s -> s != null && !s.isEmpty())
+                        getUUID(record.get("commonAncestorId")),
+                        getUUID(record.get("otherCommonAncestorId")))
+                     .filter(Objects::nonNull)
                      .collect(Collectors.toList());
     }
 
@@ -78,6 +71,9 @@ public class GenealogicalLink {
         return value.asString(null);
     }
 
+    private static UUID getUUID(org.neo4j.driver.Value commonAncestorId) {
+        return commonAncestorId.isNull() ? null : UUID.fromString(commonAncestorId.asString());
+    }
 
     private static Relation buildRelation(Record record, String personPrefix) {
         String otherPrefix = personPrefix.equals("person1") ? "person2" : "person1";

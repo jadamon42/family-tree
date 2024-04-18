@@ -37,10 +37,12 @@ public class CustomCypherQueryExecutor {
               AND ((directCommonAncestor)-[*]->(p2) OR directCommonAncestor = p2)
         OPTIONAL MATCH (p1CommonAncestorThroughMarriage:Person)
             WHERE ((p1CommonAncestorThroughMarriage)-[*]->(p1) OR p1CommonAncestorThroughMarriage = p1)
-              AND (p1CommonAncestorThroughMarriage)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2)
+              AND ((p1CommonAncestorThroughMarriage)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2)
+                    OR (p1CommonAncestorThroughMarriage)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(:Person)-[:PARTNER_IN]->(:Partnership)-[:BEGAT]->(p2))
         OPTIONAL MATCH (p2CommonAncestorThroughMarriage:Person)
-            WHERE (p2CommonAncestorThroughMarriage)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1)
-              AND ((p2CommonAncestorThroughMarriage)-[*]->(p2) OR p2CommonAncestorThroughMarriage = p2)
+            WHERE ((p2CommonAncestorThroughMarriage)-[*]->(p2) OR p2CommonAncestorThroughMarriage = p2)
+              AND ((p2CommonAncestorThroughMarriage)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1)
+                    OR (p2CommonAncestorThroughMarriage)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(:Person)-[:PARTNER_IN]->(:Partnership)-[:BEGAT]->(p1))
         OPTIONAL MATCH (onlyMarriageCommonAncestor: Person)
             WHERE (onlyMarriageCommonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1)
               AND (onlyMarriageCommonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2)
@@ -89,6 +91,16 @@ public class CustomCypherQueryExecutor {
                           .bind(person2Id.toString()).to("person2Id")
                           .fetchAs(GenealogicalLink.class)
                           .mappedBy(GenealogicalLink::fromRecord)
+                          .one();
+    }
+
+    public Optional<UUID> findSpouseViaSpousesAncestor(UUID personId, UUID ancestorId) {
+        return neo4jClient.query(("""
+        MATCH (a:Person {id: $ancestorId})-[*]->(spouse:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p:Person {id: $personId})
+        RETURN spouse.id AS spouseId"""))
+                          .bind(personId.toString()).to("personId")
+                          .bind(ancestorId.toString()).to("ancestorId")
+                          .fetchAs(UUID.class)
                           .one();
     }
 }
