@@ -1,5 +1,6 @@
 package com.github.jadamon42.family.service;
 
+import com.github.jadamon42.family.exception.PartnershipNotFoundException;
 import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
@@ -36,7 +37,11 @@ public class PersonService {
     }
 
     public PersonProjection createPerson(PersonRequest request) {
-        return personRepository.saveAndReturnProjection(Person.fromRequest(request));
+        PersonProjection person = personRepository.saveAndReturnProjection(Person.fromRequest(request));
+        if (request.getParentsPartnershipId() != null && request.getParentsPartnershipId().isPresent()) {
+            createParentPartnershipLink(request.getParentsPartnershipId().get(), person.getId());
+        }
+        return person;
     }
 
     public Optional<PersonProjection> updatePerson(UUID id, PersonRequest request) {
@@ -45,6 +50,9 @@ public class PersonService {
         if (existingPerson != null) {
             Person person = getPatchedPerson(existingPerson, request);
             existingPerson = personRepository.updateAndReturnProjection(id, person);
+            if (request.getParentsPartnershipId() != null && request.getParentsPartnershipId().isPresent()) {
+                createParentPartnershipLink(request.getParentsPartnershipId().get(), existingPerson.getId());
+            }
         }
         return Optional.ofNullable(existingPerson);
     }
@@ -75,5 +83,12 @@ public class PersonService {
         patch(builder, Person.PersonBuilder::birthDate, request.getBirthDate(), existingPerson.getBirthDate());
         patch(builder, Person.PersonBuilder::deathDate, request.getDeathDate(), existingPerson.getDeathDate());
         return builder.build();
+    }
+
+    private void createParentPartnershipLink(UUID parentsPartnershipId, UUID childId) {
+        boolean linked = partnershipRepository.linkChildToPartnership(parentsPartnershipId, childId);
+        if (!linked) {
+            throw new PartnershipNotFoundException(parentsPartnershipId);
+        }
     }
 }
