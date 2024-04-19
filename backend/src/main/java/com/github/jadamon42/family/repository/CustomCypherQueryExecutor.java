@@ -47,8 +47,8 @@ public class CustomCypherQueryExecutor {
             WHERE (onlyMarriageCommonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p1)
               AND (onlyMarriageCommonAncestor)-[*]->(:Person)-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2)
         WITH p1, p2
-           , directCommonAncestor IS NULL AND (p1CommonAncestorThroughMarriage IS NOT NULL OR onlyMarriageCommonAncestor IS NOT NULL) AS person2MarriedIn
-           , directCommonAncestor IS NULL AND (p2CommonAncestorThroughMarriage IS NOT NULL OR onlyMarriageCommonAncestor IS NOT NULL) AS person1MarriedIn
+           , directCommonAncestor IS NULL AND (p1CommonAncestorThroughMarriage IS NOT NULL OR (p2CommonAncestorThroughMarriage IS NULL AND onlyMarriageCommonAncestor IS NOT NULL)) AS person2MarriedIn
+           , directCommonAncestor IS NULL AND (p2CommonAncestorThroughMarriage IS NOT NULL OR (p1CommonAncestorThroughMarriage IS NULL AND onlyMarriageCommonAncestor IS NOT NULL)) AS person1MarriedIn
            , CASE
                 WHEN directCommonAncestor IS NOT NULL THEN directCommonAncestor
                 WHEN p1CommonAncestorThroughMarriage IS NOT NULL THEN p1CommonAncestorThroughMarriage
