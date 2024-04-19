@@ -19,54 +19,100 @@ public class GenealogicalLinkService {
     }
 
     public Optional<String> getRelationshipLabel(UUID personIdFrom, UUID personIdTo) {
+        String retval = null;
         Optional<GenealogicalLink> genealogicalLink = customCypherQueryExecutor.findLatestGenealogicalLink(personIdFrom, personIdTo);
 
-        if (genealogicalLink.isEmpty()) {
-            return Optional.empty();
+        if (genealogicalLink.isPresent()) {
+            GenealogicalLink link = genealogicalLink.get();
+            Relation relation = link.getRelationFromPerspectiveOfPersonFrom();
+
+            int numberOfGenerationsToCommonAncestor = relation.getNumberOfGenerationsToCommonAncestor();
+            int numberOfGenerationsToOtherPerson = relation.getNumberOfGenerationsToOtherPerson();
+            boolean isValidRelation = numberOfGenerationsToCommonAncestor >= 0
+                                                    && numberOfGenerationsToOtherPerson <= numberOfGenerationsToCommonAncestor;
+
+            if (isValidRelation) {
+                if (link.getPersonFromMarriedIn() && link.getPersonToMarriedIn()) {
+                    retval = getRelationshipLabelBothMarriedIn(
+                            link, numberOfGenerationsToCommonAncestor, numberOfGenerationsToOtherPerson);
+                } else if (link.getPersonFromMarriedIn()) {
+                    retval = getRelationshipLabelPersonFromMarriedIn(
+                            link, numberOfGenerationsToCommonAncestor, numberOfGenerationsToOtherPerson);
+                } else if (link.getPersonToMarriedIn()) {
+                    retval = getRelationshipLabelPersonToMarriedIn(
+                            link, numberOfGenerationsToCommonAncestor, numberOfGenerationsToOtherPerson);
+                } else {
+                    retval = getRelationshipLabelNoneMarriedIn(
+                            link, numberOfGenerationsToCommonAncestor, numberOfGenerationsToOtherPerson);
+                }
+            }
         }
 
-        GenealogicalLink link = genealogicalLink.get();
-        Relation relation = link.getRelationFromPerspectiveOfPersonFrom();
+        return Optional.ofNullable(retval);
+    }
 
-        int numberOfGenerationsToCommonAncestor = relation.getNumberOfGenerationsToCommonAncestor();
-        int numberOfGenerationsToOtherPerson = relation.getNumberOfGenerationsToOtherPerson();
-
-        if (numberOfGenerationsToCommonAncestor < 0 || numberOfGenerationsToOtherPerson > numberOfGenerationsToCommonAncestor) {
-            return Optional.empty();
-        }
-
-        int difference = numberOfGenerationsToCommonAncestor - numberOfGenerationsToOtherPerson;
+    private String getRelationshipLabelBothMarriedIn(GenealogicalLink link, int numberOfGenerationsToCommonAncestor, int numberOfGenerationsToOtherPerson) {
         String retval;
+        int difference = numberOfGenerationsToCommonAncestor - numberOfGenerationsToOtherPerson;
 
         if (difference == 0) {
             retval = switch (numberOfGenerationsToCommonAncestor) {
                 case 0 -> "Self" ;
-                case 1 -> {
-                    if (link.getPersonFromMarriedIn()) {
-                        yield "%s-in-Law".formatted(getParentLabel(link));
-                    }
-                    yield getParentLabel(link);
-                }
-                default -> getGreatPrefix(numberOfGenerationsToCommonAncestor - 2) + getGrantParentLabel(link);
+                case 1 ->  "%s-in-Law".formatted(getParentLabel(link));
+                default -> "%s%s-in-Law".formatted(getGreatPrefix(numberOfGenerationsToCommonAncestor - 2), getGrandParentLabel(link));
             };
         } else {
             retval = switch (numberOfGenerationsToCommonAncestor) {
                 case 0 -> switch (numberOfGenerationsToOtherPerson) {
-                    case -1 -> getChildLabel(link);
-                    default -> getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2) + getGrandChildLabel(link);
+                    case -1 -> "Step-%s".formatted(getChildLabel(link));
+                    default -> "Step-%s%s".formatted(getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2), getGrandChildLabel(link));
                 };
                 case 1 -> switch (numberOfGenerationsToOtherPerson) {
-                    case 0 -> getSiblingLabel(link);
-                    default -> {
-                        int numberOfGreats = Math.abs(numberOfGenerationsToOtherPerson) - 1;
+                    case 0 -> getSpouseOrSiblingInLawLabel(link);
+                    default -> "Step-%s".formatted(getChildLabel(link));
+                };
+                default ->  {
+                    if (difference == 1) {
+                        int numberOfGreats = numberOfGenerationsToCommonAncestor - 2;
                         if (numberOfGreats == 0) {
-                            yield getNiblingLabel(link);
+                            yield "Step-%s-in-Law".formatted(getParentLabel(link));
                         } else if (numberOfGreats == 1) {
-                            yield "Grand-" + getNiblingLabel(link);
+                             yield "Step-%s-in-Law".formatted(getGrandParentLabel(link));
                         } else {
-                            yield getGreatPrefix(numberOfGreats-1) + "Grand-" + getNiblingLabel(link);
+                            Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
+                            if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
+                                yield "%sGrand-%s-in-Law".formatted(getGreatPrefix(numberOfGreats - 1), getPiblingLabel(link));
+                            } else {
+                                yield "Step-%s%s-in-Law".formatted(getGreatPrefix(numberOfGreats - 1), getGrandParentLabel(link));
+                            }
                         }
                     }
+                    yield "Step-%s".formatted(getSiblingLabel(link));
+                }
+            };
+        }
+        return retval;
+    }
+
+    private String getRelationshipLabelPersonFromMarriedIn(GenealogicalLink link, int numberOfGenerationsToCommonAncestor, int numberOfGenerationsToOtherPerson) {
+        String retval;
+        int difference = numberOfGenerationsToCommonAncestor - numberOfGenerationsToOtherPerson;
+
+        if (difference == 0) {
+            retval = switch (numberOfGenerationsToCommonAncestor) {
+                case 0 -> "Self" ;
+                case 1 -> "%s-in-Law".formatted(getParentLabel(link));
+                default -> "%s%s-in-Law".formatted(getGreatPrefix(numberOfGenerationsToCommonAncestor - 2), getGrandParentLabel(link));
+            };
+        } else {
+            retval = switch (numberOfGenerationsToCommonAncestor) {
+                case 0 -> switch (numberOfGenerationsToOtherPerson) {
+                    case -1 -> "Step-%s".formatted(getChildLabel(link));
+                    default -> "Step-%s%s".formatted(getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2), getGrandChildLabel(link));
+                };
+                case 1 -> switch (numberOfGenerationsToOtherPerson) {
+                    case 0 -> getSpouseOrSiblingInLawLabel(link);
+                    default -> getFullNiblingLabel(link, numberOfGenerationsToOtherPerson);
                 };
                 default ->  {
                     int cousinType;
@@ -74,56 +120,11 @@ public class GenealogicalLinkService {
                     if (difference == 1) {
                         int numberOfGreats = numberOfGenerationsToCommonAncestor - 2;
                         if (numberOfGreats == 0) {
-                            if (link.getPersonFromMarriedIn() && link.getPersonToMarriedIn()){
-                                yield "Step-%s-in-Law".formatted(getParentLabel(link));
-                            } else if (link.getPersonFromMarriedIn()) {
-                                yield "%s-in-Law".formatted(getPiblingLabel(link));
-                            } else if (link.getPersonToMarriedIn()) {
-                                // if personTo's spouse an uncle, personTo is an aunt
-                                // else stepparent
-                                Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
-                                if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
-                                    yield getPiblingLabel(link);
-                                } else {
-                                    yield "Step-%s".formatted(getParentLabel(link));
-                                }
-                            }
-                            yield getPiblingLabel(link);
+                            yield "%s-in-Law".formatted(getPiblingLabel(link));
                         } else if (numberOfGreats == 1) {
-                            if (link.getPersonFromMarriedIn() && link.getPersonToMarriedIn()){
-                                yield "Step-%s-in-Law".formatted(getSimpleGrandParentLabel(link));
-                            } else if (link.getPersonFromMarriedIn()) {
-                                yield "Grand-" + getPiblingLabel(link) + "-in-Law";
-                            } else if (link.getPersonToMarriedIn()) {
-                                // if personTo's spouse a grand uncle, personTo is a grand aunt
-                                // else step-grandparent
-                                // TODO: refactor
-                                Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
-                                if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
-                                    yield "Grand-" + getPiblingLabel(link);
-                                } else {
-                                    yield "Step-%s".formatted(getSimpleGrandParentLabel(link));
-                                }
-                            }
-                            yield "Grand-" + getPiblingLabel(link);
+                            yield "Grand-%s-in-Law".formatted(getPiblingLabel(link));
                         } else {
-                            if (link.getPersonToMarriedIn()) {
-                                Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
-                                if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
-                                    if (link.getPersonFromMarriedIn()) {
-                                        yield getGreatPrefix(numberOfGreats - 1) + "Grand-" + getPiblingLabel(link) + "-in-Law";
-                                    }
-                                    yield getGreatPrefix(numberOfGreats - 1) + "Grand-" + getPiblingLabel(link);
-                                } else {
-                                    if (link.getPersonFromMarriedIn()) {
-                                        yield "Step-%s".formatted(getGreatPrefix(numberOfGenerationsToCommonAncestor - 3) + getSimpleGrandParentLabel(link)) + "-in-Law";
-                                    }
-                                    yield "Step-%s".formatted(getGreatPrefix(numberOfGenerationsToCommonAncestor - 3) + getSimpleGrandParentLabel(link));
-                                }
-                            } else if (link.getPersonFromMarriedIn()) {
-                                yield getGreatPrefix(numberOfGreats - 1) + "Grand-" + getPiblingLabel(link) + "-in-Law";
-                            }
-                            yield getGreatPrefix(numberOfGreats - 1) + "Grand-" + getPiblingLabel(link);
+                            yield "%sGrand-%s-in-Law".formatted(getGreatPrefix(numberOfGreats - 1), getPiblingLabel(link));
                         }
                     } else if (difference <= numberOfGenerationsToCommonAncestor) {
                         cousinType = difference - 1;
@@ -132,18 +133,134 @@ public class GenealogicalLinkService {
                         cousinType = numberOfGenerationsToCommonAncestor - 1;
                         timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
                     }
-                    if (link.getPersonToMarriedIn()) {
-                        yield "Step-" + getSimpleSiblingLabel(link);
-                    } else if (link.getPersonFromMarriedIn()) {
-                        yield getCousinPrefix(cousinType) + "Cousin-in-Law" + getTimeRemovedSuffix(timesRemoved);
-                    } else {
-                        yield getCousinPrefix(cousinType) + "Cousin" + getTimeRemovedSuffix(timesRemoved);
-                    }
+                    yield "%sCousin-in-Law%s".formatted(getCousinPrefix(cousinType), getTimeRemovedSuffix(timesRemoved));
                 }
             };
         }
+        return retval;
+    }
 
-        return Optional.of(retval);
+    private String getRelationshipLabelPersonToMarriedIn(GenealogicalLink link, int numberOfGenerationsToCommonAncestor, int numberOfGenerationsToOtherPerson) {
+        String retval;
+        int difference = numberOfGenerationsToCommonAncestor - numberOfGenerationsToOtherPerson;
+
+        if (difference == 0) {
+            retval = switch (numberOfGenerationsToCommonAncestor) {
+                case 0 -> "Self" ;
+                case 1 -> getParentLabel(link);
+                default -> "%s%s".formatted(getGreatPrefix(numberOfGenerationsToCommonAncestor - 2), getGrandParentLabel(link));
+            };
+        } else {
+            retval = switch (numberOfGenerationsToCommonAncestor) {
+                case 0 -> switch (numberOfGenerationsToOtherPerson) {
+                    case -1 -> "%s-in-Law".formatted(getChildLabel(link));
+                    default -> "%s%s-in-Law".formatted(getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2), getGrandChildLabel(link));
+                };
+                case 1 -> switch (numberOfGenerationsToOtherPerson) {
+                    case 0 -> getSpouseOrSiblingInLawLabel(link);
+                    default -> "Step-%s".formatted(getChildLabel(link));
+                };
+                default ->  {
+                    if (difference == 1) {
+                        int numberOfGreats = numberOfGenerationsToCommonAncestor - 2;
+                        if (numberOfGreats == 0) {
+                            Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
+                            if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
+                                yield getPiblingLabel(link);
+                            } else {
+                                yield "Step-%s".formatted(getParentLabel(link));
+                            }
+                        } else if (numberOfGreats == 1) {
+                            Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
+                            if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
+                                yield "Grand-%s".formatted(getPiblingLabel(link));
+                            } else {
+                                yield "Step-%s".formatted(getGrandParentLabel(link));
+                            }
+                        } else {
+                            Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
+                            if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
+                                yield "%sGrand-%s".formatted(getGreatPrefix(numberOfGreats - 1), getPiblingLabel(link));
+                            } else {
+                                yield "Step-%s%s".formatted(getGreatPrefix(numberOfGreats - 1), getGrandParentLabel(link));
+                            }
+                        }
+                    }
+                    yield "Step-%s".formatted(getSiblingLabel(link));
+                }
+            };
+        }
+        return retval;
+    }
+
+    public String getRelationshipLabelNoneMarriedIn(GenealogicalLink link, int numberOfGenerationsToCommonAncestor, int numberOfGenerationsToOtherPerson) {
+        String retval;
+        int difference = numberOfGenerationsToCommonAncestor - numberOfGenerationsToOtherPerson;
+
+        if (difference == 0) {
+            retval = switch (numberOfGenerationsToCommonAncestor) {
+                case 0 -> "Self" ;
+                case 1 -> getParentLabel(link);
+                default -> "%s%s".formatted(getGreatPrefix(numberOfGenerationsToCommonAncestor - 2), getGrandParentLabel(link));
+            };
+        } else {
+            retval = switch (numberOfGenerationsToCommonAncestor) {
+                case 0 -> switch (numberOfGenerationsToOtherPerson) {
+                    case -1 -> getChildLabel(link);
+                    default -> "%s%s".formatted(getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2), getGrandChildLabel(link));
+                };
+                case 1 -> switch (numberOfGenerationsToOtherPerson) {
+                    case 0 -> {
+                        if (link.getSharedAncestralPartnershipId() == null) {
+                            yield "Half-%s".formatted(getSiblingLabel(link));
+                        }
+                        yield getSiblingLabel(link);
+                    }
+                    default -> getFullNiblingLabel(link, numberOfGenerationsToOtherPerson);
+                };
+                default ->  {
+                    int cousinType;
+                    int timesRemoved;
+                    if (difference == 1) {
+                        int numberOfGreats = numberOfGenerationsToCommonAncestor - 2;
+                        if (numberOfGreats == 0) {
+                             yield getPiblingLabel(link);
+                        } else if (numberOfGreats == 1) {
+                            yield "Grand-%s".formatted(getPiblingLabel(link));
+                        } else {
+                            yield "%sGrand-%s".formatted(getGreatPrefix(numberOfGreats - 1), getPiblingLabel(link));
+                        }
+                    } else if (difference <= numberOfGenerationsToCommonAncestor) {
+                        cousinType = difference - 1;
+                        timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
+                    } else {
+                        cousinType = numberOfGenerationsToCommonAncestor - 1;
+                        timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
+                    }
+                    yield "%sCousin%s".formatted(getCousinPrefix(cousinType), getTimeRemovedSuffix(timesRemoved));
+                }
+            };
+        }
+        return retval;
+    }
+
+    private String getFullNiblingLabel(GenealogicalLink link, int numberOfGenerationsToOtherPerson) {
+        int numberOfGreats = Math.abs(numberOfGenerationsToOtherPerson) - 1;
+        if (numberOfGreats == 0) {
+            return getNiblingLabel(link);
+        } else if (numberOfGreats == 1) {
+            return "Grand-%s".formatted(getNiblingLabel(link));
+        } else {
+            return "%sGrand-%s".formatted(getGreatPrefix(numberOfGreats - 1), getNiblingLabel(link));
+        }
+    }
+
+    private String getSpouseOrSiblingInLawLabel(GenealogicalLink link) {
+        Optional<UUID> spouseId = customCypherQueryExecutor.findSpouseViaSpousesAncestor(link.getPersonToId(), link.getCommonAncestorIds().stream().findFirst().get());
+        if (spouseId.isPresent() && spouseId.get().equals(link.getPersonFromId())) {
+            return getSpouseLabel(link);
+        }
+        return "%s-in-Law".formatted(getSiblingLabel(link));
     }
 
     private boolean isPibling(GenealogicalLink link) {
@@ -157,124 +274,62 @@ public class GenealogicalLinkService {
     }
 
     private String getParentLabel(GenealogicalLink link) {
-        String retval;
         if (link.getPersonToSex() == Sex.MALE) {
-            retval = "Father";
+            return "Father";
         } else if (link.getPersonToSex() == Sex.FEMALE) {
-            retval = "Mother" ;
-        } else {
-            retval = "Parent";
+            return "Mother" ;
         }
-        return retval;
+        return "Parent";
     }
 
-    private String getSimpleGrandParentLabel(GenealogicalLink link) {
-        String retval;
+    private String getGrandParentLabel(GenealogicalLink link) {
         if (link.getPersonToSex() == Sex.MALE) {
-            retval = "Grandfather" ;
+            return "Grandfather" ;
         } else if (link.getPersonToSex() == Sex.FEMALE) {
-            retval = "Grandmother" ;
-        } else {
-            retval = "Grandparent" ;
+            return "Grandmother" ;
         }
-        return retval;
-    }
-
-    private String getGrantParentLabel(GenealogicalLink link) {
-        String retval = getSimpleGrandParentLabel(link);
-
-        if (link.getPersonFromMarriedIn()) {
-            retval = "%s-in-Law".formatted(retval);
-        }
-
-        return retval;
-    }
-
-    private String getSimpleChildLabel(GenealogicalLink link) {
-        String retval;
-        if (link.getPersonToSex() == Sex.MALE) {
-            retval = "Son" ;
-        } else if (link.getPersonToSex() == Sex.FEMALE) {
-            retval = "Daughter" ;
-        } else {
-            retval = "Child" ;
-        }
-        return retval;
+        return "Grandparent" ;
     }
 
     private String getChildLabel(GenealogicalLink link) {
-        String retval = getSimpleChildLabel(link);
-
-        if (link.getPersonFromMarriedIn()) {
-            retval = "Step-%s".formatted(retval);
-        } else if (link.getPersonToMarriedIn()) {
-            retval = "%s-in-Law".formatted(retval);
+        if (link.getPersonToSex() == Sex.MALE) {
+            return "Son" ;
+        } else if (link.getPersonToSex() == Sex.FEMALE) {
+            return "Daughter" ;
         }
-
-        return retval;
+        return "Child" ;
     }
 
     private String getGrandChildLabel(GenealogicalLink link) {
-        // TODO: test steps/in-Laws
-        String retval;
         if (link.getPersonToSex() == Sex.MALE) {
-            retval = "Grandson";
+            return "Grandson";
         } else if (link.getPersonToSex() == Sex.FEMALE) {
-            retval = "Granddaughter";
-        } else {
-            retval = "Grandchild";
+            return "Granddaughter";
         }
-
-        if (link.getPersonFromMarriedIn()) {
-            retval = "Step-%s".formatted(retval);
-        } else if (link.getPersonToMarriedIn()) {
-            retval = "%s-in-Law".formatted(retval);
-        }
-
-        return retval;
-    }
-
-    private String getSimpleSiblingLabel(GenealogicalLink link) {
-        String retval;
-        if (link.getPersonToSex() == Sex.MALE) {
-            retval = "Brother" ;
-        } else if (link.getPersonToSex() == Sex.FEMALE) {
-            retval = "Sister" ;
-        } else {
-            retval = "Sibling" ;
-        }
-        return retval;
+        return "Grandchild";
     }
 
     private String getSiblingLabel(GenealogicalLink link) {
-        // TODO: have to support not marriages (not spouses)
-        String retval;
-        if (link.getRelationFromPerspectiveOfPersonFrom().isBloodRelation()) {
-            retval = getSimpleSiblingLabel(link);
-            if (link.getSharedAncestralPartnershipId() == null) {
-                retval = "Half-" + retval;
-            }
-        } else {
-            Optional<UUID> spouseId = customCypherQueryExecutor.findSpouseViaSpousesAncestor(link.getPersonToId(), link.getCommonAncestorIds().stream().findFirst().get());
-            if (spouseId.isPresent() && spouseId.get().equals(link.getPersonFromId())) {
-                if (link.getPersonToSex() == Sex.MALE) {
-                    retval = "Husband" ;
-                } else if (link.getPersonToSex() == Sex.FEMALE) {
-                    retval = "Wife" ;
-                } else {
-                    retval = "Spouse" ;
-                }
-            } else {
-                retval = "%s-in-Law".formatted(getSimpleSiblingLabel(link));
-            }
+        if (link.getPersonToSex() == Sex.MALE) {
+            return "Brother" ;
+        } else if (link.getPersonToSex() == Sex.FEMALE) {
+            return "Sister" ;
         }
-        return retval;
+        return "Sibling" ;
+    }
+
+    private String getSpouseLabel(GenealogicalLink link) {
+        // TODO: have to support not marriages (not spouses)
+        if (link.getPersonToSex() == Sex.MALE) {
+            return "Husband" ;
+        } else if (link.getPersonToSex() == Sex.FEMALE) {
+            return "Wife" ;
+        }
+        return "Spouse" ;
     }
 
     private String getNiblingLabel(GenealogicalLink link) {
-        if (link.getPersonToMarriedIn()) {
-            return "Step-%s".formatted(getSimpleChildLabel(link));
-        } if (link.getPersonToSex() == Sex.MALE) {
+        if (link.getPersonToSex() == Sex.MALE) {
             return "Nephew";
         } else if (link.getPersonToSex() == Sex.FEMALE) {
             return "Niece";

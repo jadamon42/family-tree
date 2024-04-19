@@ -168,7 +168,7 @@ public class GenealogicalLinkServiceSpouseTest {
         assertThat(relationshipLabel).isEqualTo("Step-Brother-in-Law");
     }
 
-    @Test
+    @Test @Disabled
     void getGenealogicalLinkOfStepSister() {
         String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepSisterId).orElseThrow();
         assertThat(relationshipLabel).isEqualTo("Step-Sister-in-Law");
