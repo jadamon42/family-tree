@@ -2,6 +2,7 @@ package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jadamon42.family.model.*;
+import com.github.jadamon42.family.service.GenealogicalLinkService;
 import com.github.jadamon42.family.service.PersonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,33 @@ class PersonControllerTest {
         mockMvc.perform(get("/api/person?rootsOnly=true"))
                .andExpect(status().isOk())
                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void getRelationship() throws Exception {
+        UUID personFromId = UUID.randomUUID();
+        UUID personToId = UUID.randomUUID();
+        when(genealogicalLinkService.getRelationshipLabel(personFromId, personToId)).thenReturn(Optional.of("A Relationship"));
+
+        mockMvc.perform(get("/api/person/relationship?personFromId=" + personFromId + "&personToId=" + personToId))
+               .andExpect(status().isOk())
+               .andExpect(content().string("A Relationship"));
+    }
+
+    @Test
+    void getRelationshipReturns404WhenNotFound() throws Exception {
+        UUID personFromId = UUID.randomUUID();
+        UUID personToId = UUID.randomUUID();
+        when(genealogicalLinkService.getRelationshipLabel(personFromId, personToId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/person/relationship?personFromId=" + personFromId + "&personToId=" + personToId))
+               .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getRelationshipReturns400WhenNoParams() throws Exception {
+        mockMvc.perform(get("/api/person"))
+               .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -199,6 +227,8 @@ class PersonControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private PersonService personService;
+    @MockBean
+    private GenealogicalLinkService genealogicalLinkService;
     @Autowired
     private ObjectMapper objectMapper;
 }
