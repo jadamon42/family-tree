@@ -30,6 +30,9 @@ public class GenealogicalLink {
     Relation relationFromPerspectiveOfPersonTo;
 
     public static GenealogicalLink fromRecord(TypeSystem ignored, Record record) {
+        if (record.get("commonAncestorId").isNull()) {
+            return null;
+        }
         return GenealogicalLink.builder()
                                .personFromId(getUUID(record.get("person1Id")))
                                .personToId(getUUID(record.get("person2Id")))

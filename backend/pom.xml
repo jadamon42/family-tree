@@ -23,6 +23,7 @@
         <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
         <neo4j.version>5.18.1</neo4j.version>
         <lombok.version>1.18.32</lombok.version>
+        <spotbugs-annotations.version>4.8.4</spotbugs-annotations.version>
     </properties>
 
     <dependencies>
@@ -91,6 +92,11 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>${spotbugs-annotations.version}</version>
         </dependency>
     </dependencies>
 

@@ -148,7 +148,10 @@ public class GenealogicalLinkServiceTest {
 
     @Test @Disabled
     void getGenealogicalLinkOfStepFather() {
-        // make a null person node be the root for all non-begat persons
+        // 'mother' doesn't have a parent, so we can't find a common ancestor between 'mother' and 'person'
+        // we find our relationship with 'step-father' through 'mother'
+        // possible solution: make a null person node be the root for all non-begat persons? Don't like it.
+        // Just say not related?
         String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepFatherId).orElseThrow();
         assertThat(relationshipLabel).isEqualTo("Step-Father");
     }
