@@ -1,10 +1,7 @@
 package com.github.jadamon42.family.model;
 
-import com.github.jadamon42.family.exception.PersonNotFoundException;
 import com.github.jadamon42.family.util.SexConverter;
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Value;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.types.TypeSystem;
@@ -29,20 +26,8 @@ public class GenealogicalLink {
     Sex personToSex;
     Boolean personFromMarriedIn;
     Boolean personToMarriedIn;
-    @Getter(AccessLevel.NONE)
-    Relation relationFromPerspectiveOfPerson1;
-    @Getter(AccessLevel.NONE)
-    Relation relationFromPerspectiveOfPerson2;
-
-    public Relation getRelationFromPerspectiveOfPerson(UUID personId) {
-        if (personId.equals(personFromId)) {
-            return relationFromPerspectiveOfPerson1;
-        } else if (personId.equals(personToId)) {
-            return relationFromPerspectiveOfPerson2;
-        } else {
-            throw new PersonNotFoundException(personId);
-        }
-    }
+    Relation relationFromPerspectiveOfPersonFrom;
+    Relation relationFromPerspectiveOfPersonTo;
 
     public static GenealogicalLink fromRecord(TypeSystem ignored, Record record) {
         return GenealogicalLink.builder()
@@ -54,8 +39,8 @@ public class GenealogicalLink {
                                .personToMarriedIn(record.get("person2MarriedIn").asBoolean())
                                .sharedAncestralPartnershipId(getUUID(record.get("sharedAncestralPartnershipId")))
                                .commonAncestorIds(getCommonAncestorIds(record))
-                               .relationFromPerspectiveOfPerson1(buildRelation(record, "person1"))
-                               .relationFromPerspectiveOfPerson2(buildRelation(record, "person2"))
+                               .relationFromPerspectiveOfPersonFrom(buildRelation(record, "person1"))
+                               .relationFromPerspectiveOfPersonTo(buildRelation(record, "person2"))
                                .build();
     }
 

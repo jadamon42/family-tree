@@ -1,5 +1,7 @@
 package com.github.jadamon42.family.service;
 
+import com.github.jadamon42.family.exception.PartnershipNotFoundException;
+import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.model.PersonRequest;
@@ -27,6 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataNeo4jTest
 @Import(CustomCypherQueryExecutor.class)
@@ -113,6 +116,36 @@ public class PersonServiceTest {
     }
 
     @Test
+    void savePersonWithParentPartnership() {
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .parentsPartnershipId(Optional.of(partnershipId))
+                                             .build();
+
+        PersonProjection savedPerson = personService.createPerson(request);
+        Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow();
+
+        assertThat(savedPerson.getId()).isNotNull();
+        assertThat(savedPerson.getFirstName()).isEqualTo("John");
+        assertThat(savedPerson.getLastName()).isEqualTo("Doe");
+        assertThat(savedPerson.getPartnerships()).isEmpty();
+        assertThat(partnership.getChildren()).hasSize(3);
+    }
+
+    @Test
+    void savePersonWithParentPartnershipThrowsExceptionWhenPartnershipNotFound() {
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .parentsPartnershipId(Optional.of(UUID.randomUUID()))
+                                             .build();
+
+        assertThatThrownBy(() -> personService.createPerson(request))
+            .isInstanceOf(PartnershipNotFoundException.class);
+    }
+
+    @Test
     void updatePerson() {
         PersonRequest request = PersonRequest.builder()
                                              .firstName(Optional.of("John"))
@@ -161,6 +194,34 @@ public class PersonServiceTest {
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
             assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
         });
+    }
+
+    @Test
+    void updatePersonWithParentPartnership() {
+        PersonRequest request = PersonRequest.builder()
+                                             .lastName(Optional.of("Doe"))
+                                             .parentsPartnershipId(Optional.of(partnershipId))
+                                             .build();
+
+        PersonProjection updatedPerson = personService.updatePerson(personId, request).orElseThrow();
+        Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow();
+
+        assertThat(updatedPerson.getId()).isEqualTo(personId);
+        assertThat(updatedPerson.getFirstName()).isEqualTo("Stray");
+        assertThat(updatedPerson.getLastName()).isEqualTo("Doe");
+        assertThat(updatedPerson.getPartnerships()).isEmpty();
+        assertThat(partnership.getChildren()).hasSize(3);
+    }
+
+    @Test
+    void updatePersonWithParentPartnershipThrowsExceptionWhenPartnershipNotFound() {
+        PersonRequest request = PersonRequest.builder()
+                                             .lastName(Optional.of("Doe"))
+                                             .parentsPartnershipId(Optional.of(UUID.randomUUID()))
+                                             .build();
+
+        assertThatThrownBy(() -> personService.updatePerson(personId, request))
+            .isInstanceOf(PartnershipNotFoundException.class);
     }
 
     @Test

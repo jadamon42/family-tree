@@ -26,7 +26,7 @@ public class GenealogicalLinkService {
         }
 
         GenealogicalLink link = genealogicalLink.get();
-        Relation relation = link.getRelationFromPerspectiveOfPerson(personIdFrom);
+        Relation relation = link.getRelationFromPerspectiveOfPersonFrom();
 
         int numberOfGenerationsToCommonAncestor = relation.getNumberOfGenerationsToCommonAncestor();
         int numberOfGenerationsToOtherPerson = relation.getNumberOfGenerationsToOtherPerson();
@@ -131,7 +131,7 @@ public class GenealogicalLinkService {
     }
 
     private boolean isPibling(GenealogicalLink link) {
-        Relation relation = link.getRelationFromPerspectiveOfPerson(link.getPersonFromId());
+        Relation relation = link.getRelationFromPerspectiveOfPersonFrom();
 
         int numberOfGenerationsToCommonAncestor = relation.getNumberOfGenerationsToCommonAncestor();
         int numberOfGenerationsToOtherPerson = relation.getNumberOfGenerationsToOtherPerson();
@@ -235,7 +235,7 @@ public class GenealogicalLinkService {
     private String getSiblingLabel(GenealogicalLink link) {
         // TODO: have to support not marriages (not spouses)
         String retval;
-        if (link.getRelationFromPerspectiveOfPerson(link.getPersonFromId()).isBloodRelation()) {
+        if (link.getRelationFromPerspectiveOfPersonFrom().isBloodRelation()) {
             retval = getSimpleSiblingLabel(link);
             if (link.getSharedAncestralPartnershipId() == null) {
                 retval = "Half-" + retval;

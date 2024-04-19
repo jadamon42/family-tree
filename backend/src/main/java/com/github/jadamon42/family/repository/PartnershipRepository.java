@@ -34,4 +34,12 @@ public interface PartnershipRepository extends Neo4jRepository<Partnership, UUID
             RETURN p
             """)
     PartnershipProjection updateAndReturnProjection(UUID id, Partnership partnership);
+
+    @Query("""
+            MATCH (c:Person {id: $childId})
+            MATCH (p:Partnership {id: $partnershipId})
+            CREATE (p)-[:BEGAT]->(c)
+            RETURN COUNT(p) > 0
+            """)
+    boolean linkChildToPartnership(UUID partnershipId, UUID childId);
 }

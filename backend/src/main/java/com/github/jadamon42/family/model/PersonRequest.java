@@ -8,6 +8,7 @@ import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 @Value
 @Builder
@@ -19,6 +20,7 @@ public class PersonRequest {
     Optional<Sex> sex;
     Optional<LocalDate> birthDate;
     Optional<LocalDate> deathDate;
+    Optional<UUID> parentsPartnershipId;
 
     public static class PersonRequestBuilder {
         @JsonAnySetter
