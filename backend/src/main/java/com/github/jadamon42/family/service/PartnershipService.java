@@ -18,7 +18,7 @@ import java.util.UUID;
 import static com.github.jadamon42.family.util.PatchHelper.patch;
 
 @Service
-@Transactional
+@Transactional("transactionManager")
 public class PartnershipService {
     private final PartnershipRepository partnershipRepository;
     private final PersonRepository personRepository;

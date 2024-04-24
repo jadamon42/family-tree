@@ -14,6 +14,7 @@ import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataNeo4jTest
 @Import(CustomCypherQueryExecutor.class)
+@ActiveProfiles("test")
 public class GenealogicalLinkServiceTest {
     @Test
     void getGenealogicalLinkOfNonExistentPerson() {
@@ -443,6 +445,402 @@ public class GenealogicalLinkServiceTest {
     void getGenealogicalLinkOfThirdCousinThriceRemoved() {
         String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinThriceRemovedId).orElseThrow();
         assertThat(relationshipLabel).isEqualTo("3rd Cousin Thrice Removed");
+    }
+
+    // Spouse Tests (mostly for in-law relationships)
+    @Test
+    void getGenealogicalLinkOfSonFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, sonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Son");
+    }
+
+    @Test
+    void getGenealogicalLinkOfDaughterInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, daughterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Daughter-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfDaughterFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, daughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Daughter");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSonInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, sonInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Son-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepSonFromSpouse() {
+        Optional<String> relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepSonId);
+        assertThat(relationshipLabel).isEmpty();
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepDaughterFromSpouse() {
+        Optional<String> relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepDaughterId);
+        assertThat(relationshipLabel).isEmpty();
+    }
+
+    @Test
+    void getGenealogicalLinkOfGrandsonFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, grandsonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandson");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGranddaughterInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, granddaughterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Granddaughter-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGranddaughterFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, granddaughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Granddaughter");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGrandsonInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, grandsonInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandson-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandsonFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandsonId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandson");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGranddaughterInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGranddaughterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Granddaughter-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGranddaughterFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGranddaughterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Granddaughter");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandsonInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandsonInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandson-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, fatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Father-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfMotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, motherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Mother-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepFatherFromSpouse() {
+        // 'mother' doesn't have a parent, so we can't find a common ancestor between 'mother' and 'person'
+        // we find our relationship with 'step-father' through 'mother'
+        // possible solution: make a null person node be the root for all non-begat persons? Don't like it.
+        // Just say not related?
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepFatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Father-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepMotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepMotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Mother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfBrotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, brotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Brother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSisterFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, sisterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Sister-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfHalfBrotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, halfBrotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Half-Brother-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfHalfSisterFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, halfSisterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Half-Sister-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepBrotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepBrotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Brother-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepSisterFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepSisterId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Sister-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfBrotherInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, brotherInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Brother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSisterInLawFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, sisterInLawId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Sister-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfNieceFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, nieceId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Niece");
+    }
+
+    @Test
+    void getGenealogicalLinkOfNephewFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, nephewId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Nephew");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatNieceFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatNieceId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Niece");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatNephewFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatNephewId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Nephew");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandNieceFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandNieceId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Niece");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandNephewFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandNephewId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Nephew");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGrandfatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, grandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandfather-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGrandmotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, grandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grandmother-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGrandfatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Grandfather-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepGrandmotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Grandmother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfUncleFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, uncleId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Uncle-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfAuntFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, auntId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Aunt-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFirstCousinFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, firstCousinId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFirstCousinOnceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, firstCousinOnceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin-in-Law Once Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFirstCousinTwiceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, firstCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin-in-Law Twice Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFirstCousinThriceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, firstCousinThriceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin-in-Law Thrice Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandfatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandfather-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandmotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grandmother-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGreatGrandfatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepGreatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Grandfather-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfStepGreatGrandmotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepGreatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Grandmother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatUncleFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatUncleId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Uncle-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatAuntFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatAuntId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Grand-Aunt-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFirstCousinOnceRemovedThroughGreatGrandparentsFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, firstCousinOnceRemovedThroughGreatGrandparentsId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin-in-Law Once Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSecondCousinFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, secondCousinId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSecondCousinOnceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, secondCousinOnceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin-in-Law Once Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSecondCousinTwiceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, secondCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin-in-Law Twice Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSecondCousinThriceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, secondCousinThriceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin-in-Law Thrice Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGreatGrandfatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGreatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Great-Grandfather-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGreatGrandmotherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGreatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Great-Grandmother-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGreatGreatGrandfatherFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepGreatGreatGrandfatherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Great-Grandfather-in-Law");
+    }
+
+    @Test @Disabled
+    void getGenealogicalLinkOfStepGreatGreatGrandmotherFromSpouse() {
+        // need null object for this too
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, stepGreatGreatGrandmotherId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Step-Great-Great-Grandmother-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandUncleFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandUncleId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Uncle-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfGreatGrandAuntFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, greatGrandAuntId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("Great-Grand-Aunt-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfFirstCousinTwiceRemovedThroughGreatGreatGrandparentsFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, firstCousinTwiceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("1st Cousin-in-Law Twice Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfSecondCousinOnceRemovedThroughGreatGreatGrandparentsFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, secondCousinOnceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("2nd Cousin-in-Law Once Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfThirdCousinFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, thirdCousinId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin-in-Law");
+    }
+
+    @Test
+    void getGenealogicalLinkOfThirdCousinOnceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, thirdCousinOnceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin-in-Law Once Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfThirdCousinTwiceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, thirdCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin-in-Law Twice Removed");
+    }
+
+    @Test
+    void getGenealogicalLinkOfThirdCousinThriceRemovedFromSpouse() {
+        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(spouseId, thirdCousinThriceRemovedId).orElseThrow();
+        assertThat(relationshipLabel).isEqualTo("3rd Cousin-in-Law Thrice Removed");
     }
 
     private static Neo4j embeddedDatabaseServer;

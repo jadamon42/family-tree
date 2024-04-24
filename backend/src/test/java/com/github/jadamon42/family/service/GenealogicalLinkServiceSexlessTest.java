@@ -14,6 +14,7 @@ import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataNeo4jTest
 @Import(CustomCypherQueryExecutor.class)
+@ActiveProfiles("test")
 public class GenealogicalLinkServiceSexlessTest {
     @Test
     void getGenealogicalLinkOfNonExistentPerson() {
@@ -274,38 +276,6 @@ public class GenealogicalLinkServiceSexlessTest {
     private final UUID otherParentId = UUID.fromString("00000000-0000-0000-0000-000000000032");
     private final UUID stepParentId = UUID.fromString("00000000-0000-0000-0000-000000000033");
 
-    private final UUID spousePartnershipId = UUID.fromString("00000001-0000-0000-0000-000000000000");
-    private final UUID childPartnershipId = UUID.fromString("00000002-0000-0000-0000-000000000000");
-    private final UUID grandchildPartnershipId = UUID.fromString("00000003-0000-0000-0000-000000000000");
-    private final UUID greatGrandchildPartnershipId = UUID.fromString("00000004-0000-0000-0000-000000000000");
-    private final UUID parentPartnershipId = UUID.fromString("00000005-0000-0000-0000-000000000000");
-    private final UUID siblingPartnershipId = UUID.fromString("00000006-0000-0000-0000-000000000000");
-    private final UUID nieceOrNephewPartnershipId = UUID.fromString("00000007-0000-0000-0000-000000000000");
-    private final UUID greatNieceOrNephewPartnershipId = UUID.fromString("00000008-0000-0000-0000-000000000000");
-    private final UUID greatGrandNieceOrNephewPartnershipId = UUID.fromString("00000009-0000-0000-0000-000000000000");
-    private final UUID grandparentPartnershipId = UUID.fromString("00000010-0000-0000-0000-000000000000");
-    private final UUID auntOrUnclePartnershipId = UUID.fromString("00000011-0000-0000-0000-000000000000");
-    private final UUID firstCousinPartnershipId = UUID.fromString("00000012-0000-0000-0000-000000000000");
-    private final UUID firstCousinOnceRemovedPartnershipId = UUID.fromString("00000013-0000-0000-0000-000000000000");
-    private final UUID firstCousinTwiceRemovedPartnershipId = UUID.fromString("00000014-0000-0000-0000-000000000000");
-    private final UUID firstCousinThriceRemovedPartnershipId = UUID.fromString("00000015-0000-0000-0000-000000000000");
-    private final UUID greatGrandparentPartnershipId = UUID.fromString("00000016-0000-0000-0000-000000000000");
-    private final UUID greatAuntOrUnclePartnershipId = UUID.fromString("00000017-0000-0000-0000-000000000000");
-    private final UUID firstCousinOnceRemovedThroughGreatGrandparentsPartnershipId = UUID.fromString("00000018-0000-0000-0000-000000000000");
-    private final UUID secondCousinPartnershipId = UUID.fromString("00000019-0000-0000-0000-000000000000");
-    private final UUID secondCousinOnceRemovedPartnershipId = UUID.fromString("00000020-0000-0000-0000-000000000000");
-    private final UUID secondCousinTwiceRemovedPartnershipId = UUID.fromString("00000021-0000-0000-0000-000000000000");
-    private final UUID secondCousinThriceRemovedPartnershipId = UUID.fromString("00000022-0000-0000-0000-000000000000");
-    private final UUID greatGreatGrandparentPartnershipId = UUID.fromString("00000023-0000-0000-0000-000000000000");
-    private final UUID greatGrandAuntOrUnclePartnershipId = UUID.fromString("00000024-0000-0000-0000-000000000000");
-    private final UUID firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnershipId = UUID.fromString("00000025-0000-0000-0000-000000000000");
-    private final UUID secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnershipId = UUID.fromString("00000026-0000-0000-0000-000000000000");
-    private final UUID thirdCousinPartnershipId = UUID.fromString("00000027-0000-0000-0000-000000000000");
-    private final UUID thirdCousinOnceRemovedPartnershipId = UUID.fromString("00000028-0000-0000-0000-000000000000");
-    private final UUID thirdCousinTwiceRemovedPartnershipId = UUID.fromString("00000029-0000-0000-0000-000000000000");
-    private final UUID thirdCousinThriceRemovedPartnershipId = UUID.fromString("00000030-0000-0000-0000-000000000000");
-    private final UUID parentSecondMarriagePartnershipId = UUID.fromString("00000031-0000-0000-0000-000000000000");
-
     @Autowired
     GenealogicalLinkServiceSexlessTest(CustomCypherQueryExecutor customCypherQueryExecutor) {
         this.genealogicalLinkService = new GenealogicalLinkService(customCypherQueryExecutor);
@@ -360,69 +330,69 @@ public class GenealogicalLinkServiceSexlessTest {
             CREATE (stepParent: Person {id: '00000000-0000-0000-0000-000000000033', firstName: 'Spouse2OfParent', lastName: 'Spouse2OfParent'})
             
             // Common Ancestor 0
-            CREATE (person)-[:PARTNER_IN]->(spousePartnership:Partnership {id: '00000001-0000-0000-0000-000000000000'})
+            CREATE (person)-[:PARTNER_IN]->(spousePartnership:Partnership {id: randomUUID()})
             CREATE (spouse)-[:PARTNER_IN]->(spousePartnership)
             CREATE (spousePartnership)-[:BEGAT]->(child)
-            CREATE (child)-[:PARTNER_IN]->(childPartnership:Partnership {id: '00000002-0000-0000-0000-000000000000'})
+            CREATE (child)-[:PARTNER_IN]->(childPartnership:Partnership {id: randomUUID()})
             CREATE (childPartnership)-[:BEGAT]->(grandchild)
-            CREATE (grandchild)-[:PARTNER_IN]->(grandchildPartnership:Partnership {id: '00000003-0000-0000-0000-000000000000'})
+            CREATE (grandchild)-[:PARTNER_IN]->(grandchildPartnership:Partnership {id: randomUUID()})
             CREATE (grandchildPartnership)-[:BEGAT]->(greatGrandchild)
             
             // Common Ancestor 1
-            CREATE (parent)-[:PARTNER_IN]->(parentPartnership:Partnership {id: '00000005-0000-0000-0000-000000000000'})<-[:PARTNER_IN]-(otherParent)
-            CREATE (parent)-[:PARTNER_IN]->(parentSecondMarriagePartnership:Partnership {id: '00000031-0000-0000-0000-000000000000'})<-[:PARTNER_IN]-(stepParent)
+            CREATE (parent)-[:PARTNER_IN]->(parentPartnership:Partnership {id: randomUUID()})<-[:PARTNER_IN]-(otherParent)
+            CREATE (parent)-[:PARTNER_IN]->(parentSecondMarriagePartnership:Partnership {id: randomUUID()})<-[:PARTNER_IN]-(stepParent)
             CREATE (parentPartnership)-[:BEGAT]->(person)
             CREATE (parentPartnership)-[:BEGAT]->(sibling)
-            CREATE (sibling)-[:PARTNER_IN]->(siblingPartnership:Partnership {id: '00000006-0000-0000-0000-000000000000'})
+            CREATE (sibling)-[:PARTNER_IN]->(siblingPartnership:Partnership {id: randomUUID()})
             CREATE (siblingPartnership)-[:BEGAT]->(nieceOrNephew)
-            CREATE (nieceOrNephew)-[:PARTNER_IN]->(nieceOrNephewPartnership:Partnership {id: '00000007-0000-0000-0000-000000000000'})
+            CREATE (nieceOrNephew)-[:PARTNER_IN]->(nieceOrNephewPartnership:Partnership {id: randomUUID()})
             CREATE (nieceOrNephewPartnership)-[:BEGAT]->(greatNieceOrNephew)
-            CREATE (greatNieceOrNephew)-[:PARTNER_IN]->(greatNieceOrNephewPartnership:Partnership {id: '00000008-0000-0000-0000-000000000000'})
+            CREATE (greatNieceOrNephew)-[:PARTNER_IN]->(greatNieceOrNephewPartnership:Partnership {id: randomUUID()})
             CREATE (greatNieceOrNephewPartnership)-[:BEGAT]->(greatGrandNieceOrNephew)
             
             // Common Ancestor 2
             CREATE (grandparent)-[:PARTNER_IN]->(grandparentPartnership:Partnership {id: '00000010-0000-0000-0000-000000000000'})
             CREATE (grandparentPartnership)-[:BEGAT]->(parent)
             CREATE (grandparentPartnership)-[:BEGAT]->(auntOrUncle)
-            CREATE (auntOrUncle)-[:PARTNER_IN]->(auntOrUnclePartnership:Partnership {id: '00000011-0000-0000-0000-000000000000'})
+            CREATE (auntOrUncle)-[:PARTNER_IN]->(auntOrUnclePartnership:Partnership {id: randomUUID()})
             CREATE (auntOrUnclePartnership)-[:BEGAT]->(firstCousin)
-            CREATE (firstCousin)-[:PARTNER_IN]->(firstCousinPartnership:Partnership {id: '00000012-0000-0000-0000-000000000000'})
+            CREATE (firstCousin)-[:PARTNER_IN]->(firstCousinPartnership:Partnership {id: randomUUID()})
             CREATE (firstCousinPartnership)-[:BEGAT]->(firstCousinOnceRemoved)
-            CREATE (firstCousinOnceRemoved)-[:PARTNER_IN]->(firstCousinOnceRemovedPartnership:Partnership {id: '00000013-0000-0000-0000-000000000000'})
+            CREATE (firstCousinOnceRemoved)-[:PARTNER_IN]->(firstCousinOnceRemovedPartnership:Partnership {id: randomUUID()})
             CREATE (firstCousinOnceRemovedPartnership)-[:BEGAT]->(firstCousinTwiceRemoved)
-            CREATE (firstCousinTwiceRemoved)-[:PARTNER_IN]->(firstCousinTwiceRemovedPartnership:Partnership {id: '00000014-0000-0000-0000-000000000000'})
+            CREATE (firstCousinTwiceRemoved)-[:PARTNER_IN]->(firstCousinTwiceRemovedPartnership:Partnership {id: randomUUID()})
             CREATE (firstCousinTwiceRemovedPartnership)-[:BEGAT]->(firstCousinThriceRemoved)
             
             // Common Ancestor 3
-            CREATE (greatGrandparent)-[:PARTNER_IN]->(greatGrandparentPartnership:Partnership {id: '00000016-0000-0000-0000-000000000000'})
+            CREATE (greatGrandparent)-[:PARTNER_IN]->(greatGrandparentPartnership:Partnership {id: randomUUID()})
             CREATE (greatGrandparentPartnership)-[:BEGAT]->(grandparent)
             CREATE (greatGrandparentPartnership)-[:BEGAT]->(greatAuntOrUncle)
-            CREATE (greatAuntOrUncle)-[:PARTNER_IN]->(greatAuntOrUnclePartnership:Partnership {id: '00000017-0000-0000-0000-000000000000'})
+            CREATE (greatAuntOrUncle)-[:PARTNER_IN]->(greatAuntOrUnclePartnership:Partnership {id: randomUUID()})
             CREATE (greatAuntOrUnclePartnership)-[:BEGAT]->(firstCousinOnceRemovedThroughGreatGrandparents)
-            CREATE (firstCousinOnceRemovedThroughGreatGrandparents)-[:PARTNER_IN]->(firstCousinOnceRemovedThroughGreatGrandparentsPartnership:Partnership {id: '00000018-0000-0000-0000-000000000000'})
+            CREATE (firstCousinOnceRemovedThroughGreatGrandparents)-[:PARTNER_IN]->(firstCousinOnceRemovedThroughGreatGrandparentsPartnership:Partnership {id: randomUUID()})
             CREATE (firstCousinOnceRemovedThroughGreatGrandparentsPartnership)-[:BEGAT]->(secondCousin)
-            CREATE (secondCousin)-[:PARTNER_IN]->(secondCousinPartnership:Partnership {id: '00000019-0000-0000-0000-000000000000'})
+            CREATE (secondCousin)-[:PARTNER_IN]->(secondCousinPartnership:Partnership {id: randomUUID()})
             CREATE (secondCousinPartnership)-[:BEGAT]->(secondCousinOnceRemoved)
             CREATE (secondCousinOnceRemoved)-[:PARTNER_IN]->(secondCousinOnceRemovedPartnership:Partnership {id: '00000020-0000-0000-0000-000000000000'})
             CREATE (secondCousinOnceRemovedPartnership)-[:BEGAT]->(secondCousinTwiceRemoved)
-            CREATE (secondCousinTwiceRemoved)-[:PARTNER_IN]->(secondCousinTwiceRemovedPartnership:Partnership {id: '00000021-0000-0000-0000-000000000000'})
+            CREATE (secondCousinTwiceRemoved)-[:PARTNER_IN]->(secondCousinTwiceRemovedPartnership:Partnership {id: randomUUID()})
             CREATE (secondCousinTwiceRemovedPartnership)-[:BEGAT]->(secondCousinThriceRemoved)
             
             // Common Ancestor 4
-            CREATE (greatGreatGrandparent)-[:PARTNER_IN]->(greatGreatGrandparentPartnership:Partnership {id: '00000023-0000-0000-0000-000000000000'})
+            CREATE (greatGreatGrandparent)-[:PARTNER_IN]->(greatGreatGrandparentPartnership:Partnership {id: randomUUID()})
             CREATE (greatGreatGrandparentPartnership)-[:BEGAT]->(greatGrandparent)
             CREATE (greatGreatGrandparentPartnership)-[:BEGAT]->(greatGrandAuntOrUncle)
-            CREATE (greatGrandAuntOrUncle)-[:PARTNER_IN]->(greatGrandAuntOrUnclePartnership:Partnership {id: '00000024-0000-0000-0000-000000000000'})
+            CREATE (greatGrandAuntOrUncle)-[:PARTNER_IN]->(greatGrandAuntOrUnclePartnership:Partnership {id: randomUUID()})
             CREATE (greatGrandAuntOrUnclePartnership)-[:BEGAT]->(firstCousinTwiceRemovedThroughGreatGreatGrandparents)
-            CREATE (firstCousinTwiceRemovedThroughGreatGreatGrandparents)-[:PARTNER_IN]->(firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnership:Partnership {id: '00000025-0000-0000-0000-000000000000'})
+            CREATE (firstCousinTwiceRemovedThroughGreatGreatGrandparents)-[:PARTNER_IN]->(firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnership:Partnership {id: randomUUID()})
             CREATE (firstCousinTwiceRemovedThroughGreatGreatGrandparentsPartnership)-[:BEGAT]->(secondCousinOnceRemovedThroughGreatGreatGrandparents)
-            CREATE (secondCousinOnceRemovedThroughGreatGreatGrandparents)-[:PARTNER_IN]->(secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnership:Partnership {id: '00000026-0000-0000-0000-000000000000'})
+            CREATE (secondCousinOnceRemovedThroughGreatGreatGrandparents)-[:PARTNER_IN]->(secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnership:Partnership {id: randomUUID()})
             CREATE (secondCousinOnceRemovedThroughGreatGreatGrandparentsPartnership)-[:BEGAT]->(thirdCousin)
-            CREATE (thirdCousin)-[:PARTNER_IN]->(thirdCousinPartnership:Partnership {id: '00000027-0000-0000-0000-000000000000'})
+            CREATE (thirdCousin)-[:PARTNER_IN]->(thirdCousinPartnership:Partnership {id: randomUUID()})
             CREATE (thirdCousinPartnership)-[:BEGAT]->(thirdCousinOnceRemoved)
-            CREATE (thirdCousinOnceRemoved)-[:PARTNER_IN]->(thirdCousinOnceRemovedPartnership:Partnership {id: '00000028-0000-0000-0000-000000000000'})
+            CREATE (thirdCousinOnceRemoved)-[:PARTNER_IN]->(thirdCousinOnceRemovedPartnership:Partnership {id: randomUUID()})
             CREATE (thirdCousinOnceRemovedPartnership)-[:BEGAT]->(thirdCousinTwiceRemoved)
-            CREATE (thirdCousinTwiceRemoved)-[:PARTNER_IN]->(thirdCousinTwiceRemovedPartnership:Partnership {id: '00000029-0000-0000-0000-000000000000'})
+            CREATE (thirdCousinTwiceRemoved)-[:PARTNER_IN]->(thirdCousinTwiceRemovedPartnership:Partnership {id: randomUUID()})
             CREATE (thirdCousinTwiceRemovedPartnership)-[:BEGAT]->(thirdCousinThriceRemoved)
             """);
         }

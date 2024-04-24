@@ -18,18 +18,16 @@ public interface PersonRepository extends Neo4jRepository<Person, UUID> {
     """)
     Collection<PersonProjection> findRootPeople();
 
-    @Query("""
-            MATCH (p:Person {id: $id})
-            OPTIONAL MATCH (p)-[r:PARTNER_IN]->(pt:Partnership)
-            RETURN p, collect(r), collect(pt)
-            """)
     Optional<PersonProjection> findProjectionById(UUID id);
 
     @Query("""
             CREATE (p:Person {
                 id: randomUUID(),
                 firstName: :#{#person.getFirstName()},
-                lastName: :#{#person.getLastName()}
+                lastName: :#{#person.getLastName()},
+                birthDate: :#{#person.getBirthDate()},
+                deathDate: :#{#person.getDeathDate()},
+                sex: :#{#person.getSex()}
             })
             RETURN p
             """)
@@ -39,7 +37,10 @@ public interface PersonRepository extends Neo4jRepository<Person, UUID> {
             MATCH (p:Person {id: $id})
             OPTIONAL MATCH (p)-[r:PARTNER_IN]->(pt:Partnership)
             SET p.firstName = :#{#person.getFirstName()},
-                p.lastName = :#{#person.getLastName()}
+                p.lastName = :#{#person.getLastName()},
+                p.birthDate = :#{#person.getBirthDate()},
+                p.deathDate = :#{#person.getDeathDate()},
+                p.sex = :#{#person.getSex()}
             RETURN p, collect(r), collect(pt)
             """)
     PersonProjection updateAndReturnProjection(UUID id, Person person);

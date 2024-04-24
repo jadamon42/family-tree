@@ -21,7 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
-        <neo4j.version>5.18.1</neo4j.version>
+        <neo4j.version>5.19.0</neo4j.version>
         <lombok.version>1.18.32</lombok.version>
         <spotbugs-annotations.version>4.8.4</spotbugs-annotations.version>
     </properties>
@@ -86,6 +86,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- To embed Neo4j in the application. -->
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+            <version>${neo4j.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -97,6 +103,10 @@
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
             <version>${spotbugs-annotations.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
     </dependencies>
 
