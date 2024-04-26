@@ -4,11 +4,13 @@ import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
+import org.springframework.graphql.data.GraphQlRepository;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
+@GraphQlRepository
 public interface PersonRepository extends Neo4jRepository<Person, UUID> {
     @Query("""
         MATCH (p:Person)
@@ -17,6 +19,14 @@ public interface PersonRepository extends Neo4jRepository<Person, UUID> {
         RETURN p, collect(r), collect(n)
     """)
     Collection<PersonProjection> findRootPeople();
+
+    @Query("""
+        MATCH (p:Person)
+        WHERE NOT (:Partnership)-[:BEGAT]->(p)
+        OPTIONAL MATCH (p)-[r]->(n)
+        RETURN p, collect(r), collect(n)
+    """)
+    Collection<Person> findRootPeopleGraphQl();
 
     Optional<PersonProjection> findProjectionById(UUID id);
 

@@ -1,0 +1,34 @@
+type Query {
+    getPeople: [Person]!
+    getRootPeople: [Person]!
+}
+
+#type Mutation {
+#    createPerson(input: PersonInput!): Person!
+#}
+
+#input PersonInput {
+#    firstName: String
+#    lastName: String
+#    birthDate: String
+#    deathDate: String
+#    sex: String
+#}
+
+type Partnership {
+    id: ID!
+    type: String
+    startDate: String
+    endDate: String
+    children: [Person]
+}
+
+type Person {
+    id: ID!
+    firstName: String
+    lastName: String
+    birthDate: String
+    deathDate: String
+    sex: String
+    partnerships: [Partnership]
+}
