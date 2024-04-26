@@ -186,6 +186,7 @@ public class PersonServiceTest {
                                              .build();
 
         PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
+        Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow();
 
         assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId);
         assertThat(updatedPerson.getFirstName()).isEqualTo("Jon");
@@ -195,7 +196,10 @@ public class PersonServiceTest {
             assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
             assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
+            assertThat(partnerships.get(0).getId()).isEqualTo(partnership.getId());
         });
+        // No changes to the fields not specified in the projection
+        assertThat(partnership.getChildren()).hasSize(2);
     }
 
     @Test
