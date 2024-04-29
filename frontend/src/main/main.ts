@@ -9,9 +9,10 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { spawn } from 'child_process';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
@@ -112,6 +113,23 @@ const createWindow = async () => {
   new AppUpdater();
 };
 
+const startBackend = () => {
+  const jarPath = path.join(app.getAppPath(), 'backend', 'family-1.0.jar');
+  const backend = spawn('java', ['-jar', jarPath]);
+
+  backend.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+  });
+
+  backend.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+  });
+
+  backend.on('close', (code) => {
+    console.log(`backend process exited with code ${code}`);
+  });
+};
+
 /**
  * Add event listeners...
  */
@@ -128,8 +146,9 @@ app
   .whenReady()
   .then(() => {
     createWindow();
+    startBackend();
     app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
+      // On macOS, it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow();
     });

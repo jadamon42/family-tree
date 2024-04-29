@@ -1,6 +1,6 @@
 {
   "name": "family-tree-frontend",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "Frontend for Family Tree App",
   "author": "Jonathan Damon",
   "main": "./dist/main/main.js",
