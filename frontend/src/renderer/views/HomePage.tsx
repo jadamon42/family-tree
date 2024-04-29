@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PersonNode from '../components/PersonNode';
 import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.scss';
@@ -57,14 +57,8 @@ function HomePage() {
   };
 
   const handleAddPerson = () => {
-    const newPerson = {
-      id: Math.random().toString(),
-      name: 'New Person',
-      sex: 'Male',
-      dob: '01/01/2000',
-    };
-    setPeople((prevPeople) => [...prevPeople, newPerson]);
     setContextMenu(null);
+    window.electron.ipcRenderer.sendMessage('open-person-form');
   };
 
   const handleAddPartner = () => {
@@ -83,6 +77,14 @@ function HomePage() {
     setContextMenu(null);
   };
 
+  const newPersonListener = (person: Person) => {
+    setPeople((prevPeople) => [...prevPeople, person]);
+  };
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('new-person', newPersonListener);
+  }, []);
+
   return (
     <div
       className="fullScreenDiv"
@@ -94,6 +96,7 @@ function HomePage() {
     >
       {people.map((person) => (
         <PersonNode
+          key={person.id}
           person={person}
           onClick={(event) => handlePersonClick(event, person)}
           onContextMenu={handlePersonRightClick}

@@ -26,12 +26,6 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
-
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
@@ -133,6 +127,37 @@ const startBackend = () => {
 /**
  * Add event listeners...
  */
+
+ipcMain.on('open-person-form', () => {
+  if (!mainWindow) {
+    return;
+  }
+
+  let childWindow: BrowserWindow | null = new BrowserWindow({
+    width: 400,
+    height: 400,
+    parent: mainWindow,
+    webPreferences: {
+      preload: app.isPackaged
+        ? path.join(__dirname, 'preload.js')
+        : path.join(__dirname, '../../.erb/dll/preload.js'),
+      devTools: false,
+    },
+  });
+
+  childWindow.loadURL(resolveHtmlPath('index.html', 'add-person'));
+
+  childWindow.on('closed', () => {
+    childWindow = null;
+  });
+});
+
+ipcMain.on('submit-person-form', (event, person) => {
+  console.log(person);
+  if (mainWindow) {
+    mainWindow.webContents.send('new-person', person);
+  }
+});
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
