@@ -37,7 +37,7 @@ function HomePage() {
   const handlePersonClick = (event: React.MouseEvent, person: Person) => {
     event.stopPropagation();
     setSelectedPerson((prevPerson) => {
-      if (prevPerson && prevPerson.name === person.name) {
+      if (prevPerson && prevPerson.id === person.id) {
         return null;
       }
       return person;
@@ -75,6 +75,9 @@ function HomePage() {
       setPeople((prevPeople) =>
         prevPeople.filter((person) => person.id !== contextMenu.person?.id),
       );
+    }
+    if (selectedPerson && contextMenu?.person?.id === selectedPerson.id) {
+      setSelectedPerson(null);
     }
     setContextMenu(null);
   };
