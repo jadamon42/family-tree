@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import PersonNode, { Person } from '../components/PersonNode';
+import PersonNode from '../components/PersonNode';
 import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.scss';
 import ContextMenu from '../components/ContextMenu';
+import Person from '../models/Person';
 
 function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -113,11 +114,6 @@ function HomePage() {
           }
         />
       )}
-      {/* <PersonFormModal */}
-      {/*  isOpen={selectedPerson !== null} */}
-      {/*  onClose={() => setSelectedPerson(null)} */}
-      {/*  onAddPerson={handleAddPerson} */}
-      {/* /> */}
       <div className={`personDetailsPanel ${selectedPerson ? 'show' : ''}`}>
         {selectedPerson && (
           <PersonDetails

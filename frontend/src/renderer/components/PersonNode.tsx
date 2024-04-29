@@ -1,14 +1,6 @@
 import React from 'react';
 import '../styles/Person.scss';
-
-export interface Person {
-  id: string;
-  name: string;
-  sex: string;
-  dob: string;
-  dod?: string;
-  partnerships?: string[];
-}
+import Person from '../models/Person';
 
 interface PersonNodeProps {
   person: Person;

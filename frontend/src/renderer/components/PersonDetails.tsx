@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person } from './PersonNode';
+import Person from '../models/Person';
 
 function PersonDetails({ name, sex, dob, dod }: Person) {
   return (
