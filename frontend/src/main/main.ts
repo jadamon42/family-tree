@@ -30,7 +30,7 @@ const createWindow = async () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
-  console.log("ah");
+
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
   mainWindow.on('ready-to-show', () => {
@@ -56,6 +56,10 @@ const createWindow = async () => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
+
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 const startBackend = () => {

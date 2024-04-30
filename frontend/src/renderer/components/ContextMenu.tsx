@@ -10,7 +10,7 @@ interface ContextMenuProps {
   onDeletePerson?: () => void;
 }
 
-function ContextMenu({ x, y, onAddPerson, onAddPartner, onEditPerson, onDeletePerson }: ContextMenuProps) {
+function ContextMenu({ x, y, onAddPerson=undefined, onAddPartner=undefined, onEditPerson=undefined, onDeletePerson=undefined }: ContextMenuProps) {
   return (
     <div className="contextMenu" style={{ position: 'absolute', top: y, left: x }}>
       {onAddPerson && (
@@ -36,12 +36,5 @@ function ContextMenu({ x, y, onAddPerson, onAddPartner, onEditPerson, onDeletePe
     </div>
   );
 }
-
-ContextMenu.defaultProps = {
-  onAddPerson: undefined,
-  onAddPartner: undefined,
-  onEditPerson: undefined,
-  onDeletePerson: undefined,
-};
 
 export default ContextMenu;

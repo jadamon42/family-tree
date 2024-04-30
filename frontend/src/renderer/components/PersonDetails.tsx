@@ -4,7 +4,7 @@ import Person from '../models/Person';
 import { SexDisplayNames } from '../models/Sex';
 import '../styles/PersonDetails.css';
 
-function PersonDetails({ name, sex, dob, dod }: Person) {
+function PersonDetails({ name, sex, dob, dod=undefined }: Person) {
   return (
     <Paper className="person-details" elevation={3}>
       <div className="header">
@@ -25,9 +25,5 @@ function PersonDetails({ name, sex, dob, dod }: Person) {
     </Paper>
   );
 }
-
-PersonDetails.defaultProps = {
-  dod: undefined,
-};
 
 export default PersonDetails;
