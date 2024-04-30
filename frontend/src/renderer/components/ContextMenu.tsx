@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/ContextMenu.scss';
+import '../styles/ContextMenu.css';
 
 interface ContextMenuProps {
   x: number;

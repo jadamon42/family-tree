@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, TextField } from '@mui/material';
 import Person from '../models/Person';
-import '../styles/PersonFormModal.scss';
+import '../styles/PersonFormModal.css';
 import { Sex, SexDisplayNames } from '../models/Sex';
 
 interface PersonFormModalProps {

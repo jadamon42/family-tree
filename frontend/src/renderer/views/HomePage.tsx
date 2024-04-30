@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PersonNode from '../components/PersonNode';
 import PersonDetails from '../components/PersonDetails';
-import '../styles/HomePage.scss';
+import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { Avatar, Paper, Typography } from '@mui/material';
 import Person from '../models/Person';
 import { SexDisplayNames } from '../models/Sex';
-import '../styles/PersonDetails.scss';
+import '../styles/PersonDetails.css';
 
 function PersonDetails({ name, sex, dob, dod }: Person) {
   return (

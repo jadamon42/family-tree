@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/Partnership.scss';
+import '../styles/Partnership.css';
 // import Partnership from '../models/Partnership';
 //
 // interface PartnershipNodeProps {
