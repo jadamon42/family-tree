@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Person from '../models/Person';
+import PersonFormModal from '../components/PersonFormModal';
 
 function PersonFormPage() {
   const [person, setPerson] = useState<Person>({
@@ -7,6 +8,14 @@ function PersonFormPage() {
     name: '',
     sex: '',
     dob: '',
+  });
+
+  const editPersonListener = (personToEdit: Person) => {
+    if (personToEdit) setPerson(personToEdit);
+  };
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('person-data', editPersonListener);
   });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,40 +33,13 @@ function PersonFormPage() {
 
   return (
     <div>
-      <h1>Person Form</h1>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="name">
-          Name:
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={person.name}
-            onChange={handleChange}
-          />
-        </label>
-        <label htmlFor="sex">
-          Sex:
-          <input
-            type="text"
-            id="sex"
-            name="sex"
-            value={person.sex}
-            onChange={handleChange}
-          />
-        </label>
-        <label htmlFor="dob">
-          Date of Birth:
-          <input
-            type="date"
-            id="dob"
-            name="dob"
-            value={person.dob}
-            onChange={handleChange}
-          />
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
+      <h1>Create Person</h1>
+      <PersonFormModal
+        person={person}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        handleCancel={window.close}
+      />
     </div>
   );
 }

@@ -6,21 +6,13 @@ interface ContextMenuProps {
   y: number;
   onAddPerson?: () => void;
   onAddPartner?: () => void;
+  onEditPerson?: () => void;
   onDeletePerson?: () => void;
 }
 
-function ContextMenu({
-  x,
-  y,
-  onAddPerson,
-  onAddPartner,
-  onDeletePerson,
-}: ContextMenuProps) {
+function ContextMenu({ x, y, onAddPerson, onAddPartner, onEditPerson, onDeletePerson }: ContextMenuProps) {
   return (
-    <div
-      className="contextMenu"
-      style={{ position: 'absolute', top: y, left: x }}
-    >
+    <div className="contextMenu" style={{ position: 'absolute', top: y, left: x }}>
       {onAddPerson && (
         <button type="button" onClick={onAddPerson}>
           Add Person
@@ -29,6 +21,11 @@ function ContextMenu({
       {onAddPartner && (
         <button type="button" onClick={onAddPartner}>
           Add Partner
+        </button>
+      )}
+      {onEditPerson && (
+        <button type="button" onClick={onEditPerson}>
+          Edit Person
         </button>
       )}
       {onDeletePerson && (
@@ -43,6 +40,7 @@ function ContextMenu({
 ContextMenu.defaultProps = {
   onAddPerson: undefined,
   onAddPartner: undefined,
+  onEditPerson: undefined,
   onDeletePerson: undefined,
 };
 

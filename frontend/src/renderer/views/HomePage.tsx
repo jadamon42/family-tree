@@ -43,6 +43,7 @@ function HomePage() {
       }
       return person;
     });
+    setContextMenu(null);
   };
 
   const handlePersonRightClick = (event: React.MouseEvent, person: Person) => {
@@ -65,11 +66,14 @@ function HomePage() {
     setContextMenu(null);
   };
 
+  const handleEditPerson = () => {
+    window.electron.ipcRenderer.sendMessage('open-person-form', contextMenu?.person);
+    setContextMenu(null);
+  };
+
   const handleDeletePerson = () => {
     if (contextMenu && contextMenu.person) {
-      setPeople((prevPeople) =>
-        prevPeople.filter((person) => person.id !== contextMenu.person?.id),
-      );
+      setPeople((prevPeople) => prevPeople.filter((person) => person.id !== contextMenu.person?.id));
     }
     if (selectedPerson && contextMenu?.person?.id === selectedPerson.id) {
       setSelectedPerson(null);
@@ -77,12 +81,15 @@ function HomePage() {
     setContextMenu(null);
   };
 
-  const newPersonListener = (person: Person) => {
-    setPeople((prevPeople) => [...prevPeople, person]);
+  const putPersonListener = (person: Person) => {
+    setPeople((prevPeople) => {
+      const updatedPeople = prevPeople.filter((p) => p.id !== person.id);
+      return [...updatedPeople, person];
+    });
   };
 
   useEffect(() => {
-    return window.electron.ipcRenderer.on('new-person', newPersonListener);
+    return window.electron.ipcRenderer.on('person-submitted', putPersonListener);
   }, []);
 
   return (
@@ -106,15 +113,10 @@ function HomePage() {
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
-          onAddPerson={
-            contextMenu.type === 'background' ? handleAddPerson : undefined
-          }
-          onAddPartner={
-            contextMenu.type === 'person' ? handleAddPartner : undefined
-          }
-          onDeletePerson={
-            contextMenu.type === 'person' ? handleDeletePerson : undefined
-          }
+          onAddPerson={contextMenu.type === 'background' ? handleAddPerson : undefined}
+          onAddPartner={contextMenu.type === 'person' ? handleAddPartner : undefined}
+          onEditPerson={contextMenu.type === 'person' ? handleEditPerson : undefined}
+          onDeletePerson={contextMenu.type === 'person' ? handleDeletePerson : undefined}
         />
       )}
       <div className={`personDetailsPanel ${selectedPerson ? 'show' : ''}`}>

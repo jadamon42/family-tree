@@ -31,8 +31,7 @@ if (process.env.NODE_ENV === 'production') {
   sourceMapSupport.install();
 }
 
-const isDebug =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 if (isDebug) {
   require('electron-debug')();
@@ -69,10 +68,9 @@ const createWindow = async () => {
     width: 1024,
     height: 728,
     icon: getAssetPath('icon.png'),
+    title: 'Family Tree',
     webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
+      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
 
@@ -128,24 +126,29 @@ const startBackend = () => {
  * Add event listeners...
  */
 
-ipcMain.on('open-person-form', () => {
+ipcMain.on('open-person-form', (event, person) => {
   if (!mainWindow) {
     return;
   }
 
   let childWindow: BrowserWindow | null = new BrowserWindow({
-    width: 400,
-    height: 400,
+    width: 300,
+    height: 550,
+    minWidth: 300,
+    minHeight: 550,
     parent: mainWindow,
+    title: person ? 'Edit Person' : 'Add Person',
     webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
+      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
       devTools: false,
     },
   });
 
   childWindow.loadURL(resolveHtmlPath('index.html', 'add-person'));
+
+  childWindow.webContents.on('did-finish-load', () => {
+    childWindow?.webContents.send('person-data', person);
+  });
 
   childWindow.on('closed', () => {
     childWindow = null;
@@ -153,9 +156,8 @@ ipcMain.on('open-person-form', () => {
 });
 
 ipcMain.on('submit-person-form', (event, person) => {
-  console.log(person);
   if (mainWindow) {
-    mainWindow.webContents.send('new-person', person);
+    mainWindow.webContents.send('person-submitted', person);
   }
 });
 
