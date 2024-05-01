@@ -1,15 +1,16 @@
 .form-container {
   max-width: 600px;
   margin: auto;
-  padding: 20px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 form {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  align-items: start; /* Align form fields to the start (left) */
 }
 
 form .MuiFormControl-root {
@@ -23,14 +24,32 @@ form .MuiFormControl-root .MuiFormGroup-root {
 }
 
 form .MuiTextField-root {
-  margin-bottom: 15px;
+  flex: 1;
+}
+
+.name-inputs {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.sex-radials {
+  color:  black;
+}
+
+.date-inputs {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .button-container {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  gap: 20px; /* Add space between buttons */
+  gap: 20px;
 }
 
 .cancel-button {

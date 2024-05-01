@@ -89,10 +89,10 @@ ipcMain.on('open-person-form', (event, person) => {
   }
 
   let childWindow: BrowserWindow | null = new BrowserWindow({
-    width: 300,
-    height: 550,
-    minWidth: 300,
-    minHeight: 550,
+    width: 650,
+    height: 450,
+    minWidth: 650,
+    minHeight: 450,
     parent: mainWindow,
     title: person ? 'Edit Person' : 'Add Person',
     webPreferences: {

@@ -4,13 +4,13 @@ import Person from '../models/Person';
 import { SexDisplayNames } from '../models/Sex';
 import '../styles/PersonDetails.css';
 
-function PersonDetails({ name, sex, dob, dod=undefined }: Person) {
+function PersonDetails({ firstName, middleName, lastName, sex, dob, dod=undefined }: Person) {
   return (
     <Paper className="person-details" elevation={3}>
       <div className="header">
-        <Avatar alt={name} src="/static/images/avatar/1.jpg" />
+        <Avatar alt={firstName} src="/static/images/avatar/1.jpg" />
         <Typography variant="h4" component="h2" gutterBottom>
-          {name}
+          {firstName} {middleName ? `${middleName} ` : ''}{lastName}
         </Typography>
       </div>
       <Typography variant="body1" component="p" gutterBottom>

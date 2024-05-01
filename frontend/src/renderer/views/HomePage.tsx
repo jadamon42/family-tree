@@ -123,7 +123,9 @@ function HomePage() {
         {selectedPerson && (
           <PersonDetails
             id={selectedPerson.id}
-            name={selectedPerson.name}
+            firstName={selectedPerson.firstName}
+            middleName={selectedPerson.middleName}
+            lastName={selectedPerson.lastName}
             sex={selectedPerson.sex}
             dob={selectedPerson.dob}
             dod={selectedPerson.dod}

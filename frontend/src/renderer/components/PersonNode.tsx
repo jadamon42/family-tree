@@ -8,8 +8,14 @@ interface PersonNodeProps {
   onContextMenu: (event: React.MouseEvent, person: Person) => void;
 }
 
+const getLongestName = (person: Person): string => {
+  const firstName = person.firstName || '';
+  const lastName = person.lastName || '';
+  return firstName.length > lastName.length ? firstName : lastName;
+}
+
 function PersonNode({ person, onClick, onContextMenu }: PersonNodeProps) {
-  const longestName: string = person.name.split(' ').reduce((a: string, b: string) => (a.length > b.length ? a : b));
+  const longestName: string = getLongestName(person);
   const fontSize = `${Math.min(1, 10 / longestName.length)}em`;
 
   return (
@@ -20,7 +26,7 @@ function PersonNode({ person, onClick, onContextMenu }: PersonNodeProps) {
       onContextMenu={(event) => onContextMenu(event, person)}
       style={{ fontSize }}
     >
-      {person.name}
+      {person.firstName} {person.lastName}
     </button>
   );
 }

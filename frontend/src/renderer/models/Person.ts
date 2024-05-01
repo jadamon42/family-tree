@@ -2,7 +2,9 @@ import type Partnership from './Partnership';
 
 class Person {
   id: string;
-  name: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   sex: string;
   dob: string;
   dod?: string;
@@ -10,14 +12,18 @@ class Person {
 
   constructor(
     id: string,
-    name: string,
+    firstName: string,
+    middleName: string,
+    lastName: string,
     sex: string,
     dob: string,
     dod?: string,
     partnerships?: Partnership[],
   ) {
     this.id = id;
-    this.name = name;
+    this.firstName = firstName;
+    this.middleName = middleName;
+    this.lastName = lastName;
     this.sex = sex;
     this.dob = dob;
     this.dod = dod;
