@@ -4,6 +4,7 @@ import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
+import Partnership from '../models/Partnership';
 
 function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -63,6 +64,12 @@ function HomePage() {
   };
 
   const handleAddPartner = () => {
+    const partnership = new Partnership(Math.random().toString(), undefined, undefined, undefined, []);
+    putPersonListener({
+      ...contextMenu.person,
+      partnerships: [...contextMenu.person.partnerships, partnership],
+    })
+    window.electron.ipcRenderer.sendMessage('open-partner-form', partnership);
     setContextMenu(null);
   };
 
@@ -90,6 +97,10 @@ function HomePage() {
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('person-submitted', putPersonListener);
+  }, []);
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('partner-submitted', putPersonListener);
   }, []);
 
   return (

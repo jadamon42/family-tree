@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, FormControlLabel, Radio, RadioGroup, TextField } from '@mui/material';
 import Person from '../models/Person';
-import '../styles/PersonFormModal.css';
+import '../styles/PersonForm.css';
 import { Sex, SexDisplayNames } from '../models/Sex';
 
 interface PersonFormModalProps {
@@ -11,18 +11,17 @@ interface PersonFormModalProps {
   handleCancel: () => void;
 }
 
-function PersonFormModal({ person, handleChange, handleSubmit, handleCancel }: PersonFormModalProps) {
+function PersonForm({ person, handleChange, handleSubmit, handleCancel }: PersonFormModalProps) {
   return (
     <div className="form-container">
-      <h1>Create Person</h1>
       <form onSubmit={handleSubmit}>
         <div className="name-inputs">
           <TextField id="firstName" name="firstName" label="First Name" value={person.firstName} onChange={handleChange}
-                     required />
+                     required InputLabelProps={{ shrink: !!person.firstName }}/>
           <TextField id="middleName" name="middleName" label="Middle Name" value={person.middleName}
-                     onChange={handleChange} />
+                     onChange={handleChange} InputLabelProps={{ shrink: !!person.middleName }} />
           <TextField id="lastName" name="lastName" label="Last Name" value={person.lastName} onChange={handleChange}
-                     required />
+                     required InputLabelProps={{ shrink: !!person.lastName }} />
         </div>
         <div className="sex-radials">
           <RadioGroup row aria-label="sex" name="sex" value={person.sex} onChange={handleChange}>
@@ -68,4 +67,4 @@ function PersonFormModal({ person, handleChange, handleSubmit, handleCancel }: P
   );
 }
 
-export default PersonFormModal;
+export default PersonForm;

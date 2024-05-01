@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import Person from '../models/Person';
-import PersonFormModal from '../components/PersonFormModal';
+import PersonForm from '../components/PersonForm';
 import { Sex } from '../models/Sex';
 
 function PersonFormPage() {
   const [person, setPerson] = useState<Person>({
     id: Math.random().toString(),
     firstName: undefined,
-    middleName: null,
+    middleName: undefined,
     lastName: undefined,
-    sex: null,
-    dob: null,
+    sex: undefined,
+    dob: undefined,
+    dod: undefined,
+    partnerships: [],
   });
 
   const editPersonListener = (personToEdit: Person) => {
@@ -49,12 +51,15 @@ function PersonFormPage() {
   };
 
   return (
-    <PersonFormModal
+  <div>
+    <h1>Create Person</h1>
+    <PersonForm
       person={person}
       handleChange={handleChange}
       handleSubmit={handleSubmit}
       handleCancel={window.close}
     />
+  </div>
   );
 }
 

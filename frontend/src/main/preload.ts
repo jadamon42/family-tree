@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'open-person-form' | 'person-data' | 'submit-person-form' | 'person-submitted';
+export type Channels = 'open-person-form' | 'person-data' | 'submit-person-form' | 'person-submitted' | 'open-partner-form' | 'partnership-data' | 'submit-partner-form' | 'partner-submitted';
 
 const electronHandler = {
   ipcRenderer: {

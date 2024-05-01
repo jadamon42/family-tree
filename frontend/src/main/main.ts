@@ -88,7 +88,7 @@ ipcMain.on('open-person-form', (event, person) => {
     return;
   }
 
-  let childWindow: BrowserWindow | null = new BrowserWindow({
+  let personWindow: BrowserWindow | null = new BrowserWindow({
     width: 650,
     height: 450,
     minWidth: 650,
@@ -97,24 +97,57 @@ ipcMain.on('open-person-form', (event, person) => {
     title: person ? 'Edit Person' : 'Add Person',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      devTools: false,
     },
   });
 
-  childWindow.loadURL(resolveHtmlPath('index.html', 'add-person'));
+  personWindow.loadURL(resolveHtmlPath('index.html', 'person-form'));
 
-  childWindow.webContents.on('did-finish-load', () => {
-    childWindow?.webContents.send('person-data', person);
+  personWindow.webContents.on('did-finish-load', () => {
+    personWindow?.webContents.send('person-data', person);
   });
 
-  childWindow.on('closed', () => {
-    childWindow = null;
+  personWindow.on('closed', () => {
+    personWindow = null;
+  });
+});
+
+ipcMain.on('open-partner-form', (event, partnership) => {
+  if (!mainWindow) {
+    return;
+  }
+
+  let partnerWindow: BrowserWindow | null = new BrowserWindow({
+    width: 650,
+    height: 650,
+    minWidth: 650,
+    minHeight: 650,
+    parent: mainWindow,
+    title: 'Add Partner',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  partnerWindow.loadURL(resolveHtmlPath('index.html', 'partner-form'));
+
+  partnerWindow.webContents.on('did-finish-load', () => {
+    partnerWindow?.webContents.send('partnership-data', partnership);
+  });
+
+  partnerWindow.on('closed', () => {
+    partnerWindow = null;
   });
 });
 
 ipcMain.on('submit-person-form', (event, person) => {
   if (mainWindow) {
     mainWindow.webContents.send('person-submitted', person);
+  }
+});
+
+ipcMain.on('submit-partner-form', (event, person) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('partner-submitted', person);
   }
 });
 
