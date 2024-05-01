@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Person from '../models/Person';
-import PersonForm from '../components/PersonForm';
+import PersonFormBody from '../components/form/PersonFormBody';
 import { Sex } from '../models/Sex';
+import '../styles/FormPage.css';
+import SubmitAndCancelButtons from '../components/form/SubmitAndCancelButtons';
 
 function PersonFormPage() {
   const [person, setPerson] = useState<Person>({
@@ -51,15 +53,14 @@ function PersonFormPage() {
   };
 
   return (
-  <div>
-    <h1>Create Person</h1>
-    <PersonForm
-      person={person}
-      handleChange={handleChange}
-      handleSubmit={handleSubmit}
-      handleCancel={window.close}
-    />
-  </div>
+    <form onSubmit={handleSubmit}>
+      <h1>Create Person</h1>
+      <PersonFormBody
+        person={person}
+        handleChange={handleChange}
+      />
+      <SubmitAndCancelButtons onCancel={window.close} />
+    </form>
   );
 }
 

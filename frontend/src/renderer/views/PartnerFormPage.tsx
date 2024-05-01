@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Person from '../models/Person';
-import PersonForm from '../components/PersonForm';
+import PersonFormBody from '../components/form/PersonFormBody';
 import { Sex } from '../models/Sex';
-import PartnershipForm from '../components/PartnershipForm';
+import PartnershipFormBody from '../components/form/PartnershipFormBody';
 import Partnership from '../models/Partnership';
-import '../styles/PartnerFormPage.css';
+import SubmitAndCancelButtons from '../components/form/SubmitAndCancelButtons';
+import '../styles/FormPage.css';
 
 function PartnerFormPage() {
   const [partner, setPartner] = useState<Person>({
@@ -17,11 +18,9 @@ function PartnerFormPage() {
     dod: undefined,
     partnerships: [],
   });
-  const [partnership, setPartnership] = useState<Partnership>(null);
 
   const addPartnerListener = (partnership: Partnership) => {
     if (partnership) {
-      setPartnership(partnership);
       setPartner({
         ...partner,
         partnerships: [partnership],
@@ -55,13 +54,12 @@ function PartnerFormPage() {
   };
 
   const handlePartnershipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPartnership({
-      ...partnership,
-      [event.target.name]: event.target.value,
-    });
     setPartner({
       ...partner,
-      partnerships:  [partnership],
+      partnerships:  [{
+        ...partner.partnerships[0],
+        [event.target.name]: event.target.value,
+      }],
     });
   }
 
@@ -72,21 +70,19 @@ function PartnerFormPage() {
   };
 
   return (
-    <div>
+    <form onSubmit={handleSubmit}>
       <h1>Create Partner</h1>
-      <PartnershipForm
-        partnership={partnership}
+      <PartnershipFormBody
+        partnership={partner.partnerships[0]}
         handleChange={handlePartnershipChange}
       />
       <div className="separator" />
-      <PersonForm
+      <PersonFormBody
         person={partner}
         handleChange={handlePartnerChange}
-        handleSubmit={handleSubmit}
-        handleCancel={window.close}
-        // maybe this shouldn't have submit or cancel
       />
-    </div>
+      <SubmitAndCancelButtons onCancel={window.close} />
+    </form>
   );
 }
 

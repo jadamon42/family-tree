@@ -1,20 +1,17 @@
 import React from 'react';
-import { Button, FormControlLabel, Radio, RadioGroup, TextField } from '@mui/material';
-import Person from '../models/Person';
-import '../styles/PersonForm.css';
-import { Sex, SexDisplayNames } from '../models/Sex';
+import { FormControlLabel, Radio, RadioGroup, TextField } from '@mui/material';
+import Person from '../../models/Person';
+import '../../styles/PersonFormBody.css';
+import { Sex, SexDisplayNames } from '../../models/Sex';
 
 interface PersonFormModalProps {
   person: Person;
   handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSubmit: (event: React.FormEvent) => void;
-  handleCancel: () => void;
 }
 
-function PersonForm({ person, handleChange, handleSubmit, handleCancel }: PersonFormModalProps) {
+function PersonFormBody({ person, handleChange }: PersonFormModalProps) {
   return (
-    <div className="form-container">
-      <form onSubmit={handleSubmit}>
+    <div className="inputs-container">
         <div className="name-inputs">
           <TextField id="firstName" name="firstName" label="First Name" value={person.firstName} onChange={handleChange}
                      required InputLabelProps={{ shrink: !!person.firstName }}/>
@@ -54,17 +51,8 @@ function PersonForm({ person, handleChange, handleSubmit, handleCancel }: Person
             }}
           />
         </div>
-        <div className="button-container">
-          <Button variant="contained" color="secondary" type="button" className="cancel-button" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button variant="contained" color="primary" type="submit" className="submit-button">
-            Submit
-          </Button>
-        </div>
-      </form>
     </div>
   );
 }
 
-export default PersonForm;
+export default PersonFormBody;

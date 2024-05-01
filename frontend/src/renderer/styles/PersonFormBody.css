@@ -1,4 +1,4 @@
-.form-container {
+.inputs-container {
   max-width: 600px;
   margin: auto;
   box-sizing: border-box;
@@ -7,23 +7,17 @@
   gap: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-form .MuiFormControl-root {
+.inputs-container .MuiFormControl-root {
   width: 100%;
 }
 
-form .MuiFormControl-root .MuiFormGroup-root {
+.inputs-container .MuiFormControl-root .MuiFormGroup-root {
   display: flex;
   flex-direction: row;
   justify-content: start;
 }
 
-form .MuiTextField-root {
+.inputs-container .MuiTextField-root {
   flex: 1;
 }
 
@@ -43,19 +37,4 @@ form .MuiTextField-root {
   flex-direction: row;
   justify-content: space-between;
   gap: 20px;
-}
-
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  gap: 20px;
-}
-
-.cancel-button {
-  align-self: flex-start;
-}
-
-.submit-button {
-  align-self: flex-end;
 }

@@ -1,20 +1,20 @@
 import React from 'react';
 import { Box, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, TextField } from '@mui/material';
-import Partnership from '../models/Partnership';
-import '../styles/PartnershipForm.css';
+import Partnership from '../../models/Partnership';
+import '../../styles/PartnershipFormBody.css';
 
 interface PersonFormModalProps {
   partnership: Partnership;
   handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function PartnershipForm({ partnership, handleChange}: PersonFormModalProps) {
+function PartnershipFormBody({ partnership, handleChange}: PersonFormModalProps) {
   if (!partnership) {
     return null;
   }
 
   return (
-    <div className="form-container">
+    <div className="inputs-container">
         <div className="type-radials">
           <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <FormControl component="fieldset">
@@ -53,4 +53,4 @@ function PartnershipForm({ partnership, handleChange}: PersonFormModalProps) {
   );
 }
 
-export default PartnershipForm
+export default PartnershipFormBody
