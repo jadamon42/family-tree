@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/person")
+@CrossOrigin(origins = "*")
 public class PersonController {
     private final PersonService personService;
     private final GenealogicalLinkService genealogicalLinkService;

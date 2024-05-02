@@ -4,7 +4,7 @@ import Person from '../models/Person';
 import { SexDisplayNames } from '../models/Sex';
 import '../styles/PersonDetails.css';
 
-function PersonDetails({ firstName, middleName, lastName, sex, dob, dod=undefined }: Person) {
+function PersonDetails({ firstName, middleName, lastName, sex, birthDate, deathDate=undefined }: Person) {
   return (
     <Paper className="person-details" elevation={3}>
       <div className="header">
@@ -17,10 +17,10 @@ function PersonDetails({ firstName, middleName, lastName, sex, dob, dod=undefine
         <strong>Sex:</strong> {SexDisplayNames[sex as keyof typeof SexDisplayNames] || 'Unknown'}
       </Typography>
       <Typography variant="body1" component="p" gutterBottom>
-        <strong>Date of Birth:</strong> {dob || 'Unknown'}
+        <strong>Date of Birth:</strong> {birthDate || 'Unknown'}
       </Typography>
       <Typography variant="body1" component="p" gutterBottom>
-        <strong>Date of Death:</strong> {dob ? dod || 'Present' : 'Unknown'}
+        <strong>Date of Death:</strong> {birthDate ? deathDate || 'Present' : 'Unknown'}
       </Typography>
     </Paper>
   );

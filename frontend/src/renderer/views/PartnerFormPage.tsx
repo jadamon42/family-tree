@@ -1,50 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import Person from '../models/Person';
 import PersonFormBody from '../components/form/PersonFormBody';
-import { Sex } from '../models/Sex';
 import PartnershipFormBody from '../components/form/PartnershipFormBody';
-import Partnership from '../models/Partnership';
 import SubmitAndCancelButtons from '../components/form/SubmitAndCancelButtons';
 import '../styles/FormPage.css';
+import { createPerson } from '../actions/PersonActions';
+import { createPartnership } from '../actions/PartnershipActions';
 
 function PartnerFormPage() {
+  const [personId, setPersonId] = useState<string>(null);
   const [partner, setPartner] = useState<Person>({
-    id: Math.random().toString(),
+    id: undefined,
     firstName: undefined,
     middleName: undefined,
     lastName: undefined,
     sex: undefined,
-    dob: undefined,
-    dod: undefined,
-    partnerships: [],
+    birthDate: undefined,
+    deathDate: undefined,
+    partnerships: [{
+      id: undefined,
+      startDate: undefined,
+      endDate: undefined,
+      type: undefined,
+      children: [],
+    }],
   });
 
-  const addPartnerListener = (partnership: Partnership) => {
-    if (partnership) {
-      setPartner({
-        ...partner,
-        partnerships: [partnership],
-      })
+  const addPartnerListener = (personId: string) => {
+    if (personId) {
+      setPersonId(personId);
     }
   };
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('partnership-data', addPartnerListener);
   });
-
-  const toTitleCase = (name: string) => {
-    return name.replace(/\b\w/g, (char) => char.toUpperCase()).trim();
-  }
-
-  const sanitizePersonInput = (person: Person) => {
-    return {
-      ...person,
-      firstName: person.firstName ? toTitleCase(person.firstName) : null,
-      middleName: person.middleName ? toTitleCase(person.middleName) : null,
-      lastName: person.lastName ? toTitleCase(person.lastName) : null,
-      sex: person.sex === Sex.UNKNOWN ? null : person.sex
-    }
-  }
 
   const handlePartnerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPartner({
@@ -63,9 +53,11 @@ function PartnerFormPage() {
     });
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    window.electron.ipcRenderer.sendMessage('submit-partner-form', sanitizePersonInput(partner));
+    const createdPerson: Person = await createPerson(partner);
+    await createPartnership(partner.partnerships[0], [createdPerson.id, personId]);
+    window.electron.ipcRenderer.sendMessage('submit-partner-form', personId, createdPerson.id);
     window.close();
   };
 

@@ -109,9 +109,11 @@ ipcMain.on('open-person-form', (event, person) => {
   personWindow.on('closed', () => {
     personWindow = null;
   });
+
+  personWindow.webContents.openDevTools();
 });
 
-ipcMain.on('open-partner-form', (event, partnership) => {
+ipcMain.on('open-partner-form', (event, personId) => {
   if (!mainWindow) {
     return;
   }
@@ -131,23 +133,25 @@ ipcMain.on('open-partner-form', (event, partnership) => {
   partnerWindow.loadURL(resolveHtmlPath('index.html', 'partner-form'));
 
   partnerWindow.webContents.on('did-finish-load', () => {
-    partnerWindow?.webContents.send('partnership-data', partnership);
+    partnerWindow?.webContents.send('partnership-data', personId);
   });
 
   partnerWindow.on('closed', () => {
     partnerWindow = null;
   });
+
+  partnerWindow.webContents.openDevTools();
 });
 
-ipcMain.on('submit-person-form', (event, person) => {
+ipcMain.on('submit-person-form', (event, personId) => {
   if (mainWindow) {
-    mainWindow.webContents.send('person-submitted', person);
+    mainWindow.webContents.send('person-submitted', personId);
   }
 });
 
-ipcMain.on('submit-partner-form', (event, person) => {
+ipcMain.on('submit-partner-form', (event, personId, partnerId) => {
   if (mainWindow) {
-    mainWindow.webContents.send('partner-submitted', person);
+    mainWindow.webContents.send('partner-submitted', personId, partnerId);
   }
 });
 
@@ -163,7 +167,7 @@ app
   .whenReady()
   .then(() => {
     createWindow();
-    // startBackend();
+    startBackend();
     app.on('activate', () => {
       // On macOS, it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.

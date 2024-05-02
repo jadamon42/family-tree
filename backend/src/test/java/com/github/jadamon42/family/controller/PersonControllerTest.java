@@ -132,46 +132,6 @@ class PersonControllerTest {
     }
 
     @Test
-    void createPersonWithIdReturns400() throws Exception {
-        String personJson = """
-        {
-            "id": "00000000-0000-0000-0000-000000000000",
-            "firstName": "John",
-            "lastName": "Doe"
-        }
-        """;
-
-        mockMvc.perform(post("/api/person")
-               .contentType(MediaType.APPLICATION_JSON)
-               .content(personJson))
-               .andExpect(status().isBadRequest())
-               .andExpect(content().string("Unknown property: id"));
-    }
-
-    @Test
-    void createPersonWithPartnershipsReturns400() throws Exception {
-        String personJson = """
-        {
-            "firstName": "John",
-            "lastName": "Doe",
-            "partnerships": [
-                {
-                    "type": "marriage",
-                    "startDate": "2021-01-01",
-                    "endDate": "2024-01-01"
-                }
-            ]
-        }
-        """;
-
-        mockMvc.perform(post("/api/person")
-               .contentType(MediaType.APPLICATION_JSON)
-               .content(personJson))
-               .andExpect(status().isBadRequest())
-               .andExpect(content().string("Unknown property: partnerships"));
-    }
-
-    @Test
     void patchPerson() throws Exception {
         String personJson = """
         {

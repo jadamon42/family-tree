@@ -4,7 +4,7 @@ import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
-import Partnership from '../models/Partnership';
+import { deletePerson, getPerson } from '../actions/PersonActions';
 
 function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -59,17 +59,12 @@ function HomePage() {
   };
 
   const handleAddPerson = () => {
-    setContextMenu(null);
     window.electron.ipcRenderer.sendMessage('open-person-form');
+    setContextMenu(null);
   };
 
   const handleAddPartner = () => {
-    const partnership = new Partnership(Math.random().toString(), undefined, undefined, undefined, []);
-    putPersonListener({
-      ...contextMenu.person,
-      partnerships: [...contextMenu.person.partnerships, partnership],
-    })
-    window.electron.ipcRenderer.sendMessage('open-partner-form', partnership);
+    window.electron.ipcRenderer.sendMessage('open-partner-form', contextMenu?.person?.id);
     setContextMenu(null);
   };
 
@@ -78,8 +73,9 @@ function HomePage() {
     setContextMenu(null);
   };
 
-  const handleDeletePerson = () => {
+  const handleDeletePerson = async () => {
     if (contextMenu && contextMenu.person) {
+      await deletePerson(contextMenu.person.id);
       setPeople((prevPeople) => prevPeople.filter((person) => person.id !== contextMenu.person?.id));
     }
     if (selectedPerson && contextMenu?.person?.id === selectedPerson.id) {
@@ -88,10 +84,35 @@ function HomePage() {
     setContextMenu(null);
   };
 
-  const putPersonListener = (person: Person) => {
+  const putPersonListener = async (personId: string) => {
+    const person = await getPerson(personId);
+    if (!person) return;
+
     setPeople((prevPeople) => {
-      const updatedPeople = prevPeople.filter((p) => p.id !== person.id);
+      const updatedPeople = prevPeople.filter((p) => p.id !== personId);
       return [...updatedPeople, person];
+    });
+  };
+
+  const putPartnerListener = async (personId: string, partnerId: string) => {
+    const person: Person = await getPerson(personId);
+    const partner: Person = await getPerson(partnerId);
+    if (!person || !partner) return;
+
+    // const sharedPartnership = person.partnerships.find(partnership =>
+    //   partner.partnerships.some(p => p.id === partnership.id)
+    // );
+    //
+    // if (!sharedPartnership) return;
+    //
+    // person.partnerships = person.partnerships.map(p => p.id === sharedPartnership.id ? sharedPartnership : p);
+    // partner.partnerships = partner.partnerships.map(p => p.id === sharedPartnership.id ? sharedPartnership : p);
+
+    setPeople((prevPeople) => {
+      const updatedPeople = prevPeople.filter((p) => p.id !== personId && p.id !== partnerId);
+      updatedPeople.push(person);
+      updatedPeople.push(partner);
+      return updatedPeople;
     });
   };
 
@@ -100,7 +121,7 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    return window.electron.ipcRenderer.on('partner-submitted', putPersonListener);
+    return window.electron.ipcRenderer.on('partner-submitted', putPartnerListener);
   }, []);
 
   return (
@@ -138,8 +159,8 @@ function HomePage() {
             middleName={selectedPerson.middleName}
             lastName={selectedPerson.lastName}
             sex={selectedPerson.sex}
-            dob={selectedPerson.dob}
-            dod={selectedPerson.dod}
+            birthDate={selectedPerson.birthDate}
+            deathDate={selectedPerson.deathDate}
           />
         )}
       </div>

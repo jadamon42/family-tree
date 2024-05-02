@@ -6,8 +6,8 @@ class Person {
   middleName: string;
   lastName: string;
   sex: string;
-  dob: string;
-  dod?: string;
+  birthDate: string;
+  deathDate?: string;
   partnerships?: Partnership[];
 
   constructor(
@@ -16,8 +16,8 @@ class Person {
     middleName: string,
     lastName: string,
     sex: string,
-    dob: string,
-    dod?: string,
+    birthDate: string,
+    deathDate?: string,
     partnerships?: Partnership[],
   ) {
     this.id = id;
@@ -25,8 +25,8 @@ class Person {
     this.middleName = middleName;
     this.lastName = lastName;
     this.sex = sex;
-    this.dob = dob;
-    this.dod = dod;
+    this.birthDate = birthDate;
+    this.deathDate = deathDate;
     this.partnerships = partnerships;
   }
 }

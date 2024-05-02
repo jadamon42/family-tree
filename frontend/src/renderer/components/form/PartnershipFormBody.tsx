@@ -9,10 +9,6 @@ interface PersonFormModalProps {
 }
 
 function PartnershipFormBody({ partnership, handleChange}: PersonFormModalProps) {
-  if (!partnership) {
-    return null;
-  }
-
   return (
     <div className="inputs-container">
         <div className="type-radials">

@@ -1,6 +1,5 @@
 package com.github.jadamon42.family.model;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
@@ -35,12 +34,5 @@ public class PartnershipRequest {
                                  .endDate(endDate)
                                  .partnerIds(partnerIds != null ? partnerIds : List.of())
                                  .build();
-    }
-
-    public static class PartnershipRequestBuilder {
-        @JsonAnySetter
-        public PartnershipRequestBuilder unknown(String name, Object ignoredValue) {
-            throw new IllegalArgumentException("Unknown property: " + name);
-        }
     }
 }

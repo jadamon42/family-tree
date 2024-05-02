@@ -1,6 +1,5 @@
 package com.github.jadamon42.family.model;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Value;
@@ -21,11 +20,4 @@ public class PersonRequest {
     Optional<LocalDate> birthDate;
     Optional<LocalDate> deathDate;
     Optional<UUID> parentsPartnershipId;
-
-    public static class PersonRequestBuilder {
-        @JsonAnySetter
-        public PersonRequestBuilder unknown(String name, Object ignoredValue) {
-            throw new IllegalArgumentException("Unknown property: " + name);
-        }
-    }
 }
