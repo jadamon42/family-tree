@@ -52,7 +52,7 @@ function PersonFormPage() {
         person={person}
         handleChange={handleChange}
       />
-      <SubmitAndCancelButtons onCancel={window.close} />
+      <SubmitAndCancelButtons onCancel={window.close} onSubmit={handleSubmit} />
     </form>
   );
 }

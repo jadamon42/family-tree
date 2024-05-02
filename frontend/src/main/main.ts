@@ -109,8 +109,6 @@ ipcMain.on('open-person-form', (event, person) => {
   personWindow.on('closed', () => {
     personWindow = null;
   });
-
-  personWindow.webContents.openDevTools();
 });
 
 ipcMain.on('open-partner-form', (event, personId) => {
@@ -139,8 +137,6 @@ ipcMain.on('open-partner-form', (event, personId) => {
   partnerWindow.on('closed', () => {
     partnerWindow = null;
   });
-
-  partnerWindow.webContents.openDevTools();
 });
 
 ipcMain.on('submit-person-form', (event, personId) => {

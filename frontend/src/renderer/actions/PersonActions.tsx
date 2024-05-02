@@ -40,6 +40,18 @@ export async function getPerson(id: string) {
   return await response.json();
 }
 
+export async function getRootPeople() {
+  const response = await fetch('http://localhost:50000/api/person?rootsOnly=true');
+
+  if (!response.ok) {
+    console.error('Error:', response.statusText);
+  }
+
+  const retval: Person[] = await response.json();
+
+  return retval;
+}
+
 export async function updatePerson(person: Person) {
   const response = await fetch(`http://localhost:50000/api/person/${person.id}`, {
     method: 'PATCH',

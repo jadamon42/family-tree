@@ -4,7 +4,8 @@ import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
-import { deletePerson, getPerson } from '../actions/PersonActions';
+import { deletePerson, getPerson, getRootPeople } from '../actions/PersonActions';
+import LoadingOverlay from 'react-loading-overlay';
 
 function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -15,6 +16,7 @@ function HomePage() {
     type: 'background' | 'person';
     person?: Person;
   } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
@@ -117,6 +119,23 @@ function HomePage() {
   };
 
   useEffect(() => {
+    const fetchRootPeople = async (retryCount = 0) => {
+      try {
+        const rootPeople = await getRootPeople();
+        setPeople(rootPeople);
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Failed to fetch root people:', error);
+        if (retryCount < 10) {
+          setTimeout(() => fetchRootPeople(retryCount + 1), 4000);
+        }
+      }
+    };
+
+    fetchRootPeople();
+  }, []);
+
+  useEffect(() => {
     return window.electron.ipcRenderer.on('person-submitted', putPersonListener);
   }, []);
 
@@ -133,6 +152,14 @@ function HomePage() {
       onContextMenu={handleBackgroundRightClick}
       onKeyDown={handleKeyDown}
     >
+      {isLoading && (
+        <LoadingOverlay
+          active={isLoading}
+          spinner
+          text='Loading Family Tree...'
+          className="loadingOverlay"
+        />
+      )}
       {people.map((person) => (
         <PersonNode
           key={person.id}
@@ -141,7 +168,7 @@ function HomePage() {
           onContextMenu={handlePersonRightClick}
         />
       ))}
-      {contextMenu && (
+      {contextMenu && !isLoading && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}

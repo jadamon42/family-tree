@@ -73,7 +73,7 @@ function PartnerFormPage() {
         person={partner}
         handleChange={handlePartnerChange}
       />
-      <SubmitAndCancelButtons onCancel={window.close} />
+      <SubmitAndCancelButtons onCancel={window.close} onSubmit={handleSubmit} />
     </form>
   );
 }

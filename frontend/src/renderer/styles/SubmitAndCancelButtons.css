@@ -8,8 +8,17 @@
 
 .cancel-button {
     align-self: flex-start;
+    width: 100px;
+    height: 40px;
 }
 
 .submit-button {
     align-self: flex-end;
+    width: 100px;
+    height: 40px;
+}
+
+.submit-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
