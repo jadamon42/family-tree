@@ -1,30 +1,32 @@
 import path from 'path';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
 let mainWindow: BrowserWindow | null = null;
+let backend: ChildProcessWithoutNullStreams;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const RESOURCES_PATH = app.isPackaged
+  ? path.join(process.resourcesPath)
+  : path.join(app.getAppPath(), 'resources');
+
+const getResourcePath = (...paths: string[]): string => {
+  return path.join(RESOURCES_PATH, ...paths);
+};
+
+
 const createWindow = async () => {
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728,
-    icon: getAssetPath('icon.png'),
+    icon: getResourcePath('icon.png'),
     title: 'Family Tree',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -63,8 +65,8 @@ const createWindow = async () => {
 };
 
 const startBackend = () => {
-  const jarPath = path.join(app.getAppPath(), 'backend', 'family-1.0.jar');
-  const backend = spawn('java', ['-jar', jarPath]);
+  const jarPath = getResourcePath('family-1.0.jar');
+  backend = spawn('java', ['-jar', jarPath]);
 
   backend.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
@@ -171,3 +173,7 @@ app
     });
   })
   .catch(console.log);
+
+process.on('exit', () => {
+  backend.kill();
+});

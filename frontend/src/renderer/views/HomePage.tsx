@@ -5,7 +5,7 @@ import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
 import { deletePerson, getPerson, getRootPeople } from '../actions/PersonActions';
-import LoadingOverlay from 'react-loading-overlay';
+import { BounceLoader } from 'react-spinners';
 
 function HomePage() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -125,9 +125,11 @@ function HomePage() {
         setPeople(rootPeople);
         setIsLoading(false)
       } catch (error) {
-        console.error('Failed to fetch root people:', error);
         if (retryCount < 10) {
+          console.error('Failed to fetch root people. Retrying...');
           setTimeout(() => fetchRootPeople(retryCount + 1), 4000);
+        } else {
+          console.error('Failed to fetch root people after 10 retries.');
         }
       }
     };
@@ -153,12 +155,10 @@ function HomePage() {
       onKeyDown={handleKeyDown}
     >
       {isLoading && (
-        <LoadingOverlay
-          active={isLoading}
-          spinner
-          text='Loading Family Tree...'
-          className="loadingOverlay"
-        />
+        <div>
+          <BounceLoader color={'#123abc'} loading={isLoading} size={150} />
+          <p>Loading Family Tree...</p>
+        </div>
       )}
       {people.map((person) => (
         <PersonNode
