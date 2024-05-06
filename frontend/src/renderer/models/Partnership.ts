@@ -5,6 +5,7 @@ class Partnership {
   type: string;
   startDate: string;
   endDate: string;
+  partners: Person[];
   children: Person[];
 
   constructor(
@@ -12,12 +13,14 @@ class Partnership {
     type: string,
     startDate: string,
     endDate: string,
+    partners: Person[],
     children: Person[]
   ) {
     this.id = id;
     this.type = type;
     this.startDate = startDate;
     this.endDate = endDate;
+    this.partners = partners;
     this.children = children;
   }
 }

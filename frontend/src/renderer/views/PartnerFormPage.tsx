@@ -17,13 +17,14 @@ function PartnerFormPage() {
     sex: undefined,
     birthDate: undefined,
     deathDate: undefined,
-    partnerships: [{
-      id: undefined,
-      startDate: undefined,
-      endDate: undefined,
-      type: undefined,
-      children: [],
-    }],
+  });
+  const [partnership, setPartnership] = useState({
+    id: undefined,
+    type: undefined,
+    startDate: undefined,
+    endDate: undefined,
+    partners: undefined,
+    children: undefined,
   });
 
   const addPartnerListener = (personId: string) => {
@@ -44,19 +45,16 @@ function PartnerFormPage() {
   };
 
   const handlePartnershipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPartner({
-      ...partner,
-      partnerships:  [{
-        ...partner.partnerships[0],
-        [event.target.name]: event.target.value,
-      }],
+    setPartnership({
+      ...partnership,
+      [event.target.name]: event.target.value,
     });
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const createdPerson: Person = await createPerson(partner);
-    await createPartnership(partner.partnerships[0], [createdPerson.id, personId]);
+    await createPartnership(partnership, [createdPerson.id, personId]);
     window.electron.ipcRenderer.sendMessage('submit-partner-form', personId, createdPerson.id);
     window.close();
   };
@@ -65,7 +63,7 @@ function PartnerFormPage() {
     <form onSubmit={handleSubmit}>
       <h1>Create Partner</h1>
       <PartnershipFormBody
-        partnership={partner.partnerships[0]}
+        partnership={partnership}
         handleChange={handlePartnershipChange}
       />
       <div className="separator" />

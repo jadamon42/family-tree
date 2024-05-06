@@ -1,5 +1,3 @@
-import type Partnership from './Partnership';
-
 class Person {
   id: string;
   firstName: string;
@@ -8,7 +6,6 @@ class Person {
   sex: string;
   birthDate: string;
   deathDate?: string;
-  partnerships?: Partnership[];
 
   constructor(
     id: string,
@@ -18,7 +15,6 @@ class Person {
     sex: string,
     birthDate: string,
     deathDate?: string,
-    partnerships?: Partnership[],
   ) {
     this.id = id;
     this.firstName = firstName;
@@ -27,7 +23,6 @@ class Person {
     this.sex = sex;
     this.birthDate = birthDate;
     this.deathDate = deathDate;
-    this.partnerships = partnerships;
   }
 }
 

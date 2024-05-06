@@ -14,7 +14,6 @@ function PersonFormPage() {
     sex: 'UNKNOWN',
     birthDate: undefined,
     deathDate: undefined,
-    partnerships: [],
   });
 
   const editPersonListener = (personToEdit: Person) => {

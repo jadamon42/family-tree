@@ -18,3 +18,26 @@ export async function createPartnership(partnership: Partnership, partnerIds: st
 
   return await response.json();
 }
+
+export async function getPartnerships() {
+  let page = 1;
+  const limit = 10;
+  let hasMore = true;
+  let allPartnerships: Partnership[] = [];
+
+  while (hasMore) {
+    const response = await fetch(`http://localhost:50000/api/partnership?page=${page}&limit=${limit}`);
+    if (!response.ok) {
+      console.error('Error:', response.statusText);
+      break;
+    }
+
+    const data = await response.json();
+    allPartnerships = [...allPartnerships, ...data.content];
+
+    hasMore = !data.last;
+    page += 1;
+  }
+
+  return allPartnerships;
+}
