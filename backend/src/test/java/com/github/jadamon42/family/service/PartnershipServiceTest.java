@@ -16,11 +16,16 @@ import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +36,44 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataNeo4jTest
 @ActiveProfiles("test")
 public class PartnershipServiceTest {
+    @Test
+    void getPartnerships() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startDate").ascending());
+        Page<Partnership> page = partnershipService.getPartnerships(pageable);
+
+        assertThat(page).isNotNull();
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getTotalPages()).isEqualTo(1);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.hasNext()).isFalse();
+        assertThat(page.getContent()).isSortedAccordingTo(Comparator.comparing(Partnership::getStartDate));
+    }
+
+    @Test
+    void getPartnershipsMultiPage() {
+        Pageable pageable1 = PageRequest.of(0, 1, Sort.by("startDate").ascending());
+        Pageable pageable2 = PageRequest.of(1, 1, Sort.by("startDate").ascending());
+        Page<Partnership> page1 = partnershipService.getPartnerships(pageable1);
+        Page<Partnership> page2 = partnershipService.getPartnerships(pageable2);
+
+        assertThat(page1).isNotNull();
+        assertThat(page1.getContent()).hasSize(1);
+        assertThat(page1.getTotalElements()).isEqualTo(2);
+        assertThat(page1.getTotalPages()).isEqualTo(2);
+        assertThat(page1.getNumber()).isEqualTo(0);
+        assertThat(page1.hasNext()).isTrue();
+        assertThat(page1.getContent().get(0).getId()).isEqualTo(partnershipId);
+
+        assertThat(page2).isNotNull();
+        assertThat(page2.getContent()).hasSize(1);
+        assertThat(page2.getTotalElements()).isEqualTo(2);
+        assertThat(page2.getTotalPages()).isEqualTo(2);
+        assertThat(page2.getNumber()).isEqualTo(1);
+        assertThat(page2.hasNext()).isFalse();
+        assertThat(page2.getContent().get(0).getId()).isEqualTo(unattachedPartnershipId);
+    }
+
     @Test
     void getPartnership() {
         Partnership partnership = partnershipService.getPartnership(partnershipId).orElseThrow();
@@ -143,7 +186,7 @@ public class PartnershipServiceTest {
 
         assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
-        assertThat(updatedPartnership.getStartDate()).isEqualTo("2021-01-01");
+        assertThat(updatedPartnership.getStartDate()).isEqualTo("2022-01-01");
         assertThat(updatedPartnership.getEndDate()).isEqualTo("2023-12-31");
     }
 
@@ -246,7 +289,7 @@ public class PartnershipServiceTest {
                (otherPersonInPartnership)-[:PARTNER_IN]->(partnership)
         CREATE (person1:Person {id: '%s', firstName:'Stray1', lastName: 'Person'})
         CREATE (person2:Person {id: '%s', firstName:'Stray2', lastName: 'Person'})
-        CREATE (unattachedPartnership:Partnership {id: '%s', type: 'marriage', startDate: date('2021-01-01'), endDate: null})
+        CREATE (unattachedPartnership:Partnership {id: '%s', type: 'marriage', startDate: date('2022-01-01'), endDate: null})
         CREATE (child:Person {id: '%s', firstName:'Child', lastName: 'Person'})
         CREATE (partnership)-[:BEGAT]->(child)
         """, personInPartnershipId, otherPersonInPartnershipId, partnershipId, person1Id, person2Id, unattachedPartnershipId, childId));

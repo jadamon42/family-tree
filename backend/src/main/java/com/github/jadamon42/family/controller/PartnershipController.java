@@ -4,6 +4,8 @@ import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.PartnershipRequest;
 import com.github.jadamon42.family.service.PartnershipService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,11 @@ public class PartnershipController {
     @Autowired
     public PartnershipController(PartnershipService partnershipService) {
         this.partnershipService = partnershipService;
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<Partnership>> getPartnerships(Pageable pageable) {
+        return ResponseEntity.ok(partnershipService.getPartnerships(pageable));
     }
 
     @GetMapping("/{partnershipId}")

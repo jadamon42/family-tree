@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,16 +18,53 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @WebMvcTest(PartnershipController.class)
 @ActiveProfiles("test")
 class PartnershipControllerTest {
+    @Test
+    void getPartnerships() throws Exception {
+        UUID partnershipId = UUID.randomUUID();
+        Partnership partnership = Partnership.builder()
+                                             .id(partnershipId)
+                                             .type("marriage")
+                                             .startDate(LocalDate.of(2021, 1, 1))
+                                             .endDate(LocalDate.of(2021, 12, 31))
+                                             .build();
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startDate").ascending());
+        Page<Partnership> partnershipsPage = new PageImpl<>(List.of(partnership), pageable, 1);
+        when(partnershipService.getPartnerships(pageable)).thenReturn(partnershipsPage);
+
+        mockMvc.perform(get("/api/partnership")
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sort", "startDate,asc"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.content", hasSize(1)))
+               .andExpect(jsonPath("$.content[0].startDate", is(partnershipsPage.getContent().get(0).getStartDate().toString())));
+    }
+
+    @Test
+    void getPartnershipsReturnsEmptyPageWhenNoPartnershipsExist() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("startDate").ascending());
+        Page<Partnership> partnershipsPage = new PageImpl<>(List.of(), pageable, 0);
+        when(partnershipService.getPartnerships(pageable)).thenReturn(partnershipsPage);
+
+        mockMvc.perform(get("/api/partnership")
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sort", "startDate,asc"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.content", hasSize(0)));
+    }
+
     @Test
     void getPartnershipById() throws Exception {
         UUID partnershipId = UUID.randomUUID();

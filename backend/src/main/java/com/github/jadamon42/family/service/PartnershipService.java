@@ -5,6 +5,10 @@ import com.github.jadamon42.family.model.PartnershipRequest;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +28,15 @@ public class PartnershipService {
     public PartnershipService(PartnershipRepository partnershipRepository, PersonRepository personRepository) {
         this.partnershipRepository = partnershipRepository;
         this.personRepository = personRepository;
+    }
+
+    public Page<Partnership> getPartnerships(Pageable pageable) {
+        if (!pageable.getSort().isSorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(),
+                                      pageable.getPageSize(),
+                                      Sort.by("startDate").ascending());
+        }
+        return partnershipRepository.findAll(pageable);
     }
 
     public Optional<Partnership> getPartnership(UUID partnershipId) {
