@@ -47,9 +47,7 @@ export async function getRootPeople() {
     console.error('Error:', response.statusText);
   }
 
-  const retval: Person[] = await response.json();
-
-  return retval;
+  return await response.json();
 }
 
 export async function updatePerson(person: Person) {
@@ -77,3 +75,14 @@ export async function deletePerson(id: string) {
     console.error('Error:', response.statusText);
   }
 }
+
+export async function getPartner(personId: string, partnershipId: string) {
+  const response = await fetch(`http://localhost:50000/api/person/${personId}/partners?partnershipId=${partnershipId}`);
+
+  if (!response.ok) {
+    console.error('Error:', response.statusText);
+  }
+
+  return await response.json();
+}
+

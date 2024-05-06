@@ -23,8 +23,8 @@ function PartnershipFormBody({ partnership, handleChange}: PersonFormModalProps)
         </div>
         <div className="date-inputs">
           <TextField
-            id="dob"
-            name="dob"
+            id="startDate"
+            name="startDate"
             label="Start Date"
             type="date"
             value={partnership.startDate}
@@ -34,8 +34,8 @@ function PartnershipFormBody({ partnership, handleChange}: PersonFormModalProps)
             }}
           />
           <TextField
-            id="dod"
-            name="dod"
+            id="endDate"
+            name="endDate"
             label="End Date"
             type="date"
             value={partnership.endDate}

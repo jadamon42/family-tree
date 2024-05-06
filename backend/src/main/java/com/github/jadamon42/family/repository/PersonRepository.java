@@ -21,6 +21,14 @@ public interface PersonRepository extends Neo4jRepository<Person, UUID> {
     Optional<PersonProjection> findProjectionById(UUID id);
 
     @Query("""
+        MATCH (person:Person {id: $personId})-[PARTNER_IN]->(Partnership {id: $partnershipId})<-[:PARTNER_IN]-(partner:Person)
+        WHERE partner <> person
+        OPTIONAL MATCH (partner)-[r]->(n)
+        RETURN partner
+    """)
+    Collection<PersonProjection> findPartners(UUID personId, UUID partnershipId);
+
+    @Query("""
             CREATE (p:Person {
                 id: randomUUID(),
                 firstName: :#{#person.getFirstName()},

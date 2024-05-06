@@ -41,8 +41,15 @@ public class PersonController {
     }
 
     @GetMapping("/{personId}")
-    public ResponseEntity<Person> getPersonById(@PathVariable UUID personId) {
+    public ResponseEntity<PersonProjection> getPersonById(@PathVariable UUID personId) {
         return personService.getPerson(personId)
+                            .map(ResponseEntity::ok)
+                            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{personId}/partners")
+    public ResponseEntity<Collection<PersonProjection>> getPartners(@PathVariable UUID personId, @RequestParam UUID partnershipId) {
+        return personService.getPartners(personId, partnershipId)
                             .map(ResponseEntity::ok)
                             .orElse(ResponseEntity.notFound().build());
     }

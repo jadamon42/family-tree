@@ -1,7 +1,10 @@
 package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jadamon42.family.model.*;
+import com.github.jadamon42.family.model.MockPersonProjection;
+import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.PersonRequest;
+import com.github.jadamon42.family.model.Sex;
 import com.github.jadamon42.family.service.GenealogicalLinkService;
 import com.github.jadamon42.family.service.PersonService;
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,7 +65,7 @@ class PersonControllerTest {
     @Test
     void getPersonById() throws Exception {
        UUID personId = UUID.randomUUID();
-       Person person = Person.builder()
+        PersonProjection person = MockPersonProjection.builder()
                              .id(personId)
                              .firstName("John")
                              .lastName("Doe")
@@ -71,6 +75,32 @@ class PersonControllerTest {
        mockMvc.perform(get("/api/person/" + personId))
               .andExpect(status().isOk())
               .andExpect(content().json(objectMapper.writeValueAsString(person)));
+    }
+
+    @Test
+    void getPartner() throws Exception {
+        UUID personId = UUID.randomUUID();
+        UUID partnershipId = UUID.randomUUID();
+        PersonProjection partner = MockPersonProjection.builder()
+                                                       .id(UUID.randomUUID())
+                                                       .firstName("Jane")
+                                                       .lastName("Doe")
+                                                       .build();
+        when(personService.getPartners(personId, partnershipId)).thenReturn(Optional.of(List.of(partner)));
+
+        mockMvc.perform(get("/api/person/" + personId + "/partners?partnershipId=" + partnershipId))
+               .andExpect(status().isOk())
+               .andExpect(content().json(objectMapper.writeValueAsString(List.of(partner))));
+    }
+
+    @Test
+    void getPartnerThrows404WhenPersonNotFound() throws Exception {
+        UUID personId = UUID.randomUUID();
+        UUID partnershipId = UUID.randomUUID();
+        when(personService.getPartners(personId, partnershipId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/person/" + personId + "/partners?partnershipId=" + partnershipId))
+               .andExpect(status().isNotFound());
     }
 
     @Test

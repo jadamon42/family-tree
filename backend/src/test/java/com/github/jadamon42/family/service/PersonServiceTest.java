@@ -2,7 +2,6 @@ package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.exception.PartnershipNotFoundException;
 import com.github.jadamon42.family.model.Partnership;
-import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
@@ -92,7 +91,7 @@ public class PersonServiceTest {
 
     @Test
     void getPerson() {
-        Person person = personService.getPerson(personInPartnershipId).orElseThrow();
+        PersonProjection person = personService.getPerson(personInPartnershipId).orElseThrow();
         assertThat(person.getFirstName()).isEqualTo("Jonathan");
         assertThat(person.getLastName()).isEqualTo("Damon");
         assertThat(person.getPartnerships()).satisfies(partnerships -> {
@@ -101,6 +100,13 @@ public class PersonServiceTest {
             assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
             assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
         });
+    }
+
+    @Test
+    void getPartner() {
+        Collection<PersonProjection> partners = personService.getPartners(personInPartnershipId, partnershipId).orElseThrow();
+        assertThat(partners).hasSize(1);
+        assertThat(partners.iterator().next().getId()).isEqualTo(otherPersonInPartnershipId);
     }
 
     @Test

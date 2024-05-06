@@ -22,7 +22,6 @@ function PartnerFormPage() {
       startDate: undefined,
       endDate: undefined,
       type: undefined,
-      children: [],
     }],
   });
 

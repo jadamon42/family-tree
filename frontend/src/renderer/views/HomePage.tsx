@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import PersonNode from '../components/PersonNode';
 import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
 import { deletePerson, getPerson, getRootPeople } from '../actions/PersonActions';
 import { BounceLoader } from 'react-spinners';
+import TreeSegmentData from '../models/TreeSegmentData';
+import TreeSegmentPartnership from '../models/TreeSegmentPartnership';
+import TreeSegment from '../components/TreeSegment';
 
 function HomePage() {
+  const [roots, setRoots] = useState<Person[]>([]);
+  const [treeSegments, setTreeSegments] = useState<TreeSegmentData[]>([]);
+  const [processedPeopleIds, setProcessedPeopleIds] = useState<string[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -122,7 +127,7 @@ function HomePage() {
     const fetchRootPeople = async (retryCount = 0) => {
       try {
         const rootPeople = await getRootPeople();
-        setPeople(rootPeople);
+        setRoots(rootPeople);
         setIsLoading(false)
       } catch (error) {
         if (retryCount < 10) {
@@ -133,8 +138,27 @@ function HomePage() {
         }
       }
     };
-
+    // const buildSegment = async (person: Person) => {
+    //   const newSegment = new TreeSegmentData(person);
+    //   for (const partnership of person.partnerships) {
+    //     const partner: Person = await getPartner(person.id, partnership.id)
+    //     const newPartnership = new TreeSegmentPartnership(partner, partnership);
+    //     newPartnership.
+    //     newSegment.addPartnership(newPartnership);
+    //   }
+    //   return newSegment;
+    // }
+    // const buildTreeData = () => {
+    //   for (const root of roots) {
+    //     if (processedPeopleIds.includes(root.id)) {
+    //       continue;
+    //     }
+    //     const newSegment: TreeSegmentData = buildSegment(root);
+    //     setProcessedPeopleIds([...processedPeopleIds, root.id]);
+    //   }
+    // }
     fetchRootPeople();
+    // buildTreeData();
   }, []);
 
   useEffect(() => {
@@ -144,6 +168,14 @@ function HomePage() {
   useEffect(() => {
     return window.electron.ipcRenderer.on('partner-submitted', putPartnerListener);
   }, []);
+
+  const blah = (people: Person[]) => {
+    const retval = new TreeSegmentData(people[0]);
+    const partnership = new TreeSegmentPartnership(people[1], people[1].partnerships[0])
+    console.log(people[0].partnerships[0])
+    retval.addPartnership(partnership);
+    return retval;
+  }
 
   return (
     <div
@@ -160,14 +192,18 @@ function HomePage() {
           <p>Loading Family Tree...</p>
         </div>
       )}
-      {people.map((person) => (
-        <PersonNode
-          key={person.id}
-          person={person}
-          onClick={(event) => handlePersonClick(event, person)}
-          onContextMenu={handlePersonRightClick}
-        />
-      ))}
+      {/*{people.map((person) => (*/}
+      {/*  <PersonNode*/}
+      {/*    key={person.id}*/}
+      {/*    person={person}*/}
+      {/*    onClick={(event) => handlePersonClick(event, person)}*/}
+      {/*    onContextMenu={handlePersonRightClick}*/}
+      {/*  />*/}
+      {/*))}*/}
+      { !isLoading &&
+        <TreeSegment data={blah(people)} onPersonClick={handlePersonClick} onPersonContextMenu={handlePersonRightClick} />
+      }
+      {/*<FamilyTree rootPeople={people} onPersonClick={handlePersonClick} onPersonContextMenu={handlePersonRightClick} />*/}
       {contextMenu && !isLoading && (
         <ContextMenu
           x={contextMenu.x}

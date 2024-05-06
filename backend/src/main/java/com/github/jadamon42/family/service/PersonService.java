@@ -32,8 +32,17 @@ public class PersonService {
         return personRepository.findRootPeople();
     }
 
-    public Optional<Person> getPerson(UUID id) {
-        return personRepository.findById(id);
+    public Optional<PersonProjection> getPerson(UUID id) {
+        return personRepository.findProjectionById(id);
+    }
+
+    public Optional<Collection<PersonProjection>> getPartners(UUID personId, UUID partnershipId) {
+        PersonProjection existingPerson = personRepository.findProjectionById(personId).orElse(null);
+        Collection<PersonProjection> partners = null;
+        if (existingPerson != null) {
+            partners = personRepository.findPartners(personId, partnershipId);
+        }
+        return Optional.ofNullable(partners);
     }
 
     public PersonProjection createPerson(PersonRequest request) {

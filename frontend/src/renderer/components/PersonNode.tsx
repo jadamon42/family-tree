@@ -2,9 +2,9 @@ import React from 'react';
 import '../styles/PersonNode.css';
 import Person from '../models/Person';
 
-interface PersonNodeProps {
+export interface PersonNodeProps {
   person: Person;
-  onClick: (event: React.MouseEvent) => void;
+  onClick: (event: React.MouseEvent, person: Person) => void;
   onContextMenu: (event: React.MouseEvent, person: Person) => void;
 }
 
@@ -22,7 +22,7 @@ function PersonNode({ person, onClick, onContextMenu }: PersonNodeProps) {
     <button
       type="button"
       className="person"
-      onClick={onClick}
+      onClick={(event) => onClick(event, person)}
       onContextMenu={(event) => onContextMenu(event, person)}
       style={{ fontSize }}
     >
