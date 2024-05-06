@@ -21,18 +21,22 @@ public class PartnershipRequest {
     Optional<LocalDate> endDate;
     @Builder.Default
     List<UUID> partnerIds = List.of();
+    @Builder.Default
+    List<UUID> childIds = List.of();
 
     @JsonCreator
     public static PartnershipRequest create(
             Optional<String> type,
             Optional<LocalDate> startDate,
             Optional<LocalDate> endDate,
-            List<UUID> partnerIds) {
+            List<UUID> partnerIds,
+            List<UUID> childIds) {
         return PartnershipRequest.builder()
                                  .type(type)
                                  .startDate(startDate)
                                  .endDate(endDate)
                                  .partnerIds(partnerIds != null ? partnerIds : List.of())
+                                 .childIds(childIds != null ? childIds : List.of())
                                  .build();
     }
 }

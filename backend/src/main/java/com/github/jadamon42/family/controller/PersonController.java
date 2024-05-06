@@ -1,7 +1,6 @@
 package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Person;
-import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.service.GenealogicalLinkService;
 import com.github.jadamon42.family.service.PersonService;
@@ -26,11 +25,11 @@ public class PersonController {
     }
 
     @GetMapping
-    public ResponseEntity<Collection<PersonProjection>> getPeople(@RequestParam Boolean rootsOnly) {
+    public ResponseEntity<Collection<Person>> getPeople(@RequestParam Boolean rootsOnly) {
         if (! rootsOnly) {
             throw new UnsupportedOperationException("Only retrieval of root nodes is supported at this time.");
         }
-        return ResponseEntity.ok(personService.getRootPersonProjections());
+        return ResponseEntity.ok(personService.getRootPeople());
     }
 
     @GetMapping("/relationship")
@@ -48,12 +47,12 @@ public class PersonController {
     }
 
     @PostMapping
-    public ResponseEntity<PersonProjection> createPerson(@RequestBody PersonRequest request) {
+    public ResponseEntity<Person> createPerson(@RequestBody PersonRequest request) {
         return ResponseEntity.ok(personService.createPerson(request));
     }
 
     @PatchMapping("/{personId}")
-    public ResponseEntity<PersonProjection> patchPerson(@PathVariable UUID personId, @RequestBody PersonRequest request) {
+    public ResponseEntity<Person> patchPerson(@PathVariable UUID personId, @RequestBody PersonRequest request) {
         return personService.updatePerson(personId, request)
                             .map(ResponseEntity::ok)
                             .orElse(ResponseEntity.notFound().build());

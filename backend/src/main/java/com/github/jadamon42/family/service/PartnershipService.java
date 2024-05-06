@@ -1,16 +1,14 @@
 package com.github.jadamon42.family.service;
 
-import com.github.jadamon42.family.exception.PersonNotFoundException;
 import com.github.jadamon42.family.model.Partnership;
-import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.PartnershipRequest;
-import com.github.jadamon42.family.model.PersonProjection;
+import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,64 +30,74 @@ public class PartnershipService {
         return partnershipRepository.findById(partnershipId);
     }
 
-    public PartnershipProjection createPartnership(PartnershipRequest request) {
+    public Partnership createPartnership(PartnershipRequest request) {
         if (request.getPartnerIds().isEmpty()) {
             throw new IllegalArgumentException("At least one partner ID must be provided.");
         }
 
-        Partnership partnership = Partnership.fromRequest(request);
-        PartnershipProjection partnershipWithId = partnershipRepository.saveAndReturnProjection(partnership);
-        updatePeopleInPartnership(partnershipWithId, request.getPartnerIds());
-        return partnershipWithId;
+        Partnership partnership = Partnership.fromRequest(request).withId(UUID.randomUUID());
+        partnership = updatePartners(partnership, request.getPartnerIds());
+        partnership = updateChildren(partnership, request.getChildIds());
+        partnership = partnershipRepository.save(partnership);
+        return partnership;
     }
 
-    public Optional<PartnershipProjection> updatePartnership(UUID partnershipId, PartnershipRequest request) {
-        PartnershipProjection existingPartnership = partnershipRepository.findProjectionById(partnershipId).orElse(null);
+    public Optional<Partnership> updatePartnership(UUID partnershipId, PartnershipRequest request) {
+        Partnership existingPartnership = partnershipRepository.findById(partnershipId).orElse(null);
+        Partnership updatedPartnership = null;
 
         if (existingPartnership != null) {
-            removePeopleNoLongerInThePartnership(partnershipId, request.getPartnerIds());
-            Partnership partnership = getPatchedPartnership(existingPartnership, request);
-            existingPartnership = partnershipRepository.updateAndReturnProjection(partnershipId, partnership);
-            updatePeopleInPartnership(existingPartnership, request.getPartnerIds());
+            updatedPartnership = getPatchedPartnership(existingPartnership, request);
+            updatedPartnership = updatePartners(updatedPartnership, request.getPartnerIds());
+            updatedPartnership = updateChildren(updatedPartnership, request.getChildIds());
+            updatedPartnership = partnershipRepository.save(updatedPartnership);
         }
-        return Optional.ofNullable(existingPartnership);
+        return Optional.ofNullable(updatedPartnership);
     }
 
     public void deletePartnership(UUID partnershipId) {
-        personRepository.removeAllFromPartnership(partnershipId);
         partnershipRepository.deleteById(partnershipId);
     }
 
-    private void removePeopleNoLongerInThePartnership(UUID partnershipId, List<UUID> partnerIds) {
-        Collection<UUID> currentPartnerIds = personRepository.findPersonIdsByPartnershipId(partnershipId);
-        currentPartnerIds.stream()
-                         .filter(personId -> partnershipDoesNotContainPerson(partnerIds, personId))
-                         .forEach(personId -> personRepository.removeFromPartnership(personId, partnershipId));
-    }
-
-    private static boolean partnershipDoesNotContainPerson(List<UUID> partnerIds, UUID personId) {
-        return !partnerIds.contains(personId);
-    }
-
-    private void updatePeopleInPartnership(PartnershipProjection partnership, List<UUID> partnerIds) {
+    private Partnership updatePartners(Partnership partnership, List<UUID> partnerIds) {
+        if (!partnership.getPartners().isEmpty()) {
+            List<Person> newPartners = partnership.getPartners().stream().filter(person -> partnerIds.contains(person.getId())).toList();
+            partnership = partnership.withPartners(newPartners);
+        }
         for(UUID partnerId : partnerIds) {
-            PersonProjection person = personRepository.findProjectionById(partnerId)
-                                                      .orElseThrow(() -> new PersonNotFoundException(partnerId));
-
-            if (!isAlreadyInPartnership(person, partnership.getId())) {
-                personRepository.addToPartnership(partnerId, partnership.getId());
+            if (!isAlreadyInPartnership(partnership, partnerId)) {
+                Person partner = personRepository.findById(partnerId).orElseThrow();
+                List<Person> newPartners = new ArrayList<>(partnership.getPartners().stream().toList());
+                newPartners.add(partner);
+                partnership = partnership.withPartners(newPartners);
             }
         }
+        return partnership;
     }
 
-    private boolean isAlreadyInPartnership(PersonProjection person, UUID partnershipId) {
-        return person.getPartnerships()
-                     .stream()
-                     .anyMatch(p -> p.getId().equals(partnershipId));
+    private Partnership updateChildren(Partnership partnership, List<UUID> childIds) {
+        if (!partnership.getChildren().isEmpty()) {
+            List<Person> newChildren = partnership.getChildren().stream().filter(person -> childIds.contains(person.getId())).toList();
+            partnership = partnership.withChildren(newChildren);
+        }
+        for(UUID childId : childIds) {
+            Person child = personRepository.findById(childId).orElseThrow();
+            List<Person> newChildren = new ArrayList<>(partnership.getChildren().stream().toList());
+            newChildren.add(child);
+            partnership = partnership.withChildren(newChildren);
+        }
+        return partnership;
     }
 
-    private Partnership getPatchedPartnership(PartnershipProjection existingPartnership, PartnershipRequest request) {
+    private boolean isAlreadyInPartnership(Partnership partnership, UUID partnerId) {
+        return partnership.getPartners().stream().anyMatch(person -> person.getId().equals(partnerId));
+    }
+
+    private Partnership getPatchedPartnership(Partnership existingPartnership, PartnershipRequest request) {
         Partnership.PartnershipBuilder builder = Partnership.builder();
+        builder.id(existingPartnership.getId());
+        builder.partners(existingPartnership.getPartners());
+        builder.children(existingPartnership.getChildren());
         patch(builder,
               Partnership.PartnershipBuilder::type,
               request.getType(),
@@ -103,5 +111,6 @@ public class PartnershipService {
               request.getEndDate(),
               existingPartnership.getEndDate());
         return builder.build();
+
     }
 }

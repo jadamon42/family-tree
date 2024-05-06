@@ -1,7 +1,9 @@
 package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jadamon42.family.model.*;
+import com.github.jadamon42.family.model.Person;
+import com.github.jadamon42.family.model.PersonRequest;
+import com.github.jadamon42.family.model.Sex;
 import com.github.jadamon42.family.service.GenealogicalLinkService;
 import com.github.jadamon42.family.service.PersonService;
 import org.junit.jupiter.api.Test;
@@ -81,7 +83,7 @@ class PersonControllerTest {
                                              .firstName(Optional.of("John"))
                                              .lastName(Optional.of("Doe"))
                                              .build();
-        PersonProjection savedPerson = MockPersonProjection.builder()
+        Person savedPerson = Person.builder()
                                                            .id(personId)
                                                            .firstName("John")
                                                            .lastName("Doe")
@@ -114,7 +116,7 @@ class PersonControllerTest {
                                              .deathDate(Optional.of(LocalDate.of(2020, 1, 1)))
                                              .sex(Optional.of(Sex.MALE))
                                              .build();
-        PersonProjection savedPerson = MockPersonProjection.builder()
+        Person savedPerson = Person.builder()
                                                            .id(personId)
                                                            .firstName("John")
                                                            .lastName("Doe")
@@ -144,7 +146,7 @@ class PersonControllerTest {
                                              .firstName(Optional.of("John"))
                                              .lastName(Optional.of("Doe"))
                                              .build();
-        PersonProjection mockPersonProjection = MockPersonProjection.builder()
+        Person mockPersonProjection = Person.builder()
                                                                     .id(personId)
                                                                     .firstName("John")
                                                                     .lastName("Doe")

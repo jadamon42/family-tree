@@ -3,7 +3,6 @@ package com.github.jadamon42.family.service;
 import com.github.jadamon42.family.exception.PartnershipNotFoundException;
 import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
-import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
 import com.github.jadamon42.family.repository.PartnershipRepository;
@@ -37,26 +36,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import(CustomCypherQueryExecutor.class)
 public class PersonServiceTest {
     @Test
-    void getRootPersonProjections() {
-        Collection<PersonProjection> people = personService.getRootPersonProjections();
+    void getRootPersons() {
+        Collection<Person> people = personService.getRootPeople();
 
-        PersonProjection personInPartnership = people.stream()
+        Person personInPartnership = people.stream()
                                                      .filter(p -> p.getId().equals(personInPartnershipId))
                                                      .findFirst()
                                                      .orElseThrow();
-        PersonProjection otherPersonInPartnership = people.stream()
+        Person otherPersonInPartnership = people.stream()
                                                           .filter(p -> p.getId().equals(otherPersonInPartnershipId))
                                                           .findFirst()
                                                           .orElseThrow();
-        PersonProjection person = people.stream()
+        Person person = people.stream()
                                         .filter(p -> p.getId().equals(personId))
                                         .findFirst()
                                         .orElseThrow();
-        PersonProjection personInDanglingPartnership = people.stream()
+        Person personInDanglingPartnership = people.stream()
                                                              .filter(p -> p.getId().equals(personInDanglingPartnershipId))
                                                              .findFirst()
                                                              .orElseThrow();
-        PersonProjection spouseOfChild1 = people.stream()
+        Person spouseOfChild1 = people.stream()
                                                 .filter(p -> p.getFirstName().equals("Spouse"))
                                                 .findFirst()
                                                 .orElseThrow();
@@ -82,11 +81,6 @@ public class PersonServiceTest {
         assertThat(spouseOfChild1).satisfies(p -> {
             assertThat(p.getFirstName()).isEqualTo("Spouse");
             assertThat(p.getLastName()).isEqualTo("Of Child One");
-            assertThat(p.getPartnerships().get(0)).satisfies(partnership -> {
-                assertThat(partnership.getType()).isEqualTo("marriage");
-                assertThat(partnership.getStartDate()).isEqualTo("2021-01-01");
-                assertThat(partnership.getEndDate()).isEqualTo("2021-12-31");
-            });
         });
     }
 
@@ -95,12 +89,6 @@ public class PersonServiceTest {
         Person person = personService.getPerson(personInPartnershipId).orElseThrow();
         assertThat(person.getFirstName()).isEqualTo("Jonathan");
         assertThat(person.getLastName()).isEqualTo("Damon");
-        assertThat(person.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
-            assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
-        });
     }
 
     @Test
@@ -110,7 +98,7 @@ public class PersonServiceTest {
                                              .lastName(Optional.of("Doe"))
                                              .build();
 
-        PersonProjection savedPerson = personService.createPerson(request);
+        Person savedPerson = personService.createPerson(request);
 
         assertThat(savedPerson.getId()).isNotNull();
         assertThat(savedPerson.getFirstName()).isEqualTo("John");
@@ -125,13 +113,12 @@ public class PersonServiceTest {
                                              .parentsPartnershipId(Optional.of(partnershipId))
                                              .build();
 
-        PersonProjection savedPerson = personService.createPerson(request);
+        Person savedPerson = personService.createPerson(request);
         Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow();
 
         assertThat(savedPerson.getId()).isNotNull();
         assertThat(savedPerson.getFirstName()).isEqualTo("John");
         assertThat(savedPerson.getLastName()).isEqualTo("Doe");
-        assertThat(savedPerson.getPartnerships()).isEmpty();
         assertThat(partnership.getChildren()).hasSize(3);
     }
 
@@ -154,17 +141,11 @@ public class PersonServiceTest {
                                              .lastName(Optional.of("Doe"))
                                              .build();
 
-        PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
+        Person updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
 
         assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId);
         assertThat(updatedPerson.getFirstName()).isEqualTo("John");
         assertThat(updatedPerson.getLastName()).isEqualTo("Doe");
-        assertThat(updatedPerson.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
-            assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
-        });
     }
 
     @Test
@@ -174,7 +155,7 @@ public class PersonServiceTest {
                                              .lastName(Optional.of("Doe"))
                                              .build();
 
-        Optional<PersonProjection> person = personService.updatePerson(UUID.randomUUID(), request);
+        Optional<Person> person = personService.updatePerson(UUID.randomUUID(), request);
 
         assertThat(person).isEmpty();
     }
@@ -185,20 +166,13 @@ public class PersonServiceTest {
                                              .firstName(Optional.of("Jon"))
                                              .build();
 
-        PersonProjection updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
+        Person updatedPerson = personService.updatePerson(personInPartnershipId, request).orElseThrow();
         Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow();
 
         assertThat(updatedPerson.getId()).isEqualTo(personInPartnershipId);
         assertThat(updatedPerson.getFirstName()).isEqualTo("Jon");
         assertThat(updatedPerson.getLastName()).isEqualTo("Damon");
-        assertThat(updatedPerson.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2021-01-01");
-            assertThat(partnerships.get(0).getEndDate()).isEqualTo("2021-12-31");
-            assertThat(partnerships.get(0).getId()).isEqualTo(partnership.getId());
-        });
-        // No changes to the fields not specified in the projection
+        assertThat(partnership.getPartners()).hasSize(2);
         assertThat(partnership.getChildren()).hasSize(2);
     }
 
@@ -209,13 +183,12 @@ public class PersonServiceTest {
                                              .parentsPartnershipId(Optional.of(partnershipId))
                                              .build();
 
-        PersonProjection updatedPerson = personService.updatePerson(personId, request).orElseThrow();
+        Person updatedPerson = personService.updatePerson(personId, request).orElseThrow();
         Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow();
 
         assertThat(updatedPerson.getId()).isEqualTo(personId);
         assertThat(updatedPerson.getFirstName()).isEqualTo("Stray");
         assertThat(updatedPerson.getLastName()).isEqualTo("Doe");
-        assertThat(updatedPerson.getPartnerships()).isEmpty();
         assertThat(partnership.getChildren()).hasSize(3);
     }
 
@@ -235,14 +208,6 @@ public class PersonServiceTest {
         personService.deletePerson(personId);
 
         assertThat(personService.getPerson(personId)).isEmpty();
-    }
-
-    @Test
-    void deletePersonDeletesDanglingPartnerships() {
-        personService.deletePerson(personInDanglingPartnershipId);
-
-        assertThat(personService.getPerson(personInDanglingPartnershipId)).isEmpty();
-        assertThat(partnershipRepository.findById(danglingPartnershipId)).isEmpty();
     }
 
     private static Neo4j embeddedDatabaseServer;
@@ -288,7 +253,7 @@ public class PersonServiceTest {
         CREATE (personInDanglingPartnership:Person {id: '%s', firstName:'Stray', lastName: 'Person'})
         CREATE (danglingPartnership:Partnership {id: '%s', type: 'marriage', startDate: date('2021-12-31'), endDate: null})
         CREATE (personInDanglingPartnership)-[:PARTNER_IN]->(danglingPartnership)
-        
+
         // Children
         CREATE (child1:Person {id: randomUuid(), firstName:'Child', lastName: 'One'})
         CREATE (child2:Person {id: randomUuid(), firstName:'Child', lastName: 'Two'})

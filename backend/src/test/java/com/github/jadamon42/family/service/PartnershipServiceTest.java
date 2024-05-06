@@ -1,9 +1,7 @@
 package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.model.Partnership;
-import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.PartnershipRequest;
-import com.github.jadamon42.family.model.PersonProjection;
 import com.github.jadamon42.family.repository.PartnershipRepository;
 import com.github.jadamon42.family.repository.PersonRepository;
 import org.junit.jupiter.api.AfterAll;
@@ -41,6 +39,15 @@ public class PartnershipServiceTest {
         assertThat(partnership.getType()).isEqualTo("marriage");
         assertThat(partnership.getStartDate()).isEqualTo("2021-01-01");
         assertThat(partnership.getEndDate()).isNull();
+        assertThat(partnership.getPartners()).satisfies(partners -> {
+            assertThat(partners).hasSize(2);
+            assertThat(partners.stream().anyMatch(person -> person.getId().equals(personInPartnershipId))).isTrue();
+            assertThat(partners.stream().anyMatch(person -> person.getId().equals(otherPersonInPartnershipId))).isTrue();
+        });
+        assertThat(partnership.getChildren()).satisfies(children -> {
+            assertThat(children).hasSize(1);
+            assertThat(children.get(0).getId()).isEqualTo(childId);
+        });
     }
 
     @Test
@@ -50,23 +57,23 @@ public class PartnershipServiceTest {
                                                        .startDate(Optional.of(LocalDate.of(2023, 1, 1)))
                                                        .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
                                                        .partnerIds(List.of(person1Id, person2Id))
+                                                       .childIds(List.of(personInPartnershipId))
                                                        .build();
 
-        PartnershipProjection savedPartnership = partnershipService.createPartnership(request);
-        PersonProjection person1 = personRepository.findProjectionById(person1Id).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(person2Id).orElseThrow();
+        Partnership savedPartnership = partnershipService.createPartnership(request);
 
         assertThat(savedPartnership.getId()).isNotNull();
         assertThat(savedPartnership.getType()).isEqualTo("marriage");
         assertThat(savedPartnership.getStartDate()).isEqualTo("2023-01-01");
         assertThat(savedPartnership.getEndDate()).isEqualTo("2023-12-31");
-        assertThat(person1.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(savedPartnership.getId());
+        assertThat(savedPartnership.getPartners()).satisfies(partners -> {
+            assertThat(partners).hasSize(2);
+            assertThat(partners.get(0).getId()).isEqualTo(person1Id);
+            assertThat(partners.get(1).getId()).isEqualTo(person2Id);
         });
-        assertThat(person2.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(savedPartnership.getId());
+        assertThat(savedPartnership.getChildren()).satisfies(children -> {
+            assertThat(children).hasSize(1);
+            assertThat(children.get(0).getId()).isEqualTo(personInPartnershipId);
         });
     }
 
@@ -92,27 +99,16 @@ public class PartnershipServiceTest {
                                                        .partnerIds(List.of(personInPartnershipId, otherPersonInPartnershipId))
                                                        .build();
 
-        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(partnershipId, request).orElseThrow();
-        PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId).orElseThrow();
+        Partnership updatedPartnership = partnershipService.updatePartnership(partnershipId, request).orElseThrow();
 
         assertThat(updatedPartnership.getId()).isEqualTo(partnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isEqualTo("2023-01-02");
         assertThat(updatedPartnership.getEndDate()).isEqualTo("2023-12-31");
-        assertThat(person1.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(partnershipId);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-02");
-            assertThat(partnerships.get(0).getEndDate()).isEqualTo("2023-12-31");
-        });
-        assertThat(person2.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(partnershipId);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-02");
-            assertThat(partnerships.get(0).getEndDate()).isEqualTo("2023-12-31");
+        assertThat(updatedPartnership.getPartners()).satisfies(partners -> {
+            assertThat(partners).hasSize(2);
+            assertThat(partners.stream().anyMatch(person -> person.getId().equals(personInPartnershipId))).isTrue();
+            assertThat(partners.stream().anyMatch(person -> person.getId().equals(otherPersonInPartnershipId))).isTrue();
         });
     }
 
@@ -124,27 +120,16 @@ public class PartnershipServiceTest {
                                                        .partnerIds(List.of(person1Id, person2Id))
                                                        .build();
 
-        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
-        PersonProjection person1 = personRepository.findProjectionById(person1Id).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(person2Id).orElseThrow();
+        Partnership updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
 
         assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isEqualTo("2023-01-01");
         assertThat(updatedPartnership.getEndDate()).isNull();
-        assertThat(person1.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(unattachedPartnershipId);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-01");
-            assertThat(partnerships.get(0).getEndDate()).isNull();
-        });
-        assertThat(person2.getPartnerships()).satisfies(partnerships -> {
-            assertThat(partnerships).hasSize(1);
-            assertThat(partnerships.get(0).getId()).isEqualTo(unattachedPartnershipId);
-            assertThat(partnerships.get(0).getType()).isEqualTo("marriage");
-            assertThat(partnerships.get(0).getStartDate()).isEqualTo("2023-01-01");
-            assertThat(partnerships.get(0).getEndDate()).isNull();
+        assertThat(updatedPartnership.getPartners()).satisfies(partners -> {
+            assertThat(partners).hasSize(2);
+            assertThat(partners.stream().anyMatch(person -> person.getId().equals(person1Id))).isTrue();
+            assertThat(partners.stream().anyMatch(person -> person.getId().equals(person2Id))).isTrue();
         });
     }
 
@@ -154,7 +139,7 @@ public class PartnershipServiceTest {
                                                        .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
                                                        .build();
 
-        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
+        Partnership updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
 
         assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
@@ -168,12 +153,39 @@ public class PartnershipServiceTest {
                                                        .startDate(Optional.empty())
                                                        .build();
 
-        PartnershipProjection updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
+        Partnership updatedPartnership = partnershipService.updatePartnership(unattachedPartnershipId, request).orElseThrow();
 
         assertThat(updatedPartnership.getId()).isEqualTo(unattachedPartnershipId);
         assertThat(updatedPartnership.getType()).isEqualTo("marriage");
         assertThat(updatedPartnership.getStartDate()).isNull();
         assertThat(updatedPartnership.getEndDate()).isNull();
+    }
+
+    @Test
+    void updatePartnershipWithRemovedPartner() {
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .partnerIds(List.of(personInPartnershipId))
+                                                       .build();
+
+        Partnership updatedPartnership = partnershipService.updatePartnership(partnershipId, request).orElseThrow();
+
+        assertThat(updatedPartnership.getId()).isEqualTo(partnershipId);
+        assertThat(updatedPartnership.getPartners()).satisfies(partners -> {
+            assertThat(partners).hasSize(1);
+            assertThat(partners.get(0).getId()).isEqualTo(personInPartnershipId);
+        });
+    }
+
+    @Test
+    void updatePartnershipWithRemovedChild() {
+        PartnershipRequest request = PartnershipRequest.builder()
+                                                       .childIds(List.of())
+                                                       .build();
+
+        Partnership updatedPartnership = partnershipService.updatePartnership(partnershipId, request).orElseThrow();
+
+        assertThat(updatedPartnership.getId()).isEqualTo(partnershipId);
+        assertThat(updatedPartnership.getChildren()).isEmpty();
     }
 
     @Test
@@ -184,7 +196,7 @@ public class PartnershipServiceTest {
                                                        .endDate(Optional.of(LocalDate.of(2023, 12, 31)))
                                                        .build();
 
-        Optional<PartnershipProjection> partnershipProjection = partnershipService.updatePartnership(UUID.randomUUID(), request);
+        Optional<Partnership> partnershipProjection = partnershipService.updatePartnership(UUID.randomUUID(), request);
 
         assertThat(partnershipProjection).isEmpty();
     }
@@ -197,20 +209,9 @@ public class PartnershipServiceTest {
         assertThat(partnership).isEmpty();
     }
 
-    @Test
-    void deletePartnershipUpdatesPartners() {
-        partnershipService.deletePartnership(partnershipId);
-        PersonProjection person1 = personRepository.findProjectionById(personInPartnershipId).orElseThrow();
-        PersonProjection person2 = personRepository.findProjectionById(otherPersonInPartnershipId).orElseThrow();
-
-        assertThat(person1.getPartnerships()).isEmpty();
-        assertThat(person2.getPartnerships()).isEmpty();
-    }
-
     private static Neo4j embeddedDatabaseServer;
     private static Driver neo4jDriver;
     private final PartnershipService partnershipService;
-    private final PersonRepository personRepository;
 
     static private final UUID personInPartnershipId = UUID.randomUUID();
     static private final UUID otherPersonInPartnershipId = UUID.randomUUID();
@@ -218,10 +219,10 @@ public class PartnershipServiceTest {
     static private final UUID person1Id = UUID.randomUUID();
     static private final UUID person2Id = UUID.randomUUID();
     static private final UUID unattachedPartnershipId = UUID.randomUUID();
+    static private final UUID childId = UUID.randomUUID();
 
     @Autowired
     PartnershipServiceTest(PartnershipRepository partnershipRepository, PersonRepository personRepository) {
-        this.personRepository = personRepository;
         this.partnershipService = new PartnershipService(partnershipRepository, personRepository);
     }
 
@@ -246,7 +247,9 @@ public class PartnershipServiceTest {
         CREATE (person1:Person {id: '%s', firstName:'Stray1', lastName: 'Person'})
         CREATE (person2:Person {id: '%s', firstName:'Stray2', lastName: 'Person'})
         CREATE (unattachedPartnership:Partnership {id: '%s', type: 'marriage', startDate: date('2021-01-01'), endDate: null})
-        """, personInPartnershipId, otherPersonInPartnershipId, partnershipId, person1Id, person2Id, unattachedPartnershipId));
+        CREATE (child:Person {id: '%s', firstName:'Child', lastName: 'Person'})
+        CREATE (partnership)-[:BEGAT]->(child)
+        """, personInPartnershipId, otherPersonInPartnershipId, partnershipId, person1Id, person2Id, unattachedPartnershipId, childId));
         }
     }
 

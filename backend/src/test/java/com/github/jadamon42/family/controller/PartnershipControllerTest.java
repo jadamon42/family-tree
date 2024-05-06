@@ -1,9 +1,7 @@
 package com.github.jadamon42.family.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jadamon42.family.model.MockPartnershipProjection;
 import com.github.jadamon42.family.model.Partnership;
-import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.PartnershipRequest;
 import com.github.jadamon42.family.service.PartnershipService;
 import org.junit.jupiter.api.Test;
@@ -62,7 +60,7 @@ class PartnershipControllerTest {
                                                        .startDate(Optional.of(LocalDate.of(2021, 1, 1)))
                                                        .partnerIds(List.of(personId1, personId2))
                                                        .build();
-        PartnershipProjection savedPartnership = MockPartnershipProjection.builder()
+        Partnership savedPartnership = Partnership.builder()
                                                                      .id(UUID.randomUUID())
                                                                      .type("marriage")
                                                                      .startDate(LocalDate.of(2021, 1, 1))
@@ -116,7 +114,7 @@ class PartnershipControllerTest {
                                                        .endDate(Optional.of(LocalDate.of(2021, 12, 31)))
                                                        .partnerIds(List.of(personId1, personId2))
                                                        .build();
-        PartnershipProjection savedPartnership = MockPartnershipProjection.builder()
+        Partnership savedPartnership = Partnership.builder()
                                                                           .id(partnershipId)
                                                                           .type("marriage")
                                                                           .startDate(LocalDate.of(2021, 1, 1))

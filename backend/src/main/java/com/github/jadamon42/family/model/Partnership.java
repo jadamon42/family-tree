@@ -31,8 +31,12 @@ public class Partnership {
     LocalDate startDate;
     LocalDate endDate;
 
+    @Relationship(value = "PARTNER_IN", direction = Relationship.Direction.INCOMING)
+    @Builder.Default
+    List<Person> partners = List.of();
     @Relationship(value = "BEGAT", direction = Relationship.Direction.OUTGOING)
-    List<Person> children;
+    @Builder.Default
+    List<Person> children = List.of();
 
     public static Partnership fromRequest(PartnershipRequest request) {
         Partnership.PartnershipBuilder builder = Partnership.builder();

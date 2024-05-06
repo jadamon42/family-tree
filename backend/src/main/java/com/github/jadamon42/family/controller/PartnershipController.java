@@ -1,7 +1,6 @@
 package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Partnership;
-import com.github.jadamon42.family.model.PartnershipProjection;
 import com.github.jadamon42.family.model.PartnershipRequest;
 import com.github.jadamon42.family.service.PartnershipService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +31,8 @@ public class PartnershipController {
     }
 
     @PostMapping
-    public ResponseEntity<PartnershipProjection> addPartnership(@RequestBody @Validated PartnershipRequest request) {
-        PartnershipProjection newPartnership = partnershipService.createPartnership(request);
+    public ResponseEntity<Partnership> addPartnership(@RequestBody @Validated PartnershipRequest request) {
+        Partnership newPartnership = partnershipService.createPartnership(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                                                   .path("/{id}")
                                                   .buildAndExpand(newPartnership.getId())
@@ -42,7 +41,7 @@ public class PartnershipController {
     }
 
     @PatchMapping("/{partnershipId}")
-    public ResponseEntity<PartnershipProjection> patchPartnership(@PathVariable UUID partnershipId, @RequestBody @Validated PartnershipRequest request) {
+    public ResponseEntity<Partnership> patchPartnership(@PathVariable UUID partnershipId, @RequestBody @Validated PartnershipRequest request) {
         return partnershipService.updatePartnership(partnershipId, request)
                                  .map(ResponseEntity::ok)
                                  .orElse(ResponseEntity.notFound().build());

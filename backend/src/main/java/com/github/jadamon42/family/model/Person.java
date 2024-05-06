@@ -10,11 +10,9 @@ import org.springframework.data.neo4j.core.convert.ConvertWith;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import static com.github.jadamon42.family.util.PatchHelper.set;
@@ -35,9 +33,6 @@ public class Person {
     @ConvertWith(converter = SexConverter.class)
     @Builder.Default
     Sex sex = Sex.UNKNOWN;
-
-    @Relationship(value = "PARTNER_IN", direction = Relationship.Direction.OUTGOING)
-    List<Partnership> partnerships;
 
     public static Person fromRequest(PersonRequest request) {
         Person.PersonBuilder builder = Person.builder();
