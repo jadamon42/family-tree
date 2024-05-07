@@ -24,6 +24,20 @@ function TreeSegment({ data, people, partnerships, onPersonLeftClick, onPersonRi
     }
   }, [people, partnerships]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (nodeRef.current) {
+        setNodeRect(nodeRef.current.getBoundingClientRect());
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <div className="segment">
       <div ref={nodeRef}>

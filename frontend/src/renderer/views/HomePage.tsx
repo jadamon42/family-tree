@@ -24,12 +24,36 @@ function HomePage() {
     person?: Person;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [zoom, setZoom] = useState(1);
+  const [posX, setPosX] = useState(0);
+  const [posY, setPosY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       setSelectedPerson(null);
       setContextMenu(null);
     }
+  };
+
+  const handleWheel = (event: React.WheelEvent) => {
+    const scale = event.deltaY < 0 ? 1.03 : 0.97;
+    setZoom(prevZoom => Math.max(prevZoom * scale, 0.1));
+  };
+
+  const handleMouseDown = (event: React.MouseEvent) => {
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (isDragging) {
+      setPosX(prevPosX => prevPosX + event.movementX);
+      setPosY(prevPosY => prevPosY + event.movementY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
 
   const handleBackgroundClick = () => {
@@ -267,22 +291,31 @@ function HomePage() {
       onContextMenu={handleBackgroundRightClick}
       onKeyDown={handleKeyDown}
     >
-      {isLoading && (
-        <div>
-          <BounceLoader color={'#123abc'} loading={isLoading} size={150} />
-          <p>Loading Family Tree...</p>
-        </div>
-      )}
-      {!isLoading && segments.length > 0 && segments.map((segment) => (
-        <TreeSegment
-          key={segment.personId}
-          data={segment}
-          people={people}
-          partnerships={partnerships}
-          onPersonLeftClick={handlePersonClick}
-          onPersonRightClick={handlePersonRightClick}
-        />
-      ))}
+      <div
+        className="zoomable"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        style={{ transform: `scale(${zoom}) translate(${posX}px, ${posY}px)` }}
+      >
+        {isLoading && (
+          <div>
+            <BounceLoader color={'#123abc'} loading={isLoading} size={150} />
+            <p>Loading Family Tree...</p>
+          </div>
+        )}
+        {!isLoading && segments.length > 0 && segments.map((segment) => (
+          <TreeSegment
+            key={segment.personId}
+            data={segment}
+            people={people}
+            partnerships={partnerships}
+            onPersonLeftClick={handlePersonClick}
+            onPersonRightClick={handlePersonRightClick}
+          />
+        ))}
+      </div>
       {contextMenu && !isLoading && (
         <ContextMenu
           x={contextMenu.x}
@@ -307,7 +340,8 @@ function HomePage() {
         )}
       </div>
     </div>
-  );
+  )
+    ;
 }
 
 export default HomePage;
