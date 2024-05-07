@@ -14,4 +14,11 @@ public interface PartnershipRepository extends Neo4jRepository<Partnership, UUID
             RETURN COUNT(p) > 0
             """)
     boolean linkChildToPartnership(UUID partnershipId, UUID childId);
+
+    @Query("""
+            MATCH (p:Partnership)
+            WHERE NOT (:Person)-[:PARTNER_IN]->(p)
+            DETACH DELETE p
+            """)
+    void deleteDanglingPartnerships();
 }

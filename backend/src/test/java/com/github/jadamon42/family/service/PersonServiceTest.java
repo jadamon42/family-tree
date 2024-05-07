@@ -210,6 +210,13 @@ public class PersonServiceTest {
         assertThat(personService.getPerson(personId)).isEmpty();
     }
 
+    @Test
+    void deletePersonDeletesDanglingPartnerships() {
+        personService.deletePerson(personInDanglingPartnershipId);
+
+        assertThat(partnershipRepository.findById(danglingPartnershipId)).isEmpty();
+    }
+
     private static Neo4j embeddedDatabaseServer;
     private static Driver neo4jDriver;
     private final PersonService personService;

@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import PersonNode from '../components/PersonNode';
 import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
 import { deletePerson, getPerson, getRootPeople } from '../actions/PersonActions';
 import { BounceLoader } from 'react-spinners';
+import PartnershipData from '../models/PartnershipData';
+import TreeSegmentData from '../models/TreeSegmentData';
+import { getPartnership, getPartnerships } from '../actions/PartnershipActions';
+import TreeSegmentPartnershipData from '../models/TreeSegmentPartnershipData';
+import TreeSegment from '../components/TreeSegment';
+import Partnership from '../models/Partnership';
 
 function HomePage() {
-  const [people, setPeople] = useState<Person[]>([]);
+  const [people, setPeople] = useState<Map<string, Person>>(new Map());
+  const [partnerships, setPartnerships] = useState<Map<string, PartnershipData>>(new Map());
+  const [segments, setSegments] = useState<TreeSegmentData[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -76,65 +83,171 @@ function HomePage() {
   };
 
   const handleDeletePerson = async () => {
-    if (contextMenu && contextMenu.person) {
-      await deletePerson(contextMenu.person.id);
-      setPeople((prevPeople) => prevPeople.filter((person) => person.id !== contextMenu.person?.id));
-    }
     if (selectedPerson && contextMenu?.person?.id === selectedPerson.id) {
       setSelectedPerson(null);
     }
     setContextMenu(null);
+    if (contextMenu && contextMenu.person) {
+      setIsLoading(true);
+      await deletePerson(contextMenu.person.id);
+      await load();
+    }
   };
+
+  const refocusSegment = (segment: TreeSegmentData, newPersonId: string) => {
+    let newFocusPerson = null;
+    let sharedPartnership = null;
+
+    for(const partnership of segment.partnerships) {
+      if (partnership.partner.personId === newPersonId) {
+        sharedPartnership = partnership;
+        newFocusPerson = partnership.partner;
+        break;
+      }
+    }
+
+    if (sharedPartnership && newFocusPerson) {
+      const oldFocusPerson = new TreeSegmentData(segment.personId)
+      oldFocusPerson.setPartnerships(segment.partnerships.filter(p => p.partner.personId !== newPersonId));
+      sharedPartnership.setPartner(oldFocusPerson);
+      segment.setPersonId(newFocusPerson.personId);
+      segment.setPartnerships(newFocusPerson.partnerships);
+      segment.addPartnership(sharedPartnership);
+    }
+  }
+
+  const mergeSegment = (segment: TreeSegmentData, existingSegment: TreeSegmentData): boolean => {
+    let merged = false;
+    if (segment.personId === existingSegment.personId) {
+      for(const partnership of segment.partnerships) {
+        const existingPartnership = existingSegment.partnerships.find(p => p.valueId === partnership.valueId);
+        if (!existingPartnership) {
+          existingSegment.addPartnership(partnership);
+        }
+      }
+      merged = true;
+    } else if (segment.partnerships.length === 1 && segment.partnerships[0].partner.personId === existingSegment.personId) {
+      // Right now segment will only have at most one partnership
+      // TODO: we can't refocus if they're a child
+      refocusSegment(segment, existingSegment.personId);
+      merged = mergeSegment(segment, existingSegment);
+    } else {
+      for(const existingPartnership of existingSegment.partnerships) {
+        merged = mergeSegment(segment, existingPartnership.partner);
+        if (merged) {
+          break;
+        }
+        for(const child of existingPartnership.children) {
+          merged = mergeSegment(segment, child);
+          if (merged) {
+            break;
+          }
+        }
+        if (merged) {
+          break;
+        }
+      }
+    }
+    return merged;
+  }
+
+  const mergeToSegments = (segment: TreeSegmentData, existingSegments: TreeSegmentData[]) => {
+    for(const existingSegment of existingSegments) {
+      if (mergeSegment(segment, existingSegment)) {
+        return;
+      }
+    }
+    existingSegments.push(segment);
+  }
+
+  const buildTreeSegment = (partnership: Partnership): TreeSegmentData => {
+    const segment = new TreeSegmentData(null);
+    const partners = partnership.partners.sort((a, b) => a.sex.toUpperCase() === 'MALE' ? 1: -1);
+    partners.forEach((partner, index) => {
+      setPeople((prevPeople) => new Map([...prevPeople, [partner.id, partner]]));
+      if (index === 0) {
+        segment.setPersonId(partner.id);
+      } else {
+        const segmentPartnership = new TreeSegmentPartnershipData(partnership.id);
+        segmentPartnership.setPartner(new TreeSegmentData(partner.id));
+
+        // TODO: Sort children by birth date as date instead of as string
+        const children = partnership.children.sort((a, b) => a.birthDate.localeCompare(b.birthDate));
+        children.forEach((child) => {
+          setPeople((prevPeople) => new Map([...prevPeople, [child.id, child]]));
+          const childSegment = new TreeSegmentData(child.id);
+          segmentPartnership.addChild(childSegment);
+        });
+
+        segment.addPartnership(segmentPartnership);
+      }
+    });
+    return segment;
+  }
+
+  const fetchPartnershipsAndBuildTreeSegments = async (retryCount = 0) => {
+    try {
+      const segmentsToAdd: TreeSegmentData[] = [];
+      const partnerships = await getPartnerships();
+      for(const partnership of partnerships) {
+        const segment = buildTreeSegment(partnership);
+        mergeToSegments(segment, segmentsToAdd);
+      }
+      const rootPeople = await getRootPeople();
+      for (const person of rootPeople) {
+        setPeople((prevPeople) => new Map([...prevPeople, [person.id, person]]));
+        const segment = new TreeSegmentData(person.id);
+        mergeToSegments(segment, segmentsToAdd);
+      }
+      setSegments(segmentsToAdd);
+    } catch (error) {
+      if (retryCount < 10) {
+        console.error('Failed to fetch partnerships. Retrying...');
+        await new Promise((resolve) => setTimeout(resolve, 4000));
+        await fetchPartnershipsAndBuildTreeSegments(retryCount + 1);
+      } else {
+        console.error('Failed to fetch partnerships after 10 retries.');
+      }
+    }
+  }
+
+  const load = async () => {
+    await fetchPartnershipsAndBuildTreeSegments();
+    setIsLoading(false);
+  }
 
   const putPersonListener = async (personId: string) => {
     const person = await getPerson(personId);
     if (!person) return;
 
-    setPeople((prevPeople) => {
-      const updatedPeople = prevPeople.filter((p) => p.id !== personId);
-      return [...updatedPeople, person];
+    setPeople((prevPeople) => new Map([...prevPeople, [person.id, person]]));
+    setSegments((prevSegments) => {
+      const segment = new TreeSegmentData(person.id);
+      const segmentsCopy = [...prevSegments];
+      mergeToSegments(segment, segmentsCopy);
+      return segmentsCopy;
     });
   };
 
-  const putPartnerListener = async (personId: string, partnerId: string) => {
-    const person: Person = await getPerson(personId);
-    const partner: Person = await getPerson(partnerId);
-    if (!person || !partner) return;
+  const putPartnerListener = async (partnershipId: string) => {
+    const partnership = await getPartnership(partnershipId);
+    if (!partnership) return;
 
-    // const sharedPartnership = person.partnerships.find(partnership =>
-    //   partner.partnerships.some(p => p.id === partnership.id)
-    // );
-    //
-    // if (!sharedPartnership) return;
-    //
-    // person.partnerships = person.partnerships.map(p => p.id === sharedPartnership.id ? sharedPartnership : p);
-    // partner.partnerships = partner.partnerships.map(p => p.id === sharedPartnership.id ? sharedPartnership : p);
+    for (const partner of partnership.partners) {
+      setPeople((prevPeople) => new Map([...prevPeople, [partner.id, partner]]));
+    }
 
-    setPeople((prevPeople) => {
-      const updatedPeople = prevPeople.filter((p) => p.id !== personId && p.id !== partnerId);
-      updatedPeople.push(person);
-      updatedPeople.push(partner);
-      return updatedPeople;
+    setPartnerships((prevPartnerships) => new Map([...prevPartnerships, [partnership.id, partnership]]));
+    setSegments((prevSegments) => {
+      const segment = buildTreeSegment(partnership);
+      const segmentsCopy = [...prevSegments];
+      mergeToSegments(segment, segmentsCopy);
+      return segmentsCopy;
     });
   };
 
   useEffect(() => {
-    const fetchRootPeople = async (retryCount = 0) => {
-      try {
-        const rootPeople = await getRootPeople();
-        setPeople(rootPeople);
-        setIsLoading(false)
-      } catch (error) {
-        if (retryCount < 10) {
-          console.error('Failed to fetch root people. Retrying...');
-          setTimeout(() => fetchRootPeople(retryCount + 1), 4000);
-        } else {
-          console.error('Failed to fetch root people after 10 retries.');
-        }
-      }
-    };
-
-    fetchRootPeople();
+    load();
   }, []);
 
   useEffect(() => {
@@ -160,12 +273,14 @@ function HomePage() {
           <p>Loading Family Tree...</p>
         </div>
       )}
-      {people.map((person) => (
-        <PersonNode
-          key={person.id}
-          person={person}
-          onClick={(event) => handlePersonClick(event, person)}
-          onContextMenu={handlePersonRightClick}
+      {!isLoading && segments.length > 0 && segments.map((segment) => (
+        <TreeSegment
+          key={segment.personId}
+          data={segment}
+          people={people}
+          partnerships={partnerships}
+          onPersonLeftClick={handlePersonClick}
+          onPersonRightClick={handlePersonRightClick}
         />
       ))}
       {contextMenu && !isLoading && (

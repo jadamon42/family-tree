@@ -147,9 +147,9 @@ ipcMain.on('submit-person-form', (event, personId) => {
   }
 });
 
-ipcMain.on('submit-partner-form', (event, personId, partnerId) => {
+ipcMain.on('submit-partner-form', (event, partnershipId) => {
   if (mainWindow) {
-    mainWindow.webContents.send('partner-submitted', personId, partnerId);
+    mainWindow.webContents.send('partner-submitted', partnershipId);
   }
 });
 

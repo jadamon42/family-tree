@@ -54,8 +54,8 @@ function PartnerFormPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const createdPerson: Person = await createPerson(partner);
-    await createPartnership(partnership, [createdPerson.id, personId]);
-    window.electron.ipcRenderer.sendMessage('submit-partner-form', personId, createdPerson.id);
+    const createdPartnership = await createPartnership(partnership, [createdPerson.id, personId]);
+    window.electron.ipcRenderer.sendMessage('submit-partner-form', createdPartnership.id);
     window.close();
   };
 

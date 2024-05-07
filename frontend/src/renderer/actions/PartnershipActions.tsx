@@ -20,7 +20,7 @@ export async function createPartnership(partnership: Partnership, partnerIds: st
 }
 
 export async function getPartnerships() {
-  let page = 1;
+  let page = 0;
   const limit = 10;
   let hasMore = true;
   let allPartnerships: Partnership[] = [];
@@ -40,4 +40,13 @@ export async function getPartnerships() {
   }
 
   return allPartnerships;
+}
+
+export  async function getPartnership(partnershipId: string) {
+  const response = await fetch(`http://localhost:50000/api/partnership/${partnershipId}`);
+  if (!response.ok) {
+    console.error('Error:', response.statusText);
+  }
+
+  return await response.json();
 }

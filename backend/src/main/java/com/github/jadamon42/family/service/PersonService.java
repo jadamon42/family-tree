@@ -58,20 +58,10 @@ public class PersonService {
     public void deletePerson(UUID id) {
         Optional<Person> person = personRepository.findById(id);
         if (person.isPresent()) {
-//            deleteDanglingPartnerships(person.get());
             personRepository.deleteById(id);
+            partnershipRepository.deleteDanglingPartnerships();
         }
     }
-
-//    private void deleteDanglingPartnerships(Person person) {
-//        for (PartnershipProjection partnership : person.getPartnerships()) {
-//            Collection<UUID> partners = personRepository.findPersonIdsByPartnershipId(partnership.getId());
-//            // there's probably a better way to do this
-//            if (partners.size() == 1 && partners.stream().anyMatch(id -> id.equals(person.getId()))) {
-//                partnershipRepository.deleteById(partnership.getId());
-//            }
-//        }
-//    }
 
     private Person getPatchedPerson(Person existingPerson, PersonRequest request) {
         Person.PersonBuilder builder = Person.builder();

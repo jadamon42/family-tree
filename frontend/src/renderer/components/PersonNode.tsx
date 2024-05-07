@@ -4,8 +4,8 @@ import Person from '../models/Person';
 
 interface PersonNodeProps {
   person: Person;
-  onClick: (event: React.MouseEvent) => void;
-  onContextMenu: (event: React.MouseEvent, person: Person) => void;
+  onLeftClick: (event: React.MouseEvent, person: Person) => void;
+  onRightClick: (event: React.MouseEvent, person: Person) => void;
 }
 
 const getLongestName = (person: Person): string => {
@@ -14,7 +14,7 @@ const getLongestName = (person: Person): string => {
   return firstName.length > lastName.length ? firstName : lastName;
 }
 
-function PersonNode({ person, onClick, onContextMenu }: PersonNodeProps) {
+function PersonNode({ person, onLeftClick, onRightClick }: PersonNodeProps) {
   const longestName: string = getLongestName(person);
   const fontSize = `${Math.min(1, 10 / longestName.length)}em`;
 
@@ -22,8 +22,8 @@ function PersonNode({ person, onClick, onContextMenu }: PersonNodeProps) {
     <button
       type="button"
       className="person"
-      onClick={onClick}
-      onContextMenu={(event) => onContextMenu(event, person)}
+      onClick={(event) => onLeftClick(event, person)}
+      onContextMenu={(event) => onRightClick(event, person)}
       style={{ fontSize }}
     >
       {person.firstName} {person.lastName}
