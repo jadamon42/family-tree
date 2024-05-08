@@ -1,0 +1,19 @@
+.partnership-chain {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.person-nodes {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.partnership-paths {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+

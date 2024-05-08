@@ -1,10 +1,8 @@
 import TreeSegmentData from '../models/TreeSegmentData';
-import { useEffect, useRef, useState } from 'react';
 import PersonNode from './PersonNode';
 import Person from '../models/Person';
 import PartnershipData from '../models/PartnershipData';
-import PartnershipConnection from './PartnershipConnection';
-import '../styles/TreeSegment.css';
+import PartnershipChain from './PartnershipChain';
 
 interface TreeSegmentProps {
   data: TreeSegmentData;
@@ -15,45 +13,23 @@ interface TreeSegmentProps {
 }
 
 function TreeSegment({ data, people, partnerships, onPersonLeftClick, onPersonRightClick }: TreeSegmentProps) {
-  const nodeRef = useRef<HTMLDivElement>(null);
-  const [nodeRect, setNodeRect] = useState<DOMRect>(null);
-
-  useEffect(() => {
-    if (nodeRef.current) {
-      setNodeRect(nodeRef.current.getBoundingClientRect());
-    }
-  }, [people, partnerships]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (nodeRef.current) {
-        setNodeRect(nodeRef.current.getBoundingClientRect());
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
   return (
-    <div className="segment">
-      <div ref={nodeRef}>
-        <PersonNode person={people.get(data.personId)} onLeftClick={onPersonLeftClick} onRightClick={onPersonRightClick} />
-      </div>
-      {data.partnerships.map((partnership) => (
-        <PartnershipConnection
-          key={partnership.valueId}
-          data={partnership}
-          mainNodeRect={nodeRect}
-          people={people}
-          partnerships={partnerships}
-          onPersonLeftClick={onPersonLeftClick}
-          onPersonRightClick={onPersonRightClick}
-        />
-      ))}
+    <div>
+      <PartnershipChain data={data} partnerships={partnerships} gap={20}>
+        <PersonNode
+          key={data.personId}
+          person={people.get(data.personId)}
+          onLeftClick={onPersonLeftClick}
+          onRightClick={onPersonRightClick} />
+        {data.partnerships.map((partnership) => (
+          <PersonNode
+            key={partnership.partner.personId}
+            person={people.get(partnership.partner.personId)}
+            onLeftClick={onPersonLeftClick}
+            onRightClick={onPersonRightClick} />
+        ))}
+      </PartnershipChain>
+      {/* add child segments */}
     </div>
   );
 }
