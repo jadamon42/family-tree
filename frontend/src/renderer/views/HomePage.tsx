@@ -290,13 +290,13 @@ function HomePage() {
       onClick={handleBackgroundClick}
       onContextMenu={handleBackgroundRightClick}
       onKeyDown={handleKeyDown}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
     >
       <div
         className="zoomable"
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
         style={{ transform: `scale(${zoom}) translate(${posX}px, ${posY}px)` }}
       >
         {isLoading && (
