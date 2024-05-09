@@ -173,6 +173,9 @@ function HomePage() {
       merged = mergeSegment(segment, existingSegment);
     } else {
       for(const existingPartnership of existingSegment.partnerships) {
+        // if (segment.partnerships.length === 1 && segment.partnerships[0].partner.personId === existingPartnership.partner.personId) {
+        //   refocusSegment(segment, existingPartnership.partner.personId);
+        // }
         merged = mergeSegment(segment, existingPartnership.partner);
         if (merged) {
           break;

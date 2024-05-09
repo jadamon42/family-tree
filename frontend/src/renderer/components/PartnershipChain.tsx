@@ -47,8 +47,9 @@ function PartnershipChain({ children, data, partnerships, treePathIds, gap, onLe
             key={partnership.valueId}
             data={partnership}
             partnerships={partnerships}
-            width={`${(nodeWidth + gapWidth) * (i + 1)}%`}
-            zIndex={data.partnerships.length - i}
+            nodeWidthPercentage={nodeWidth}
+            gapWidthPercentage={gapWidth}
+            index={i}
             isFocused={treePathIds.includes(partnership.valueId)}
             onLeftClick={onLeftClick}
             onRightClick={onRightClick}/>
