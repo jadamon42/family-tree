@@ -8,10 +8,13 @@ interface PartnershipChainProps {
   children: React.ReactNode;
   data: TreeSegmentData;
   partnerships: Map<string, PartnershipData>;
+  treePathIds: string[];
   gap: number;
+  onLeftClick: (event: React.MouseEvent, partnership: PartnershipData) => void;
+  onRightClick: (event: React.MouseEvent, partnership: PartnershipData) => void;
 }
 
-function PartnershipChain({ children, data, partnerships, gap }: PartnershipChainProps) {
+function PartnershipChain({ children, data, partnerships, treePathIds, gap, onLeftClick, onRightClick }: PartnershipChainProps) {
   const nodesRef = useRef(null);
   const pathsRef = useRef(null);
   const [nodeWidth, setNodeWidth] = useState(0);
@@ -40,9 +43,18 @@ function PartnershipChain({ children, data, partnerships, gap }: PartnershipChai
       </div>
       <div ref={pathsRef} className="partnership-paths">
         { data.partnerships.map((partnership, i) => (
-          <Path key={partnership.valueId} data={partnership} partnerships={partnerships} width={`${(nodeWidth + gapWidth) * (i + 1)}%`} />
+          <Path
+            key={partnership.valueId}
+            data={partnership}
+            partnerships={partnerships}
+            width={`${(nodeWidth + gapWidth) * (i + 1)}%`}
+            zIndex={1}
+            isFocused={treePathIds.includes(partnership.valueId)}
+            onLeftClick={onLeftClick}
+            onRightClick={onRightClick}/>
         ))}
       </div>
+      {/* add child segments */}
     </div>
   );
 }

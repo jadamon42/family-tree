@@ -28,6 +28,7 @@ function HomePage() {
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [treePathIds, setTreePathIds] = useState<string[]>([]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
@@ -90,6 +91,21 @@ function HomePage() {
       person,
     });
   };
+
+  const handlePartnershipClick = (event: React.MouseEvent, partnership: PartnershipData) => {
+    event.stopPropagation();
+    if (treePathIds.includes(partnership.id)) {
+      setTreePathIds([]);
+    } else {
+      setTreePathIds([partnership.id]);
+    }
+    setContextMenu(null);
+  }
+
+  const handlePartnershipRightClick = (event: React.MouseEvent, partnership: PartnershipData) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
   const handleAddPerson = () => {
     window.electron.ipcRenderer.sendMessage('open-person-form');
@@ -185,6 +201,8 @@ function HomePage() {
   }
 
   const buildTreeSegment = (partnership: Partnership): TreeSegmentData => {
+    const partnershipData = new PartnershipData(partnership.id, partnership.type, partnership.startDate, partnership.endDate);
+    setPartnerships((prevPartnerships) => new Map([...prevPartnerships, [partnership.id, partnershipData]]));
     const segment = new TreeSegmentData(null);
     const partners = partnership.partners.sort((a, b) => a.sex.toUpperCase() === 'MALE' ? 1: -1);
     partners.forEach((partner, index) => {
@@ -311,8 +329,11 @@ function HomePage() {
             data={segment}
             people={people}
             partnerships={partnerships}
+            treePathIds={treePathIds}
             onPersonLeftClick={handlePersonClick}
             onPersonRightClick={handlePersonRightClick}
+            onPartnershipLeftClick={handlePartnershipClick}
+            onPartnershipRightClick={handlePartnershipRightClick}
           />
         ))}
       </div>

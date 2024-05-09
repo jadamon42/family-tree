@@ -4,6 +4,7 @@ import Person from '../models/Person';
 
 interface PersonNodeProps {
   person: Person;
+  treePathIds: string[];
   onLeftClick: (event: React.MouseEvent, person: Person) => void;
   onRightClick: (event: React.MouseEvent, person: Person) => void;
 }
@@ -14,7 +15,7 @@ const getLongestName = (person: Person): string => {
   return firstName.length > lastName.length ? firstName : lastName;
 }
 
-function PersonNode({ person, onLeftClick, onRightClick }: PersonNodeProps) {
+function PersonNode({ person, treePathIds, onLeftClick, onRightClick }: PersonNodeProps) {
   const longestName: string = getLongestName(person);
   const fontSize = `${Math.min(1, 10 / longestName.length)}em`;
   const [focused, setFocused] = useState(false);

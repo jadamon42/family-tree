@@ -1,6 +1,52 @@
 .path {
+    /*display: flex;*/
+    /*flex-direction: row;*/
+    /*align-items: stretch;*/
     position: absolute;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
-    z-index: -2;
+    --overlay-bottom: -7px;
+    --overlay-left: -7px;
+    --overlay-right: -7px;
+    --overlay-border-width: 13px;
+    /*box-shadow: none;*/
+    /*pointer-events: none;*/
+    /*background-color: transparent;*/
+}
+
+/*.path-left {*/
+/*    flex: 0 0 4px;*/
+/*    margin-right: -4px;*/
+/*    border-bottom-left-radius: inherit;*/
+/*    pointer-events: all;*/
+/*}*/
+
+/*.path-bottom {*/
+/*    flex-grow: 1;*/
+/*    height: 2px;*/
+/*    border-bottom-left-radius: inherit;*/
+/*    border-bottom-right-radius: inherit;*/
+/*    pointer-events: all;*/
+/*    align-self: flex-end;*/
+/*}*/
+
+/*.path-right {*/
+/*    flex: 0 0 4px;*/
+/*    margin-left: -4px;*/
+/*    border-bottom-right-radius: inherit;*/
+/*    pointer-events: all;*/
+/*}*/
+
+
+
+.path::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: var(--overlay-bottom);
+    left: var(--overlay-left);
+    right: var(--overlay-right);
+    border: var(--overlay-border-width) solid transparent;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
