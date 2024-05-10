@@ -52,6 +52,10 @@ function Path({ data, partnerships, nodeWidthPercentage, gapWidthPercentage, ind
           left: `${(nodeWidthPercentage + gapWidthPercentage) * (index + 0.5)}%`
         }}
        onClick={handleClick}
+       onContextMenu={(event) => {
+         event.preventDefault();
+         onRightClick(event, partnerships.get(data.valueId));
+       }}
        onMouseMove={handleMouseMove}/>
       <div
         ref={pathRef} key={data.valueId} className="path"

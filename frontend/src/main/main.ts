@@ -141,6 +141,36 @@ ipcMain.on('open-partner-form', (event, personId) => {
   });
 });
 
+ipcMain.on('open-child-form', (event, partnershipId) => {
+  if (!mainWindow) {
+    return;
+  }
+
+  let childWindow: BrowserWindow | null = new BrowserWindow({
+    width: 650,
+    height: 650,
+    minWidth: 650,
+    minHeight: 650,
+    parent: mainWindow,
+    title: 'Add Person',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  childWindow.loadURL(resolveHtmlPath('index.html', 'child-form'));
+
+  childWindow.webContents.on('did-finish-load', () => {
+    childWindow?.webContents.send('child-data', partnershipId);
+  });
+
+  childWindow.on('closed', () => {
+    childWindow = null;
+  });
+
+  childWindow.webContents.openDevTools();
+});
+
 ipcMain.on('submit-person-form', (event, personId) => {
   if (mainWindow) {
     mainWindow.webContents.send('person-submitted', personId);
@@ -150,6 +180,12 @@ ipcMain.on('submit-person-form', (event, personId) => {
 ipcMain.on('submit-partner-form', (event, partnershipId) => {
   if (mainWindow) {
     mainWindow.webContents.send('partner-submitted', partnershipId);
+  }
+});
+
+ipcMain.on('submit-child-form', (event, childId) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('child-submitted', childId);
   }
 });
 

@@ -20,8 +20,9 @@ function HomePage() {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    type: 'background' | 'person';
+    type: 'background' | 'person' | 'partnership';
     person?: Person;
+    partnership?: PartnershipData;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [zoom, setZoom] = useState(1);
@@ -105,6 +106,12 @@ function HomePage() {
   const handlePartnershipRightClick = (event: React.MouseEvent, partnership: PartnershipData) => {
     event.preventDefault();
     event.stopPropagation();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      type: 'partnership',
+      partnership,
+    });
   }
 
   const handleAddPerson = () => {
@@ -116,6 +123,11 @@ function HomePage() {
     window.electron.ipcRenderer.sendMessage('open-partner-form', contextMenu?.person?.id);
     setContextMenu(null);
   };
+
+  const handleAddChild = () => {
+    window.electron.ipcRenderer.sendMessage('open-child-form', contextMenu?.partnership?.id);
+    setContextMenu(null);
+  }
 
   const handleEditPerson = () => {
     window.electron.ipcRenderer.sendMessage('open-person-form', contextMenu?.person);
@@ -159,7 +171,7 @@ function HomePage() {
       sharedPartnership.setPartner(oldFocusPerson);
       segment.setPersonId(newFocusPerson.personId);
       segment.setPartnerships(newFocusPerson.partnerships);
-      segment.addPartnership(sharedPartnership);
+      segment.addOrReplacePartnership(sharedPartnership);
     }
   }
 
@@ -167,10 +179,7 @@ function HomePage() {
     let merged = false;
     if (segment.personId === existingSegment.personId) {
       for(const partnership of segment.partnerships) {
-        const existingPartnership = existingSegment.partnerships.find(p => p.valueId === partnership.valueId);
-        if (!existingPartnership) {
-          existingSegment.addPartnership(partnership);
-        }
+        existingSegment.addOrReplacePartnership(partnership);
       }
       merged = true;
     } else if (segment.partnerships.length === 1 && segment.partnerships[0].partner.personId === existingSegment.personId) {
@@ -237,7 +246,7 @@ function HomePage() {
           segmentPartnership.addChild(childSegment);
         });
 
-        segment.addPartnership(segmentPartnership);
+        segment.addOrReplacePartnership(segmentPartnership);
       }
     });
     return segment;
@@ -304,6 +313,18 @@ function HomePage() {
     });
   };
 
+  const putChildListener = async (partnershipId: string) => {
+    const partnership = await getPartnership(partnershipId);
+    if (!partnership) return;
+
+    setSegments((prevSegments) => {
+      const segment = buildTreeSegment(partnership);
+      const segmentsCopy = [...prevSegments];
+      mergeToSegments(segment, segmentsCopy);
+      return segmentsCopy;
+    });
+  };
+
   useEffect(() => {
     load();
   }, []);
@@ -314,6 +335,10 @@ function HomePage() {
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('partner-submitted', putPartnerListener);
+  }, []);
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('child-submitted', putChildListener);
   }, []);
 
   return (
@@ -361,6 +386,7 @@ function HomePage() {
           onAddPartner={contextMenu.type === 'person' ? handleAddPartner : undefined}
           onEditPerson={contextMenu.type === 'person' ? handleEditPerson : undefined}
           onDeletePerson={contextMenu.type === 'person' ? handleDeletePerson : undefined}
+          onAddChild={contextMenu.type === 'partnership' ? handleAddChild : undefined}
         />
       )}
       <div className={`personDetailsPanel ${selectedPerson ? 'show' : ''}`}>

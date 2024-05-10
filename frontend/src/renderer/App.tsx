@@ -1,8 +1,9 @@
 import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './views/HomePage';
 import PersonFormPage from './views/PersonFormPage';
-import './App.css';
 import PartnerFormPage from './views/PartnerFormPage';
+import './App.css';
+import ChildFormPage from './views/ChildFormPage';
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/person-form" element={<PersonFormPage />} />
         <Route path="/partner-form" element={<PartnerFormPage />} />
+        <Route path="/child-form" element={<ChildFormPage />} />
       </Routes>
     </Router>
   );

@@ -8,9 +8,10 @@ interface ContextMenuProps {
   onAddPartner?: () => void;
   onEditPerson?: () => void;
   onDeletePerson?: () => void;
+  onAddChild?: () => void;
 }
 
-function ContextMenu({ x, y, onAddPerson=undefined, onAddPartner=undefined, onEditPerson=undefined, onDeletePerson=undefined }: ContextMenuProps) {
+function ContextMenu({ x, y, onAddPerson=undefined, onAddPartner=undefined, onEditPerson=undefined, onDeletePerson=undefined, onAddChild=undefined }: ContextMenuProps) {
   return (
     <div className="contextMenu" style={{ position: 'absolute', top: y, left: x }}>
       {onAddPerson && (
@@ -31,6 +32,11 @@ function ContextMenu({ x, y, onAddPerson=undefined, onAddPartner=undefined, onEd
       {onDeletePerson && (
         <button type="button" onClick={onDeletePerson}>
           Delete Person
+        </button>
+      )}
+      {onAddChild && (
+        <button type="button" onClick={onAddChild}>
+          Add Child
         </button>
       )}
     </div>

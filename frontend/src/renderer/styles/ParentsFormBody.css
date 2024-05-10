@@ -1,0 +1,33 @@
+.inputs-container {
+    max-width: 600px;
+    margin: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.inputs-container .MuiFormControl-root {
+    width: 100%;
+}
+
+.inputs-container .MuiFormControl-root .MuiFormGroup-root {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+
+.inputs-container .MuiTextField-root {
+    flex: 1;
+}
+
+.type-radials {
+    color:  black;
+}
+
+.parent-inputs {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+}

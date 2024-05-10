@@ -17,7 +17,8 @@ class TreeSegmentData {
     this.partnerships = partnerships;
   }
 
-  addPartnership(partnership: TreeSegmentPartnershipData) {
+  addOrReplacePartnership(partnership: TreeSegmentPartnershipData) {
+    this.partnerships = this.partnerships.filter((p) => p.valueId !== partnership.valueId);
     this.partnerships.push(partnership);
   }
 }

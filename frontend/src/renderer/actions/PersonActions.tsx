@@ -14,13 +14,16 @@ const sanitizePersonInput = (person: Person) => {
   }
 }
 
-export async function createPerson(person: Person) {
+export async function createPerson(person: Person, parentsPartnershipId?: string) {
   const response = await fetch('http://localhost:50000/api/person', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(sanitizePersonInput(person)),
+    body: JSON.stringify({
+      ...sanitizePersonInput(person),
+      parentsPartnershipId,
+    }),
   });
 
   if (!response.ok) {
