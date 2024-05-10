@@ -7,7 +7,7 @@ import { deletePerson, getPerson, getRootPeople } from '../actions/PersonActions
 import { BounceLoader } from 'react-spinners';
 import PartnershipData from '../models/PartnershipData';
 import TreeSegmentData from '../models/TreeSegmentData';
-import { getPartnership, getPartnerships } from '../actions/PartnershipActions';
+import { deletePartnership, getPartnership, getPartnerships } from '../actions/PartnershipActions';
 import TreeSegmentPartnershipData from '../models/TreeSegmentPartnershipData';
 import TreeSegment from '../components/TreeSegment';
 import Partnership from '../models/Partnership';
@@ -129,6 +129,13 @@ function HomePage() {
     setContextMenu(null);
     if (contextMenu && contextMenu.person) {
       setIsLoading(true);
+      for (const partnership of partnerships.values()) {
+        if (partnership.partnerIds.includes(contextMenu.person.id)
+          && partnership.childrenIds.length === 0
+          && partnership.partnerIds.length === 2) {
+          await deletePartnership(partnership.id);
+        }
+      }
       await deletePerson(contextMenu.person.id);
       await load();
     }
@@ -204,7 +211,13 @@ function HomePage() {
   }
 
   const buildTreeSegment = (partnership: Partnership): TreeSegmentData => {
-    const partnershipData = new PartnershipData(partnership.id, partnership.type, partnership.startDate, partnership.endDate);
+    const partnershipData = new PartnershipData(
+      partnership.id,
+      partnership.type,
+      partnership.startDate,
+      partnership.endDate,
+      partnership.partners.map(p => p.id),
+      partnership.children.map(c => c.id));
     setPartnerships((prevPartnerships) => new Map([...prevPartnerships, [partnership.id, partnershipData]]));
     const segment = new TreeSegmentData(null);
     const partners = partnership.partners.sort((a, b) => a.sex.toUpperCase() === 'MALE' ? 1: -1);

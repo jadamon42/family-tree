@@ -4,6 +4,7 @@ import PersonFormBody from '../components/form/PersonFormBody';
 import '../styles/FormPage.css';
 import SubmitAndCancelButtons from '../components/form/SubmitAndCancelButtons';
 import { createPerson, updatePerson } from '../actions/PersonActions';
+import { Sex } from '../models/Sex';
 
 function PersonFormPage() {
   const [person, setPerson] = useState<Person>({
@@ -11,7 +12,7 @@ function PersonFormPage() {
     firstName: undefined,
     middleName: undefined,
     lastName: undefined,
-    sex: 'UNKNOWN',
+    sex: Sex.UNKNOWN,
     birthDate: undefined,
     deathDate: undefined,
   });

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, TextField } from '@mui/material';
 import Partnership from '../../models/Partnership';
 import '../../styles/PartnershipFormBody.css';
+import { PartnershipType, PartnershipTypeDisplayNames } from '../../models/PartnershipType';
 
 interface PersonFormModalProps {
   partnership: Partnership;
@@ -16,7 +17,7 @@ function PartnershipFormBody({ partnership, handleChange}: PersonFormModalProps)
             <FormControl component="fieldset">
               <FormLabel component="legend">Type</FormLabel>
               <RadioGroup row aria-label="type" name="type" value={partnership.type} onChange={handleChange}>
-                <FormControlLabel value={"marriage"} control={<Radio />} label={"Marriage"} />
+                <FormControlLabel value={PartnershipType.MARRIAGE} control={<Radio />} label={PartnershipTypeDisplayNames[PartnershipType.MARRIAGE]} />
               </RadioGroup>
             </FormControl>
           </Box>

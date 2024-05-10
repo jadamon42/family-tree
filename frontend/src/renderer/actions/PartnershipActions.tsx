@@ -50,3 +50,13 @@ export  async function getPartnership(partnershipId: string) {
 
   return await response.json();
 }
+
+export async function deletePartnership(partnershipId: string) {
+  const response = await fetch(`http://localhost:50000/api/partnership/${partnershipId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    console.error('Error:', response.statusText);
+  }
+}

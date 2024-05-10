@@ -6,6 +6,8 @@ import SubmitAndCancelButtons from '../components/form/SubmitAndCancelButtons';
 import '../styles/FormPage.css';
 import { createPerson } from '../actions/PersonActions';
 import { createPartnership } from '../actions/PartnershipActions';
+import { PartnershipType } from '../models/PartnershipType';
+import { Sex } from '../models/Sex';
 
 function PartnerFormPage() {
   const [personId, setPersonId] = useState<string>(null);
@@ -14,13 +16,13 @@ function PartnerFormPage() {
     firstName: undefined,
     middleName: undefined,
     lastName: undefined,
-    sex: undefined,
+    sex: Sex.UNKNOWN,
     birthDate: undefined,
     deathDate: undefined,
   });
   const [partnership, setPartnership] = useState({
     id: undefined,
-    type: undefined,
+    type: PartnershipType.MARRIAGE,
     startDate: undefined,
     endDate: undefined,
     partners: undefined,
