@@ -167,8 +167,6 @@ ipcMain.on('open-child-form', (event, partnershipId) => {
   childWindow.on('closed', () => {
     childWindow = null;
   });
-
-  childWindow.webContents.openDevTools();
 });
 
 ipcMain.on('submit-person-form', (event, personId) => {

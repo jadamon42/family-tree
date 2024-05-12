@@ -1,7 +1,9 @@
 .partnership-chain {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    margin: auto;
+    max-width: fit-content;
 }
 
 .person-nodes {
@@ -15,5 +17,11 @@
     position: relative;
     width: 100%;
     box-sizing: border-box;
+}
+
+.children-chain {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
 }
 

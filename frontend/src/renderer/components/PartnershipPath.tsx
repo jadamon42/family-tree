@@ -3,18 +3,18 @@ import React from 'react';
 import PartnershipData from '../models/PartnershipData';
 import '../styles/Path.css';
 
-interface PathProps {
+interface PartnershipPathProps {
   data: TreeSegmentPartnershipData;
   partnerships: Map<string, PartnershipData>;
-  nodeWidthPercentage: number;
-  gapWidthPercentage: number;
+  nodeWidth: number;
+  gapWidth: number;
   index: number;
   isFocused: boolean;
   onLeftClick: (event: React.MouseEvent, partnership: PartnershipData) => void;
   onRightClick: (event: React.MouseEvent, partnership: PartnershipData) => void;
 }
 
-function Path({ data, partnerships, nodeWidthPercentage, gapWidthPercentage, index, isFocused, onLeftClick, onRightClick }: PathProps) {
+function PartnershipPath({ data, partnerships, nodeWidth, gapWidth, index, isFocused, onLeftClick, onRightClick }: PartnershipPathProps) {
   const pathRef = React.useRef(null);
   const clickableRef = React.useRef(null);
 
@@ -48,8 +48,8 @@ function Path({ data, partnerships, nodeWidthPercentage, gapWidthPercentage, ind
       <div
         ref={clickableRef} className="clickable-portion"
         style={{
-          width: `${nodeWidthPercentage + gapWidthPercentage}%`,
-          left: `${(nodeWidthPercentage + gapWidthPercentage) * (index + 0.5)}%`
+          width: `${nodeWidth + gapWidth}px`,
+          left: `${(nodeWidth + gapWidth) * (index + 0.5)}px`
         }}
        onClick={handleClick}
        onContextMenu={(event) => {
@@ -60,7 +60,7 @@ function Path({ data, partnerships, nodeWidthPercentage, gapWidthPercentage, ind
       <div
         ref={pathRef} key={data.valueId} className="path"
         style={{
-          width: `${(nodeWidthPercentage + gapWidthPercentage) * (index + 1)}%`,
+          width: `${(nodeWidth + gapWidth) * (index + 1)}px`,
           height: '100%',
           borderLeft: isFocused ? '2px solid green' : '2px solid black',
           borderRight: isFocused ? '2px solid green' : '2px solid black',
@@ -73,4 +73,4 @@ function Path({ data, partnerships, nodeWidthPercentage, gapWidthPercentage, ind
   );
 }
 
-export default Path;
+export default PartnershipPath;

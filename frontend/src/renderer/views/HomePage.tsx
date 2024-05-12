@@ -9,7 +9,7 @@ import PartnershipData from '../models/PartnershipData';
 import TreeSegmentData from '../models/TreeSegmentData';
 import { deletePartnership, getPartnership, getPartnerships } from '../actions/PartnershipActions';
 import TreeSegmentPartnershipData from '../models/TreeSegmentPartnershipData';
-import TreeSegment from '../components/TreeSegment';
+import FamilyTree from '../components/FamilyTree';
 import Partnership from '../models/Partnership';
 
 function HomePage() {
@@ -239,8 +239,8 @@ function HomePage() {
         segmentPartnership.setPartner(new TreeSegmentData(partner.id));
 
         // TODO: Sort children by birth date as date instead of as string
-        const children = partnership.children.sort((a, b) => a.birthDate.localeCompare(b.birthDate));
-        children.forEach((child) => {
+        // const children = partnership.children.sort((a, b) => a.birthDate.localeCompare(b.birthDate));
+        partnership.children.forEach((child) => {
           setPeople((prevPeople) => new Map([...prevPeople, [child.id, child]]));
           const childSegment = new TreeSegmentData(child.id);
           segmentPartnership.addChild(childSegment);
@@ -365,7 +365,7 @@ function HomePage() {
           </div>
         )}
         {!isLoading && segments.length > 0 && segments.map((segment) => (
-          <TreeSegment
+          <FamilyTree
             key={segment.personId}
             data={segment}
             people={people}
