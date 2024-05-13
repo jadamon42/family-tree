@@ -49,7 +49,8 @@ function PartnershipPath({ data, partnerships, nodeWidth, gapWidth, index, isFoc
         ref={clickableRef} className="clickable-portion"
         style={{
           width: `${nodeWidth + gapWidth}px`,
-          left: `${(nodeWidth + gapWidth) * (index + 0.5)}px`
+          left: `${(nodeWidth + gapWidth) * (index + 0.5)}px`,
+          zIndex: 101,
         }}
        onClick={handleClick}
        onContextMenu={(event) => {
@@ -66,7 +67,7 @@ function PartnershipPath({ data, partnerships, nodeWidth, gapWidth, index, isFoc
           borderRight: isFocused ? '2px solid green' : '2px solid black',
           borderBottom: isFocused ? '2px solid green' : '2px solid black',
           borderTop: 'none',
-           pointerEvents: 'none',
+          pointerEvents: 'none',
           zIndex: isFocused ? 100 : 1,
         }} />
     </div>

@@ -60,6 +60,7 @@ function HomePage() {
 
   const handleBackgroundClick = () => {
     setContextMenu(null);
+    setSelectedPerson(null);
   };
 
   const handleBackgroundRightClick = (event: React.MouseEvent) => {

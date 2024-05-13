@@ -43,7 +43,8 @@ function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidt
    */
 
   const parentRef = useRef(null);
-  const [percentages, setPercentages] = useState<number[]>([]);
+  const [percentagesToCenterOfChildNode, setPercentagesToCenterOfChildNode] = useState<number[]>([]);
+  const [percentageToCenterOfChildren, setPercentageToCenterOfChildren] = useState<number>(null);
 
   useEffect(() => {
     if (!parentRef.current) return;
@@ -51,60 +52,65 @@ function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidt
     const percentages: number[] = [];
     const parentWidth = parentRef.current.offsetWidth;
     let pixelsToCenterOfChild = 0;
+    let pixelsToCenterOfChildren = 0;
     for (let i = 0; i < data.children.length; i++) {
       const childData = data.children[i];
       pixelsToCenterOfChild += nodeWidth / 2;
       percentages.push((pixelsToCenterOfChild / parentWidth) * 100);
-      setPercentages((prev) => [...prev, (pixelsToCenterOfChild / parentWidth) * 100]);
-      if (i !== data.children.length) {
+      pixelsToCenterOfChildren  += nodeWidth / 2;
+      if (i !== data.children.length - 1) {
         pixelsToCenterOfChild += (nodeWidth / 2) + gapWidth;
         for (let j = 0; j < childData.partnerships.length; j++) {
           pixelsToCenterOfChild += nodeWidth + gapWidth;
         }
+        pixelsToCenterOfChildren += gapWidth / 2;
       }
     }
-    setPercentages(percentages);
+    setPercentagesToCenterOfChildNode(percentages);
+    setPercentageToCenterOfChildren((pixelsToCenterOfChildren / parentWidth) * 100);
   }, [JSON.stringify(data.children), nodeWidth, gapWidth]);
 
   return (
-    <div ref={parentRef} style={{
-      display: 'flex',
-      flexDirection: 'row',
-      gap: '20px',
-      position: 'relative',
-      justifyContent: 'center',
-      marginRight: gapWidth / 2,
-      marginLeft: gapWidth / 2
-    }}>
-      {data.children.map((child, i) => (
-        <div key={`${data.valueId}-${child.personId}`} className="child-tree">
-          <div style={{
-            position: 'absolute',
-            top: '0%',
-            left: 50 - percentages[i] > 0 ? `${percentages[i]}%` : '50%',
-            right : 50 - percentages[i] > 0 ? '50%' : `${100 - percentages[i]}%`,
-            height: '20px', // same as padding below
-            borderLeft: 50 - percentages[i] > 0 ? '2px solid black' : 'none',
-            borderRight: 50 - percentages[i] > 0 ? 'none' : '2px solid black',
-            borderTopLeftRadius: 50 - percentages[i] > 0 ? '10px' : '0',
-            borderTopRightRadius: 50 - percentages[i] > 0 ? '0' : '10px',
-            borderTop: '2px solid black',
-          }} />
-          <div style={{
-            paddingTop: '22px' // same as height above + width of border
-          }}>
-            <FamilyTree
-              data={child}
-              people={people}
-              partnerships={partnerships}
-              treePathIds={treePathIds}
-              onPersonLeftClick={onPersonLeftClick}
-              onPersonRightClick={onPersonRightClick}
-              onPartnershipLeftClick={onPartnershipLeftClick}
-              onPartnershipRightClick={onPartnershipRightClick} />
+    <div>
+      <div ref={parentRef} style={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '20px',
+        position: 'relative',
+        justifyContent: 'center',
+        marginRight: gapWidth / 2,
+        marginLeft: gapWidth / 2
+      }}>
+        {data.children.map((child, i) => (
+          <div key={`${data.valueId}-${child.personId}`} className="child-tree">
+            <div style={{
+              position: 'absolute',
+              top: '0%',
+              left: 50 - percentagesToCenterOfChildNode[i] > 0 ? `${percentagesToCenterOfChildNode[i]}%` : `${percentageToCenterOfChildren}%`,
+              right : 50 - percentagesToCenterOfChildNode[i] > 0 ? `${100 - percentageToCenterOfChildren}%` : `${100 - percentagesToCenterOfChildNode[i]}%`,
+              height: '20px',
+              borderLeft: 50 - percentagesToCenterOfChildNode[i] > 0 ? '2px solid black' : 'none',
+              borderRight: 50 - percentagesToCenterOfChildNode[i] > 0 ? 'none' : '2px solid black',
+              borderTopLeftRadius: 50 - percentagesToCenterOfChildNode[i] > 0 && (i === 0 || i === data.children.length - 1) ? '10px' : '0',
+              borderTopRightRadius: 50 - percentagesToCenterOfChildNode[i] > 0 || data.children.length === 1 || (i > 0 && i < data.children.length - 1) ? '0' : '10px',
+              borderTop: '2px solid black',
+            }} />
+            <div style={{
+              paddingTop: '22px' // same as height above + width of border
+            }}>
+              <FamilyTree
+                data={child}
+                people={people}
+                partnerships={partnerships}
+                treePathIds={treePathIds}
+                onPersonLeftClick={onPersonLeftClick}
+                onPersonRightClick={onPersonRightClick}
+                onPartnershipLeftClick={onPartnershipLeftClick}
+                onPartnershipRightClick={onPartnershipRightClick} />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
