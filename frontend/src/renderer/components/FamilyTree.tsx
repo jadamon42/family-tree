@@ -23,7 +23,7 @@ function FamilyTree({ data, people, partnerships, treePathIds, onPersonLeftClick
         people={people}
         partnerships={partnerships}
         treePathIds={treePathIds}
-        gap={20}
+        gapWidth={20}
         onPersonLeftClick={onPersonLeftClick}
         onPersonRightClick={onPersonRightClick}
         onPartnershipLeftClick={onPartnershipLeftClick}

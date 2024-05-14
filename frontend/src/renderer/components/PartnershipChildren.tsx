@@ -18,30 +18,6 @@ interface PartnershipChildrenProps {
 }
 
 function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidth, gapWidth, onPersonLeftClick, onPersonRightClick, onPartnershipLeftClick, onPartnershipRightClick }: PartnershipChildrenProps) {
-  // const nodesRef = useRef(null);
-  //
-  // useEffect(() => {
-  //   if (nodesRef) {
-  //     const firstNode = nodesRef.current.firstChild;
-  //     const firstNodeWidth = firstNode.offsetWidth;
-  //
-  //     pathsRef.current.style.paddingLeft = `${firstNodeWidth / 2}px`;
-  //     pathsRef.current.style.paddingRight = `${firstNodeWidth / 2}px`;
-  //     pathsRef.current.style.height = `${firstNodeWidth / 2}px`;
-  //     setNodeWidth(firstNodeWidth);
-  //   }
-  // }, [children]);
-
-
-  /*
- first family tree left edge is 10% in from the parent's left edge
- last family tree left edge is 90% in from the parent's left edge
-
- 50 - 10 -> positive so left: 10% right: 50%
- 50 - 90 -> negative so left: 50% right: 90%
-
-   */
-
   const parentRef = useRef(null);
   const [percentagesToCenterOfChildNode, setPercentagesToCenterOfChildNode] = useState<number[]>([]);
   const [percentageToCenterOfChildren, setPercentageToCenterOfChildren] = useState<number>(null);
@@ -75,11 +51,9 @@ function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidt
       <div ref={parentRef} style={{
         display: 'flex',
         flexDirection: 'row',
-        gap: '20px',
+        gap: gapWidth,
         position: 'relative',
         justifyContent: 'center',
-        marginRight: gapWidth / 2,
-        marginLeft: gapWidth / 2
       }}>
         {data.children.map((child, i) => (
           <div key={`${data.valueId}-${child.personId}`} className="child-tree">
@@ -88,7 +62,7 @@ function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidt
               top: '0%',
               left: 50 - percentagesToCenterOfChildNode[i] > 0 ? `${percentagesToCenterOfChildNode[i]}%` : `${percentageToCenterOfChildren}%`,
               right : 50 - percentagesToCenterOfChildNode[i] > 0 ? `${100 - percentageToCenterOfChildren}%` : `${100 - percentagesToCenterOfChildNode[i]}%`,
-              height: '20px',
+              height: gapWidth,
               borderLeft: 50 - percentagesToCenterOfChildNode[i] > 0 ? '2px solid black' : 'none',
               borderRight: 50 - percentagesToCenterOfChildNode[i] > 0 ? 'none' : '2px solid black',
               borderTopLeftRadius: 50 - percentagesToCenterOfChildNode[i] > 0 && (i === 0 || i === data.children.length - 1) ? '10px' : '0',
@@ -96,7 +70,7 @@ function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidt
               borderTop: '2px solid black',
             }} />
             <div style={{
-              paddingTop: '22px' // same as height above + width of border
+              paddingTop: gapWidth + 2
             }}>
               <FamilyTree
                 data={child}
