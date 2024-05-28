@@ -211,13 +211,14 @@ function HomePage() {
     return merged;
   }
 
-  const mergeToSegments = (segment: TreeSegmentData, existingSegments: TreeSegmentData[]) => {
+  const mergeIntoExistingSegment = (segment: TreeSegmentData, existingSegments: TreeSegmentData[]) => {
     for(const existingSegment of existingSegments) {
       if (mergeSegment(segment, existingSegment)) {
-        return;
+        return true;
       }
     }
     existingSegments.push(segment);
+    return false;
   }
 
   const buildTreeSegment = (partnership: Partnership): TreeSegmentData => {
@@ -253,19 +254,43 @@ function HomePage() {
     return segment;
   }
 
+  function isChildInOtherPartnerships(personId: string, partnerships: Partnership[], currentPartnershipId: string) {
+    return partnerships.some(partnership =>
+      partnership.id !== currentPartnershipId &&
+      partnership.children.some(child => child.id === personId)
+    );
+  }
+
   const fetchPartnershipsAndBuildTreeSegments = async (retryCount = 0) => {
     try {
       const segmentsToAdd: TreeSegmentData[] = [];
       const partnerships = await getPartnerships();
+      partnerships.sort((a, b) => {
+        const aHasPartnerThatIsChildInOtherPartnership = a.partners.some(partner =>
+          isChildInOtherPartnerships(partner.id, partnerships, a.id)
+        );
+        const bHasPartnerThatIsChildInOtherPartnership = b.partners.some(partner =>
+          isChildInOtherPartnerships(partner.id, partnerships, b.id)
+        );
+
+        if (aHasPartnerThatIsChildInOtherPartnership && !bHasPartnerThatIsChildInOtherPartnership) {
+          return 1; // a comes after b
+        } else if (!aHasPartnerThatIsChildInOtherPartnership && bHasPartnerThatIsChildInOtherPartnership) {
+          return -1; // a comes before b
+        } else {
+          return 0; // a and b are equal
+        }
+      });
       for(const partnership of partnerships) {
         const segment = buildTreeSegment(partnership);
-        mergeToSegments(segment, segmentsToAdd);
+        mergeIntoExistingSegment(segment, segmentsToAdd);
       }
+
       const rootPeople = await getRootPeople();
       for (const person of rootPeople) {
         setPeople((prevPeople) => new Map([...prevPeople, [person.id, person]]));
         const segment = new TreeSegmentData(person.id);
-        mergeToSegments(segment, segmentsToAdd);
+        mergeIntoExistingSegment(segment, segmentsToAdd);
       }
       setSegments(segmentsToAdd);
     } catch (error) {
@@ -292,7 +317,7 @@ function HomePage() {
     setSegments((prevSegments) => {
       const segment = new TreeSegmentData(person.id);
       const segmentsCopy = [...prevSegments];
-      mergeToSegments(segment, segmentsCopy);
+      mergeIntoExistingSegment(segment, segmentsCopy);
       return segmentsCopy;
     });
   };
@@ -309,7 +334,7 @@ function HomePage() {
     setSegments((prevSegments) => {
       const segment = buildTreeSegment(partnership);
       const segmentsCopy = [...prevSegments];
-      mergeToSegments(segment, segmentsCopy);
+      mergeIntoExistingSegment(segment, segmentsCopy);
       return segmentsCopy;
     });
   };
@@ -321,7 +346,7 @@ function HomePage() {
     setSegments((prevSegments) => {
       const segment = buildTreeSegment(partnership);
       const segmentsCopy = [...prevSegments];
-      mergeToSegments(segment, segmentsCopy);
+      mergeIntoExistingSegment(segment, segmentsCopy);
       return segmentsCopy;
     });
   };

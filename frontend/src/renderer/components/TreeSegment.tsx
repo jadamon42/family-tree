@@ -5,6 +5,7 @@ import PartnershipPath from './PartnershipPath';
 import PartnershipData from '../models/PartnershipData';
 import Person from '../models/Person';
 import PartnershipChildren from './PartnershipChildren';
+import ChildPathSpacingCalculator from '../utils/ChildPathSpacingCalculator';
 
 interface PartnershipChainProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ function TreeSegment({ children, data, people, partnerships, treePathIds, gapWid
   const parentChainRef = useRef(null);
   const pathsRef = useRef(null);
   const childrenChainRef = useRef(null);
+  const [childrenRefs, setChildrenRefs] = useState(data.partnerships.map(() => React.createRef<HTMLDivElement>()));
   const [nodeWidth, setNodeWidth] = useState(0);
   const [percentagesInForLineUpFromChildren, setPercentagesInForLineUpFromChildren] = useState<number[]>([]);
   const [percentagesInForLineDownFromPartnership, setPercentagesInForLineDownFromPartnership] = useState<number[]>([]);
@@ -40,6 +42,12 @@ function TreeSegment({ children, data, people, partnerships, treePathIds, gapWid
   }, [children]);
 
   useEffect(() => {
+    setChildrenRefs(data.partnerships.map(() => React.createRef<HTMLDivElement>()));
+  }, [JSON.stringify(data.partnerships)]);
+
+  useEffect(() => {
+    if (!childrenChainRef.current) return;
+
     const percentagesInForLineDownFromPartnership: number[] = [];
     const percentagesInForLineUpFromChildren: number[] = [];
     const parentWidth = parentChainRef.current.offsetWidth;
@@ -49,30 +57,31 @@ function TreeSegment({ children, data, people, partnerships, treePathIds, gapWid
     let lengthInOnParent = marginWidth;
     let lengthInOnChildren = 0;
     for (let i = 0; i < data.partnerships.length; i++) {
+      if (!childrenRefs || !childrenRefs[i] || !childrenRefs[i].current) continue;
       lengthInOnParent += nodeWidth + (gapWidth / 2);
       percentagesInForLineDownFromPartnership.push((lengthInOnParent / childrenWidth) * 100);
       lengthInOnParent += (gapWidth / 2);
 
+      const childrenChainComponent: HTMLDivElement = childrenRefs[i].current;
       const partnership = data.partnerships[i];
-      const children = partnership.children;
-      let childSegmentWidth = 0;
-      for (let j = 0; j < children.length; j++) {
-        childSegmentWidth += nodeWidth;
-        if (j !== children.length - 1) {
-          for (let k = 0; k < children[j].partnerships.length; k++) {
-            childSegmentWidth += gapWidth + nodeWidth;
-          }
-          childSegmentWidth += gapWidth;
-        }
-      }
-      percentagesInForLineUpFromChildren.push(((lengthInOnChildren + (childSegmentWidth / 2)) / childrenWidth) * 100);
-      lengthInOnChildren += childSegmentWidth + gapWidth;
+
+      const {
+        percentageToCenterOfChildChain
+      } = ChildPathSpacingCalculator.getChildChainSpacing(childrenChainComponent, partnership, nodeWidth, gapWidth);
+
+      const ratio = childrenChainComponent.offsetWidth / childrenChainRef.current.offsetWidth
+      const percentageToCenterOfChildChainRelativeToChildren = percentageToCenterOfChildChain * ratio;
+
+      percentagesInForLineUpFromChildren.push(lengthInOnChildren + percentageToCenterOfChildChainRelativeToChildren);
+
+      lengthInOnChildren += gapWidth / childrenChainRef.current.offsetWidth * 100;
+      lengthInOnChildren += ratio * 100;
     }
 
     setPercentagesInForLineDownFromPartnership(percentagesInForLineDownFromPartnership);
     setPercentagesInForLineUpFromChildren(percentagesInForLineUpFromChildren);
 
-  }, [JSON.stringify(data), nodeWidth, gapWidth]);
+  }, [JSON.stringify(data), nodeWidth, gapWidth, childrenRefs]);
 
   return (
     <div style={{
@@ -137,6 +146,7 @@ function TreeSegment({ children, data, people, partnerships, treePathIds, gapWid
               </div>
               <div style={{ marginTop: `${gapWidth * 2}px` }}>
                 <PartnershipChildren
+                  ref={childrenRefs[i]}
                   key={`${partnership.valueId}-children`}
                   data={partnership}
                   people={people}

@@ -1,8 +1,9 @@
 import TreeSegmentPartnershipData from '../models/TreeSegmentPartnershipData';
 import FamilyTree from './FamilyTree';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import Person from '../models/Person';
 import PartnershipData from '../models/PartnershipData';
+import ChildPathSpacingCalculator from '../utils/ChildPathSpacingCalculator';
 
 interface PartnershipChildrenProps {
   data: TreeSegmentPartnershipData;
@@ -17,40 +18,35 @@ interface PartnershipChildrenProps {
   onPartnershipRightClick: (event: React.MouseEvent, partnership: PartnershipData) => void;
 }
 
-function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidth, gapWidth, onPersonLeftClick, onPersonRightClick, onPartnershipLeftClick, onPartnershipRightClick }: PartnershipChildrenProps) {
-  const parentRef = useRef(null);
+const PartnershipChildren = React.forwardRef((props: PartnershipChildrenProps, ref: React.Ref<HTMLDivElement>) => {
+  const {
+    data,
+    people,
+    partnerships,
+    treePathIds,
+    nodeWidth,
+    gapWidth,
+    onPersonLeftClick,
+    onPersonRightClick,
+    onPartnershipLeftClick,
+    onPartnershipRightClick
+  } = props;
+  const parentRef = useRef<HTMLDivElement>(null);
   const [percentagesToCenterOfChildNode, setPercentagesToCenterOfChildNode] = useState<number[]>([]);
   const [percentageToCenterOfChildren, setPercentageToCenterOfChildren] = useState<number>(null);
+
+  useImperativeHandle(ref, () => parentRef.current);
 
   useEffect(() => {
     if (!parentRef.current) return;
 
-    const percentages: number[] = [];
-    const parentWidth = parentRef.current.offsetWidth;
-    let pixelsInOnCumulativeChildTrees = 0;
-    let pixelsToCenterOfCumulativeChildTrees = 0;
-    for (let i = 0; i < data.children.length; i++) {
-      const componentWidth = parentRef.current.children[i].offsetWidth;
-      const childData = data.children[i];
-      const pixelsToCenterOfChildOnPartnershipChain = nodeWidth / 2; // center of the first node
-      let pixelsRemainingOnChildPartnershipChain = nodeWidth / 2
-      for (let j = 0; j < childData.partnerships.length; j++) {
-        pixelsRemainingOnChildPartnershipChain += gapWidth + nodeWidth;
-      }
+    const {
+      percentagesToChildrenNodes,
+      percentageToCenterOfChildChain
+    } = ChildPathSpacingCalculator.getChildChainSpacing(parentRef.current, data, nodeWidth, gapWidth);
 
-      let totalPartnershipChainWidth = pixelsToCenterOfChildOnPartnershipChain + pixelsRemainingOnChildPartnershipChain;
-      const componentWhiteSpace = (componentWidth - totalPartnershipChainWidth) / 2;
-      pixelsInOnCumulativeChildTrees += componentWhiteSpace + pixelsToCenterOfChildOnPartnershipChain
-      percentages.push(pixelsInOnCumulativeChildTrees / parentWidth * 100);
-      if (i !== data.children.length - 1) { // if not the last child
-        pixelsRemainingOnChildPartnershipChain += gapWidth;
-        totalPartnershipChainWidth += gapWidth;
-      }
-      pixelsInOnCumulativeChildTrees += pixelsRemainingOnChildPartnershipChain + componentWhiteSpace;
-      pixelsToCenterOfCumulativeChildTrees += componentWhiteSpace + (totalPartnershipChainWidth / 2);
-    }
-    setPercentagesToCenterOfChildNode(percentages);
-    setPercentageToCenterOfChildren((pixelsToCenterOfCumulativeChildTrees / parentWidth) * 100);
+    setPercentagesToCenterOfChildNode(percentagesToChildrenNodes);
+    setPercentageToCenterOfChildren(percentageToCenterOfChildChain);
   }, [JSON.stringify(data.children), nodeWidth, gapWidth]);
 
   return (
@@ -94,6 +90,6 @@ function PartnershipChildren({ data, people, partnerships, treePathIds, nodeWidt
       </div>
     </div>
   );
-}
+});
 
 export default PartnershipChildren;
