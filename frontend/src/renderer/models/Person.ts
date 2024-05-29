@@ -4,8 +4,8 @@ class Person {
   middleName: string;
   lastName: string;
   sex: string;
-  birthDate: string;
-  deathDate?: string;
+  birthDate: Date;
+  deathDate?: Date;
 
   constructor(
     id: string,
@@ -13,8 +13,8 @@ class Person {
     middleName: string,
     lastName: string,
     sex: string,
-    birthDate: string,
-    deathDate?: string,
+    birthDate: Date,
+    deathDate?: Date,
   ) {
     this.id = id;
     this.firstName = firstName;

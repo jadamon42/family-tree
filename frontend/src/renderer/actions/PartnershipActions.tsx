@@ -1,4 +1,16 @@
 import Partnership from '../models/Partnership';
+import { mapToPerson } from './PersonActions';
+
+function mapToPartnership(partnership: any): Partnership {
+  return new Partnership(
+    partnership.id,
+    partnership.type,
+    partnership.startDate ? new Date(partnership.startDate) : undefined,
+    partnership.endDate ? new Date(partnership.endDate) : undefined,
+    partnership.partners.map(mapToPerson),
+    partnership.children.map(mapToPerson),
+  );
+}
 
 export async function createPartnership(partnership: Partnership, partnerIds: string[]) {
   const response = await fetch('http://localhost:50000/api/partnership', {
@@ -16,7 +28,8 @@ export async function createPartnership(partnership: Partnership, partnerIds: st
     console.error('Error:', response.statusText);
   }
 
-  return await response.json();
+  const createdPartnership = await response.json();
+  return mapToPartnership(createdPartnership);
 }
 
 export async function getPartnerships() {
@@ -33,7 +46,7 @@ export async function getPartnerships() {
     }
 
     const data = await response.json();
-    allPartnerships = [...allPartnerships, ...data.content];
+    allPartnerships = [...allPartnerships, ...data.content.map(mapToPartnership)];
 
     hasMore = !data.last;
     page += 1;
@@ -48,7 +61,8 @@ export  async function getPartnership(partnershipId: string) {
     console.error('Error:', response.statusText);
   }
 
-  return await response.json();
+  const partnership = await response.json();
+  return mapToPartnership(partnership);
 }
 
 export async function deletePartnership(partnershipId: string) {

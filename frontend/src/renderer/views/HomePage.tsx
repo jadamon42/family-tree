@@ -231,7 +231,7 @@ function HomePage() {
       partnership.children.map(c => c.id));
     setPartnerships((prevPartnerships) => new Map([...prevPartnerships, [partnership.id, partnershipData]]));
     const segment = new TreeSegmentData(null);
-    const partners = partnership.partners.sort((a, b) => a.sex.toUpperCase() === 'MALE' ? 1: -1);
+    const partners = partnership.partners.sort((a, b) => a.sex.toUpperCase() === 'MALE' ? -1: 1);
     partners.forEach((partner, index) => {
       setPeople((prevPeople) => new Map([...prevPeople, [partner.id, partner]]));
       if (index === 0) {
@@ -240,8 +240,9 @@ function HomePage() {
         const segmentPartnership = new TreeSegmentPartnershipData(partnership.id);
         segmentPartnership.setPartner(new TreeSegmentData(partner.id));
 
-        // TODO: Sort children by birth date as date instead of as string
-        // const children = partnership.children.sort((a, b) => a.birthDate.localeCompare(b.birthDate));
+        partnership.children.sort((a, b) => {
+          return a.birthDate > b.birthDate ? 1 : -1;
+        });
         partnership.children.forEach((child) => {
           setPeople((prevPeople) => new Map([...prevPeople, [child.id, child]]));
           const childSegment = new TreeSegmentData(child.id);

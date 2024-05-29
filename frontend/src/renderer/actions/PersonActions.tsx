@@ -14,6 +14,18 @@ const sanitizePersonInput = (person: Person) => {
   }
 }
 
+export function mapToPerson(person: any): Person {
+  return new Person(
+    person.id,
+    person.firstName,
+    person.middleName,
+    person.lastName,
+    person.sex,
+    person.birthDate ? new Date(person.birthDate) : undefined,
+    person.deathDate ? new Date(person.deathDate) : undefined,
+  );
+}
+
 export async function createPerson(person: Person, parentsPartnershipId?: string) {
   const response = await fetch('http://localhost:50000/api/person', {
     method: 'POST',
@@ -30,7 +42,8 @@ export async function createPerson(person: Person, parentsPartnershipId?: string
     console.error('Error:', response.statusText);
   }
 
-  return await response.json();
+  const createdPerson = await response.json();
+  return mapToPerson(createdPerson);
 }
 
 export async function getPerson(id: string) {
@@ -40,7 +53,8 @@ export async function getPerson(id: string) {
     console.error('Error:', response.statusText);
   }
 
-  return await response.json();
+  const person = await response.json();
+  return mapToPerson(person);
 }
 
 export async function getRootPeople() {
@@ -50,9 +64,8 @@ export async function getRootPeople() {
     console.error('Error:', response.statusText);
   }
 
-  const retval: Person[] = await response.json();
-
-  return retval;
+  const data: any[] = await response.json();
+  return data.map(person => mapToPerson(person));
 }
 
 export async function updatePerson(person: Person) {
@@ -68,7 +81,8 @@ export async function updatePerson(person: Person) {
     console.error('Error:', response.statusText);
   }
 
-  return await response.json();
+  const updatedPerson = await response.json();
+  return mapToPerson(updatedPerson);
 }
 
 export async function deletePerson(id: string) {

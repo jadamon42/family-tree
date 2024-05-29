@@ -3,16 +3,16 @@ import type Person from './Person';
 class Partnership {
   id: string;
   type: string;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   partners: Person[];
   children: Person[];
 
   constructor(
     id: string,
     type: string,
-    startDate: string,
-    endDate: string,
+    startDate: Date,
+    endDate: Date,
     partners: Person[],
     children: Person[]
   ) {
@@ -23,10 +23,6 @@ class Partnership {
     this.partners = partners;
     this.children = children;
   }
-
-  // getData() {
-  //   return new PartnershipData(this.id, this.type, this.startDate, this.endDate);
-  // }
 }
 
 export default Partnership;
