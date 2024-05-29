@@ -49,8 +49,8 @@ function HomePage() {
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (isDragging) {
-      setPosX(prevPosX => prevPosX + event.movementX);
-      setPosY(prevPosY => prevPosY + event.movementY);
+      setPosX(prevPosX => prevPosX + event.movementX / zoom);
+      setPosY(prevPosY => prevPosY + event.movementY / zoom);
     }
   };
 
