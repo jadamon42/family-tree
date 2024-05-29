@@ -1,4 +1,5 @@
 import Person from '../models/Person';
+import Relationship from '../models/Relationship';
 
 const toTitleCase = (name: string) => {
   return name.replace(/\b\w/g, (char) => char.toUpperCase()).trim();
@@ -93,4 +94,16 @@ export async function deletePerson(id: string) {
   if (!response.ok) {
     console.error('Error:', response.statusText);
   }
+}
+
+export async function getRelationship(personFromId: string, personToId: string): Promise<Relationship> {
+  const response = await fetch(`http://localhost:50000/api/person/relationship?personFromId=${personFromId}&personToId=${personToId}`);
+
+  if (!response.ok) {
+    console.error('Error:', response.statusText);
+  }
+
+  // console.log(await response.text());
+
+  return await response.json();
 }

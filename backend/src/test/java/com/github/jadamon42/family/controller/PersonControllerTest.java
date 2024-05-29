@@ -3,6 +3,7 @@ package com.github.jadamon42.family.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonRequest;
+import com.github.jadamon42.family.model.Relationship;
 import com.github.jadamon42.family.model.Sex;
 import com.github.jadamon42.family.service.GenealogicalLinkService;
 import com.github.jadamon42.family.service.PersonService;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
@@ -37,18 +39,19 @@ class PersonControllerTest {
     void getRelationship() throws Exception {
         UUID personFromId = UUID.randomUUID();
         UUID personToId = UUID.randomUUID();
-        when(genealogicalLinkService.getRelationshipLabel(personFromId, personToId)).thenReturn(Optional.of("A Relationship"));
+        Relationship relationship = new Relationship(Set.of(personFromId, personToId), "A Relationship", "An Inverse Relationship");
+        when(genealogicalLinkService.getRelationship(personFromId, personToId)).thenReturn(Optional.of(relationship));
 
         mockMvc.perform(get("/api/person/relationship?personFromId=" + personFromId + "&personToId=" + personToId))
                .andExpect(status().isOk())
-               .andExpect(content().string("A Relationship"));
+               .andExpect(content().json(objectMapper.writeValueAsString(relationship)));
     }
 
     @Test
     void getRelationshipReturns404WhenNotFound() throws Exception {
         UUID personFromId = UUID.randomUUID();
         UUID personToId = UUID.randomUUID();
-        when(genealogicalLinkService.getRelationshipLabel(personFromId, personToId)).thenReturn(Optional.empty());
+        when(genealogicalLinkService.getRelationship(personFromId, personToId)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/person/relationship?personFromId=" + personFromId + "&personToId=" + personToId))
                .andExpect(status().isNotFound());

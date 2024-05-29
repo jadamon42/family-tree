@@ -66,11 +66,11 @@ const PartnershipChildren = React.forwardRef((props: PartnershipChildrenProps, r
               left: 50 - percentagesToCenterOfChildNode[i] > 0 ? `${percentagesToCenterOfChildNode[i]}%` : `${percentageToCenterOfChildren}%`,
               right : 50 - percentagesToCenterOfChildNode[i] > 0 ? `calc(${100 - percentageToCenterOfChildren}% - 2px)` : `calc(${100 - percentagesToCenterOfChildNode[i]}% - 2px)`,
               height: gapWidth,
-              borderLeft: 50 - percentagesToCenterOfChildNode[i] > 0 ? '2px solid black' : 'none',
-              borderRight: 50 - percentagesToCenterOfChildNode[i] > 0 ? 'none' : '2px solid black',
+              borderLeft: 50 - percentagesToCenterOfChildNode[i] > 0 ? (treePathIds.includes(data.valueId) && treePathIds.includes(child.personId) ? '2px solid green' : '2px solid black') : 'none',
+              borderRight: 50 - percentagesToCenterOfChildNode[i] > 0 ? 'none' : (treePathIds.includes(data.valueId) && treePathIds.includes(child.personId) ? '2px solid green' : '2px solid black'),
               borderTopLeftRadius: 50 - percentagesToCenterOfChildNode[i] > 0 && (i === 0 || i === data.children.length - 1) ? '10px' : '0',
               borderTopRightRadius: 50 - percentagesToCenterOfChildNode[i] > 0 || data.children.length === 1 || (i > 0 && i < data.children.length - 1) ? '0' : '10px',
-              borderTop: '2px solid black',
+              borderTop: treePathIds.includes(data.valueId) && treePathIds.includes(child.personId) ? '2px solid green' : '2px solid black',
             }} />
             <div style={{
               paddingTop: gapWidth + 2

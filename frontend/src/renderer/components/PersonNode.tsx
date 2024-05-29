@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import '../styles/PersonNode.css';
 import Person from '../models/Person';
 
@@ -18,7 +18,7 @@ const getLongestName = (person: Person): string => {
 function PersonNode({ person, treePathIds, onLeftClick, onRightClick }: PersonNodeProps) {
   const longestName: string = getLongestName(person);
   const fontSize = `${Math.min(1, 10 / longestName.length)}em`;
-  const [focused, setFocused] = useState(false);
+  // const [focused, setFocused] = useState(false);
 
   // const customClick = (event: React.MouseEvent) => {
   //   setFocused(true);
@@ -31,7 +31,7 @@ function PersonNode({ person, treePathIds, onLeftClick, onRightClick }: PersonNo
       className="person"
       onClick={(event) => onLeftClick(event, person)}
       onContextMenu={(event) => onRightClick(event, person)}
-      style={{ fontSize, border: focused ? '2px solid green' : '' }}
+      style={{ fontSize, border: treePathIds.includes(person.id) ? '2px solid green' : '' }}
     >
       {person.firstName} {person.lastName}
     </button>

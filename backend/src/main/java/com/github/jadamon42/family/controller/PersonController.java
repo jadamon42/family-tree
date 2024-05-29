@@ -2,6 +2,7 @@ package com.github.jadamon42.family.controller;
 
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonRequest;
+import com.github.jadamon42.family.model.Relationship;
 import com.github.jadamon42.family.service.GenealogicalLinkService;
 import com.github.jadamon42.family.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +34,8 @@ public class PersonController {
     }
 
     @GetMapping("/relationship")
-    public ResponseEntity<String> getRelationship(@RequestParam UUID personFromId, @RequestParam UUID personToId) {
-        return genealogicalLinkService.getRelationshipLabel(personFromId, personToId)
+    public ResponseEntity<Relationship> getRelationship(@RequestParam UUID personFromId, @RequestParam UUID personToId) {
+        return genealogicalLinkService.getRelationship(personFromId, personToId)
                                     .map(ResponseEntity::ok)
                                     .orElse(ResponseEntity.notFound().build());
     }

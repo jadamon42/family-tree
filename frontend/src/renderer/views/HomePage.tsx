@@ -3,7 +3,7 @@ import PersonDetails from '../components/PersonDetails';
 import '../styles/HomePage.css';
 import ContextMenu from '../components/ContextMenu';
 import Person from '../models/Person';
-import { deletePerson, getPerson, getRootPeople } from '../actions/PersonActions';
+import { deletePerson, getPerson, getRelationship, getRootPeople } from '../actions/PersonActions';
 import { BounceLoader } from 'react-spinners';
 import PartnershipData from '../models/PartnershipData';
 import TreeSegmentData from '../models/TreeSegmentData';
@@ -29,6 +29,7 @@ function HomePage() {
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [firstSelectedNode, setFirstSelectedNode] = useState<string | null>(null);
   const [treePathIds, setTreePathIds] = useState<string[]>([]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -61,6 +62,8 @@ function HomePage() {
   const handleBackgroundClick = () => {
     setContextMenu(null);
     setSelectedPerson(null);
+    setTreePathIds([]);
+    setFirstSelectedNode(null);
   };
 
   const handleBackgroundRightClick = (event: React.MouseEvent) => {
@@ -72,14 +75,26 @@ function HomePage() {
     });
   };
 
-  const handlePersonClick = (event: React.MouseEvent, person: Person) => {
+  const handlePersonClick = async (event: React.MouseEvent, person: Person) => {
     event.stopPropagation();
-    setSelectedPerson((prevPerson) => {
-      if (prevPerson && prevPerson.id === person.id) {
-        return null;
+    if (event.ctrlKey || event.metaKey) {
+      if (firstSelectedNode === null) {
+        setFirstSelectedNode(person.id);
+        setTreePathIds([person.id]);
+      } else {
+        if (firstSelectedNode !== person.id) {
+          const relationship = await getRelationship(firstSelectedNode, person.id);
+          setTreePathIds(relationship.pathIds);
+        }
       }
-      return person;
-    });
+    } else {
+      setSelectedPerson((prevPerson) => {
+        if (prevPerson && prevPerson.id === person.id) {
+          return null;
+        }
+        return person;
+      });
+    }
     setContextMenu(null);
   };
 

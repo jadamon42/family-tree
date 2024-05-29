@@ -6,10 +6,7 @@ import lombok.Value;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.types.TypeSystem;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +25,7 @@ public class GenealogicalLink {
     Boolean personToMarriedIn;
     Relation relationFromPerspectiveOfPersonFrom;
     Relation relationFromPerspectiveOfPersonTo;
+    Set<UUID> pathIds;
 
     public static GenealogicalLink fromRecord(TypeSystem ignored, Record record) {
         if (record.get("commonAncestorId").isNull()) {
@@ -44,6 +42,23 @@ public class GenealogicalLink {
                                .commonAncestorIds(getCommonAncestorIds(record))
                                .relationFromPerspectiveOfPersonFrom(buildRelation(record, "person1"))
                                .relationFromPerspectiveOfPersonTo(buildRelation(record, "person2"))
+                               .pathIds(buildPathIds(record))
+                               .build();
+    }
+
+    public GenealogicalLink getInverse() {
+        return GenealogicalLink.builder()
+                               .personFromId(personToId)
+                               .personToId(personFromId)
+                               .personFromSex(personToSex)
+                               .personToSex(personFromSex)
+                               .personFromMarriedIn(personToMarriedIn)
+                               .personToMarriedIn(personFromMarriedIn)
+                               .sharedAncestralPartnershipId(sharedAncestralPartnershipId)
+                               .commonAncestorIds(commonAncestorIds)
+                               .relationFromPerspectiveOfPersonFrom(relationFromPerspectiveOfPersonTo)
+                               .relationFromPerspectiveOfPersonTo(relationFromPerspectiveOfPersonFrom)
+                               .pathIds(pathIds)
                                .build();
     }
 
@@ -84,5 +99,20 @@ public class GenealogicalLink {
                        .numberOfGenerationsToOtherPerson(numberOfGenerationsToCommonAncestor - otherNumberOfGenerationsToCommonAncestor)
                        .isBloodRelation(!marriedIn && !otherMarriedIn)
                        .build();
+    }
+
+    private static Set<UUID> buildPathIds(Record record) {
+        return Stream.concat(
+                        Stream.concat(
+                            record.get("pathIdsFromCommonAncestorToPerson1")
+                                  .asList(org.neo4j.driver.Value::asString)
+                                  .stream()
+                                  .map(UUID::fromString),
+                            record.get("pathIdsFromCommonAncestorToPerson2")
+                                  .asList(org.neo4j.driver.Value::asString)
+                                  .stream()
+                                  .map(UUID::fromString)),
+                        getCommonAncestorIds(record).stream())
+                     .collect(Collectors.toSet());
     }
 }

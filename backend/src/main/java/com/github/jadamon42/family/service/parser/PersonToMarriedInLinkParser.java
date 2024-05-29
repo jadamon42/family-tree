@@ -1,6 +1,7 @@
 package com.github.jadamon42.family.service.parser;
 
 import com.github.jadamon42.family.model.GenealogicalLink;
+import com.github.jadamon42.family.model.Relation;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
 
 import java.util.Optional;
@@ -10,8 +11,11 @@ public class PersonToMarriedInLinkParser extends GenealogicalLinkParser {
         super(customCypherQueryExecutor);
     }
 
-    public String getLabel(GenealogicalLink link, int numberOfGenerationsToCommonAncestor, int numberOfGenerationsToOtherPerson) {
+    public String getLabel(GenealogicalLink link) {
         String retval;
+        Relation relation = link.getRelationFromPerspectiveOfPersonFrom();
+        int numberOfGenerationsToCommonAncestor = relation.getNumberOfGenerationsToCommonAncestor();
+        int numberOfGenerationsToOtherPerson = relation.getNumberOfGenerationsToOtherPerson();
         int difference = numberOfGenerationsToCommonAncestor - numberOfGenerationsToOtherPerson;
 
         if (difference == 0) {

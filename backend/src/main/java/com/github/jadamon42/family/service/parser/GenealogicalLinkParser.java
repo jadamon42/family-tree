@@ -16,7 +16,7 @@ public abstract class GenealogicalLinkParser {
         this.customCypherQueryExecutor = customCypherQueryExecutor;
     }
 
-    public abstract String getLabel(GenealogicalLink link, int numberOfGenerationsToCommonAncestor, int numberOfGenerationsToOtherPerson);
+    public abstract String getLabel(GenealogicalLink link);
 
     String getFullNiblingLabel(GenealogicalLink link, int numberOfGenerationsToOtherPerson) {
         int numberOfGreats = Math.abs(numberOfGenerationsToOtherPerson) - 1;

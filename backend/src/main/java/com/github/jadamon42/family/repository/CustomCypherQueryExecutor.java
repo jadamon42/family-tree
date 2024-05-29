@@ -30,6 +30,8 @@ public class CustomCypherQueryExecutor {
              , null AS sharedAncestralPartnershipId
              , 0 AS person1NumberOfPersonNodesToCommonAncestor
              , 0 AS person2NumberOfPersonNodesToCommonAncestor
+             , [p1.id] AS pathIdsFromCommonAncestorToPerson1
+             , [p1.id] AS pathIdsFromCommonAncestorToPerson2
     UNION
         MATCH (p1:Person {id: $person1Id})-[*]-(p2:Person {id: $person2Id})
         OPTIONAL MATCH (directCommonAncestor:Person)
@@ -60,6 +62,14 @@ public class CustomCypherQueryExecutor {
            , person1MarriedIn
            , person2MarriedIn
            , CASE
+                WHEN commonAncestor = p1 THEN [p1.id]
+                ELSE [n IN nodes(shortestPath((commonAncestor)-[*]-(p1))) | n.id]
+             END AS pathIdsFromCommonAncestorToPerson1
+           , CASE
+                WHEN commonAncestor = p2 THEN [p2.id]
+                ELSE [n IN nodes(shortestPath((commonAncestor)-[*]-(p2))) | n.id]
+             END AS pathIdsFromCommonAncestorToPerson2
+           , CASE
                 WHEN commonAncestor = p1 THEN 0
                 ELSE SIZE([n IN nodes(shortestPath((commonAncestor)-[*]-(p1))) WHERE n:Person]) - 1
              END AS person1NumberOfPersonNodesToCommonAncestor
@@ -86,7 +96,10 @@ public class CustomCypherQueryExecutor {
              , otherCommonAncestor.id AS otherCommonAncestorId
              , sharedAncestralPartnership.id AS sharedAncestralPartnershipId
              , person1NumberOfPersonNodesToCommonAncestor
-             , person2NumberOfPersonNodesToCommonAncestor"""))
+             , person2NumberOfPersonNodesToCommonAncestor
+             , pathIdsFromCommonAncestorToPerson1
+             , pathIdsFromCommonAncestorToPerson2
+    """))
                           .bind(person1Id.toString()).to("person1Id")
                           .bind(person2Id.toString()).to("person2Id")
                           .fetchAs(GenealogicalLink.class)
