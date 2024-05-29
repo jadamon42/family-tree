@@ -1,16 +1,16 @@
 class PartnershipData {
   id: string;
   type: string;
-  startDate: string;
-  endDate: string;
+  startDate: Date;
+  endDate: Date;
   partnerIds: string[];
   childrenIds: string[];
 
   constructor(
     id: string,
     type: string,
-    startDate: string,
-    endDate: string,
+    startDate: Date,
+    endDate: Date,
     partnerIds: string[],
     childrenIds: string[]
   ) {

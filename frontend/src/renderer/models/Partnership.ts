@@ -23,6 +23,17 @@ class Partnership {
     this.partners = partners;
     this.children = children;
   }
+
+  getPartnershipData() {
+    return {
+      id: this.id,
+      type: this.type,
+      startDate: this.startDate,
+      endDate: this.endDate,
+      partnerIds: this.partners.map((partner: Person) => partner.id),
+      childrenIds: this.children.map((child: Person) => child.id),
+    };
+  }
 }
 
 export default Partnership;

@@ -331,7 +331,8 @@ function HomePage() {
       setPeople((prevPeople) => new Map([...prevPeople, [partner.id, partner]]));
     }
 
-    setPartnerships((prevPartnerships) => new Map([...prevPartnerships, [partnership.id, partnership]]));
+    setPartnerships((prevPartnerships) =>
+      new Map([...prevPartnerships, [partnership.id, partnership.getPartnershipData()]]));
     setSegments((prevSegments) => {
       const segment = buildTreeSegment(partnership);
       const segmentsCopy = [...prevSegments];
