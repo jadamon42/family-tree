@@ -32,7 +32,7 @@ public class PersonToMarriedInLinkParser extends GenealogicalLinkParser {
                 };
                 case 1 -> switch (numberOfGenerationsToOtherPerson) {
                     case 0 -> getSpouseOrSiblingInLawLabel(link);
-                    default -> "Step-%s".formatted(getChildLabel(link));
+                    default -> getStepChildOrPiblingInLawLabel(link, numberOfGenerationsToOtherPerson);
                 };
                 default ->  {
                     if (difference == 1) {
@@ -60,10 +60,31 @@ public class PersonToMarriedInLinkParser extends GenealogicalLinkParser {
                             }
                         }
                     }
-                    yield "Step-%s".formatted(getSiblingLabel(link));
+                    if (link.getCommonAncestorIds().size() == 1) {
+                        yield "Step-%s".formatted(getSiblingLabel(link));
+                    } else {
+                        int cousinType;
+                        int timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
+                        if (difference <= numberOfGenerationsToCommonAncestor) {
+                            cousinType = difference - 1;
+                        } else {
+                            cousinType = numberOfGenerationsToCommonAncestor - 1;
+                        }
+                        yield "%sCousin-in-Law%s".formatted(getCousinPrefix(cousinType), getTimeRemovedSuffix(timesRemoved));
+                    }
                 }
             };
         }
         return retval;
+    }
+
+    private String getStepChildOrPiblingInLawLabel(GenealogicalLink link, int numberOfGenerationsToOtherPerson) {
+        // this can't be right. Can you have an in-law when you only have 1 common ancestor?
+        // can you have a stepparent with 2 common ancestors?
+        if (link.getCommonAncestorIds().size() == 1) {
+            return "Step-%s".formatted(getChildLabel(link));
+        } else {
+            return "%s-in-Law".formatted(getFullNiblingLabel(link, numberOfGenerationsToOtherPerson));
+        }
     }
 }

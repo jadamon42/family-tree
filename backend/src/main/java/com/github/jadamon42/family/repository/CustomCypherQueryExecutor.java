@@ -116,4 +116,15 @@ public class CustomCypherQueryExecutor {
                           .fetchAs(UUID.class)
                           .one();
     }
+
+    public boolean isSpouse(UUID person1Id, UUID person2Id) {
+        Optional<Boolean> isSpouse = neo4jClient.query(("""
+        MATCH (p1:Person {id: $person1Id})-[:PARTNER_IN]->(:Partnership)<-[:PARTNER_IN]-(p2:Person {id: $person2Id})
+        RETURN COUNT(*) > 0"""))
+                          .bind(person1Id.toString()).to("person1Id")
+                          .bind(person2Id.toString()).to("person2Id")
+                          .fetchAs(Boolean.class)
+                          .one();
+        return isSpouse.orElse(false);
+    }
 }

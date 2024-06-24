@@ -1,5 +1,6 @@
 package com.github.jadamon42.family.service;
 
+import com.github.jadamon42.family.model.Relationship;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,212 +30,278 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GenealogicalLinkServiceSexlessTest {
     @Test
     void getGenealogicalLinkOfNonExistentPerson() {
-        Optional<String> relationshipLabel = genealogicalLinkService.getRelationshipLabel(UUID.randomUUID(), personId);
-        assertThat(relationshipLabel).isEmpty();
+        Optional<Relationship> relationship = genealogicalLinkService.getRelationship(UUID.randomUUID(), personId);
+        assertThat(relationship).isEmpty();
     }
 
     @Test
     void getGenealogicalLinkOfUnrelatedPerson() {
-        Optional<String> relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, unrelatedPersonId);
-        assertThat(relationshipLabel).isEmpty();
+        Optional<Relationship> relationship = genealogicalLinkService.getRelationship(personId, unrelatedPersonId);
+        assertThat(relationship).isEmpty();
     }
 
     @Test
     void getGenealogicalLinkOfSelf() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, personId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Self");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, personId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Self");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Self");
+        assertThat(relationship.getPathIds()).contains(personId);
     }
 
     @Test
     void getGenealogicalLinkOfSpouse() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, spouseId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Spouse");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, spouseId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Spouse");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Spouse");
+        assertThat(relationship.getPathIds()).contains(personId, spouseId);
     }
 
     @Test
     void getGenealogicalLinkOfChild() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, childId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Child");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, childId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Child");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Parent");
+        assertThat(relationship.getPathIds()).contains(personId, childId);
     }
 
     @Test
     void getGenealogicalLinkOfGrandchild() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, grandchildId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Grandchild");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, grandchildId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Grandchild");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Grandparent");
+        assertThat(relationship.getPathIds()).contains(personId, childId, grandchildId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandchild() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandchildId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Great-Grandchild");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatGrandchildId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Great-Grandchild");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Great-Grandparent");
+        assertThat(relationship.getPathIds()).contains(personId, childId, grandchildId, greatGrandchildId);
     }
 
     @Test
     void getGenealogicalLinkOfParent() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, parentId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Parent");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, parentId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Parent");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Child");
+        assertThat(relationship.getPathIds()).contains(personId, parentId);
     }
 
     @Test
     void getGenealogicalLinkOfSibling() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, siblingId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Sibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, siblingId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Sibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Sibling");
+        assertThat(relationship.getPathIds()).contains(personId, siblingId);
     }
 
     @Test
     void getGenealogicalLinkOfNieceOrNephew() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, nieceOrNephewId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Nibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, nieceOrNephewId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Nibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Pibling");
+        assertThat(relationship.getPathIds()).contains(personId, nieceOrNephewId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatNieceOrNephew() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatNieceOrNephewId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Grand-Nibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatNieceOrNephewId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Grand-Nibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Grand-Pibling");
+        assertThat(relationship.getPathIds()).contains(personId, nieceOrNephewId, greatNieceOrNephewId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandNieceOrNephew() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandNieceOrNephewId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Great-Grand-Nibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatGrandNieceOrNephewId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Great-Grand-Nibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Great-Grand-Pibling");
+        assertThat(relationship.getPathIds()).contains(personId, nieceOrNephewId, greatNieceOrNephewId, greatGrandNieceOrNephewId);
     }
 
     @Test
     void getGenealogicalLinkOfGrandparent() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, grandparentId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Grandparent");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, grandparentId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Grandparent");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Grandchild");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId);
     }
 
     @Test
     void getGenealogicalLinkOfAuntOrUncle() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, auntOrUncleId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Pibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, auntOrUncleId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Pibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Nibling");
+        assertThat(relationship.getPathIds()).contains(personId, auntOrUncleId);
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousin() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("1st Cousin");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, firstCousinId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("1st Cousin");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("1st Cousin");
+        assertThat(relationship.getPathIds()).contains(personId, firstCousinId);
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinOnceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinOnceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("1st Cousin Once Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, firstCousinOnceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("1st Cousin Once Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("1st Cousin Once Removed");
+        assertThat(relationship.getPathIds()).contains(personId, firstCousinOnceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinTwiceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinTwiceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("1st Cousin Twice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, firstCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("1st Cousin Twice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("1st Cousin Twice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, firstCousinTwiceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinThriceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinThriceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("1st Cousin Thrice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, firstCousinThriceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("1st Cousin Thrice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("1st Cousin Thrice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, firstCousinThriceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandparent() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandparentId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Great-Grandparent");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatGrandparentId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Great-Grandparent");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Great-Grandchild");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, greatGrandparentId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatAuntOrUncle() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatAuntOrUncleId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Grand-Pibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatAuntOrUncleId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Grand-Pibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Grand-Nibling");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, greatAuntOrUncleId);
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinOnceRemovedThroughGreatGrandparents() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinOnceRemovedThroughGreatGrandparentsId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("1st Cousin Once Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, firstCousinOnceRemovedThroughGreatGrandparentsId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("1st Cousin Once Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("1st Cousin Once Removed");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, firstCousinOnceRemovedThroughGreatGrandparentsId);
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousin() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("2nd Cousin");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, secondCousinId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("2nd Cousin");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("2nd Cousin");
+        assertThat(relationship.getPathIds()).contains(personId, secondCousinId);
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinOnceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinOnceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("2nd Cousin Once Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, secondCousinOnceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("2nd Cousin Once Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("2nd Cousin Once Removed");
+        assertThat(relationship.getPathIds()).contains(personId, secondCousinOnceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinTwiceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinTwiceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("2nd Cousin Twice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, secondCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("2nd Cousin Twice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("2nd Cousin Twice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, secondCousinTwiceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinThriceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinThriceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("2nd Cousin Thrice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, secondCousinThriceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("2nd Cousin Thrice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("2nd Cousin Thrice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, secondCousinThriceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatGreatGrandparent() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGreatGrandparentId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Great-Great-Grandparent");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatGreatGrandparentId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Great-Great-Grandparent");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Great-Great-Grandchild");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, greatGrandparentId, greatGreatGrandparentId);
     }
 
     @Test
     void getGenealogicalLinkOfGreatGrandAuntOrUncle() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, greatGrandAuntOrUncleId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Great-Grand-Pibling");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, greatGrandAuntOrUncleId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Great-Grand-Pibling");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Great-Grand-Nibling");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, greatGrandparentId, greatGrandAuntOrUncleId);
     }
 
     @Test
     void getGenealogicalLinkOfFirstCousinTwiceRemovedThroughGreatGreatGrandparents() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, firstCousinTwiceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("1st Cousin Twice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, firstCousinTwiceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("1st Cousin Twice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("1st Cousin Twice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, greatGrandparentId, firstCousinTwiceRemovedThroughGreatGreatGrandparentsId);
     }
 
     @Test
     void getGenealogicalLinkOfSecondCousinOnceRemovedThroughGreatGreatGrandparents() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, secondCousinOnceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("2nd Cousin Once Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, secondCousinOnceRemovedThroughGreatGreatGrandparentsId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("2nd Cousin Once Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("2nd Cousin Once Removed");
+        assertThat(relationship.getPathIds()).contains(personId, grandparentId, greatGrandparentId, secondCousinOnceRemovedThroughGreatGreatGrandparentsId);
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousin() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("3rd Cousin");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, thirdCousinId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("3rd Cousin");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("3rd Cousin");
+        assertThat(relationship.getPathIds()).contains(personId, thirdCousinId);
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinOnceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinOnceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("3rd Cousin Once Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, thirdCousinOnceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("3rd Cousin Once Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("3rd Cousin Once Removed");
+        assertThat(relationship.getPathIds()).contains(personId, thirdCousinOnceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinTwiceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinTwiceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("3rd Cousin Twice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, thirdCousinTwiceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("3rd Cousin Twice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("3rd Cousin Twice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, thirdCousinTwiceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfThirdCousinThriceRemoved() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, thirdCousinThriceRemovedId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("3rd Cousin Thrice Removed");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, thirdCousinThriceRemovedId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("3rd Cousin Thrice Removed");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("3rd Cousin Thrice Removed");
+        assertThat(relationship.getPathIds()).contains(personId, thirdCousinThriceRemovedId);
     }
 
     @Test
     void getGenealogicalLinkOfOtherParent() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, otherParentId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Parent");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, otherParentId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Parent");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Child");
+        assertThat(relationship.getPathIds()).contains(personId, otherParentId);
     }
 
     @Test
     void getGenealogicalLinkOfStepParent() {
-        String relationshipLabel = genealogicalLinkService.getRelationshipLabel(personId, stepParentId).orElseThrow();
-        assertThat(relationshipLabel).isEqualTo("Step-Parent");
+        Relationship relationship = genealogicalLinkService.getRelationship(personId, stepParentId).orElseThrow();
+        assertThat(relationship.getRelationshipLabel()).isEqualTo("Step-Parent");
+        assertThat(relationship.getInverseRelationshipLabel()).isEqualTo("Step-Child");
+        assertThat(relationship.getPathIds()).contains(personId, stepParentId);
     }
 
     private static Neo4j embeddedDatabaseServer;

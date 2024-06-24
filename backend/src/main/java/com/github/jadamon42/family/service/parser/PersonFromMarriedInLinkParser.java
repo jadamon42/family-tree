@@ -4,6 +4,8 @@ import com.github.jadamon42.family.model.GenealogicalLink;
 import com.github.jadamon42.family.model.Relation;
 import com.github.jadamon42.family.repository.CustomCypherQueryExecutor;
 
+import java.util.Optional;
+
 public class PersonFromMarriedInLinkParser extends GenealogicalLinkParser {
     public PersonFromMarriedInLinkParser(CustomCypherQueryExecutor customCypherQueryExecutor) {
         super(customCypherQueryExecutor);
@@ -30,7 +32,7 @@ public class PersonFromMarriedInLinkParser extends GenealogicalLinkParser {
                 };
                 case 1 -> switch (numberOfGenerationsToOtherPerson) {
                     case 0 -> getSpouseOrSiblingInLawLabel(link);
-                    default -> getFullNiblingLabel(link, numberOfGenerationsToOtherPerson);
+                    default -> getStepChildOrNiblingLabel(link, numberOfGenerationsToOtherPerson);
                 };
                 default ->  {
                     int cousinType;
@@ -38,23 +40,45 @@ public class PersonFromMarriedInLinkParser extends GenealogicalLinkParser {
                     if (difference == 1) {
                         int numberOfGreats = numberOfGenerationsToCommonAncestor - 2;
                         if (numberOfGreats == 0) {
-                            yield "%s-in-Law".formatted(getPiblingLabel(link));
+                            if (link.getCommonAncestorIds().size() == 1) {
+                                yield "Step-%s".formatted(getParentLabel(link));
+                            } else {
+                                yield "%s-in-Law".formatted(getPiblingLabel(link));
+                            }
                         } else if (numberOfGreats == 1) {
                             yield "Grand-%s-in-Law".formatted(getPiblingLabel(link));
                         } else {
                             yield "%sGrand-%s-in-Law".formatted(getGreatPrefix(numberOfGreats - 1), getPiblingLabel(link));
                         }
                     } else if (difference <= numberOfGenerationsToCommonAncestor) {
-                        cousinType = difference - 1;
-                        timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
+                        if (link.getCommonAncestorIds().size() == 1) {
+                            yield "Step-%s".formatted(getSiblingLabel(link));
+                        } else {
+                            cousinType = difference - 1;
+                            timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
+                            yield "%sCousin-in-Law%s".formatted(getCousinPrefix(cousinType), getTimeRemovedSuffix(timesRemoved));
+                        }
                     } else {
                         cousinType = numberOfGenerationsToCommonAncestor - 1;
                         timesRemoved = Math.abs(numberOfGenerationsToOtherPerson);
+                        yield "%sCousin-in-Law%s".formatted(getCousinPrefix(cousinType), getTimeRemovedSuffix(timesRemoved));
                     }
-                    yield "%sCousin-in-Law%s".formatted(getCousinPrefix(cousinType), getTimeRemovedSuffix(timesRemoved));
                 }
             };
         }
         return retval;
+    }
+
+    private String getStepChildOrNiblingLabel(GenealogicalLink link, int numberOfGenerationsToOtherPerson) {
+        Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link.getInverse());
+        if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
+            return getFullNiblingLabel(link, numberOfGenerationsToOtherPerson);
+        } else {
+            if (numberOfGenerationsToOtherPerson == -1) {
+                return "Step-%s".formatted(getChildLabel(link));
+            } else {
+                return "Step-%s%s".formatted(getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2), getGrandChildLabel(link));
+            }
+        }
     }
 }

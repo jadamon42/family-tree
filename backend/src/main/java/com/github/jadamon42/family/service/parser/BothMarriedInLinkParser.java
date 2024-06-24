@@ -32,7 +32,7 @@ public class BothMarriedInLinkParser extends GenealogicalLinkParser {
                 };
                 case 1 -> switch (numberOfGenerationsToOtherPerson) {
                     case 0 -> getSpouseOrSiblingInLawLabel(link);
-                    default -> "Step-%s".formatted(getChildLabel(link));
+                    default -> getStepChildLabel(link, numberOfGenerationsToOtherPerson);
                 };
                 default ->  {
                     if (difference == 1) {
@@ -55,5 +55,23 @@ public class BothMarriedInLinkParser extends GenealogicalLinkParser {
             };
         }
         return retval;
+    }
+
+    private String getStepChildLabel(GenealogicalLink link, int numberOfGenerationsToOtherPerson) {
+        Optional<GenealogicalLink> spousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link);
+        if (spousesGenealogicalLinkViaAncestor.isPresent() && isPibling(spousesGenealogicalLinkViaAncestor.get())) {
+            return "Step-%s".formatted(getChildLabel(link));
+        } else {
+            if (numberOfGenerationsToOtherPerson == -1) {
+                return "Step-%s-in-Law".formatted(getChildLabel(link));
+            } else {
+                Optional<GenealogicalLink> otherSpousesGenealogicalLinkViaAncestor = getSpousesGenealogicalLinkViaAncestor(link.getInverse());
+                if (otherSpousesGenealogicalLinkViaAncestor.isPresent() && isPibling(otherSpousesGenealogicalLinkViaAncestor.get())) {
+                    return "%s-in-Law".formatted(getFullNiblingLabel(link, numberOfGenerationsToOtherPerson));
+                } else {
+                    return "Step-%s%s-in-Law".formatted(getGreatPrefix(Math.abs(numberOfGenerationsToOtherPerson) - 2), getGrandChildLabel(link));
+                }
+            }
+        }
     }
 }

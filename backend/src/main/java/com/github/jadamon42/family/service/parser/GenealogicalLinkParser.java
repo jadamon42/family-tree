@@ -30,8 +30,8 @@ public abstract class GenealogicalLinkParser {
     }
 
     String getSpouseOrSiblingInLawLabel(GenealogicalLink link) {
-        Optional<UUID> spouseId = customCypherQueryExecutor.findSpouseViaSpousesAncestor(link.getPersonToId(), link.getCommonAncestorIds().stream().findFirst().get());
-        if (spouseId.isPresent() && spouseId.get().equals(link.getPersonFromId())) {
+        boolean isSpouse = customCypherQueryExecutor.isSpouse(link.getPersonFromId(), link.getPersonToId());
+        if (isSpouse) {
             return getSpouseLabel(link);
         }
         return "%s-in-Law".formatted(getSiblingLabel(link));

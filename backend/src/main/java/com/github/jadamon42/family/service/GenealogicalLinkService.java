@@ -19,18 +19,6 @@ public class GenealogicalLinkService {
         this.customCypherQueryExecutor = customCypherQueryExecutor;
     }
 
-    public Optional<String> getRelationshipLabel(UUID personIdFrom, UUID personIdTo) {
-        String retval = null;
-        Optional<GenealogicalLink> genealogicalLink = customCypherQueryExecutor.findLatestGenealogicalLink(personIdFrom, personIdTo);
-
-        if (genealogicalLink.isPresent()) {
-            GenealogicalLink link = genealogicalLink.get();
-            retval = getLabel(link).orElse(null);
-        }
-
-        return Optional.ofNullable(retval);
-    }
-
     public Optional<Relationship> getRelationship(UUID personIdFrom, UUID personIdTo) {
         Relationship retval = null;
         Optional<GenealogicalLink> genealogicalLink = customCypherQueryExecutor.findLatestGenealogicalLink(personIdFrom, personIdTo);
