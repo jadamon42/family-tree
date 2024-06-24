@@ -15,6 +15,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PersonRequest {
     Optional<String> firstName;
+    Optional<String> middleName;
     Optional<String> lastName;
     Optional<Sex> sex;
     Optional<LocalDate> birthDate;

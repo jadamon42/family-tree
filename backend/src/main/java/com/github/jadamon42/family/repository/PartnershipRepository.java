@@ -4,6 +4,7 @@ import com.github.jadamon42.family.model.Partnership;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 
+import java.util.Collection;
 import java.util.UUID;
 
 public interface PartnershipRepository extends Neo4jRepository<Partnership, UUID> {
@@ -21,4 +22,11 @@ public interface PartnershipRepository extends Neo4jRepository<Partnership, UUID
             DETACH DELETE p
             """)
     void deleteDanglingPartnerships();
+
+    @Query("""
+        MATCH (p:Partnership)-[r]-(n)
+        WHERE (p)-[:BEGAT]->(:Person {id: $childId})
+        RETURN p, collect(r), collect(n)
+    """)
+    Collection<Partnership> findParentPartnerships(UUID childId);
 }

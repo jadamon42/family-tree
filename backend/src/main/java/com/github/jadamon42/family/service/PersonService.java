@@ -1,6 +1,7 @@
 package com.github.jadamon42.family.service;
 
 import com.github.jadamon42.family.exception.PartnershipNotFoundException;
+import com.github.jadamon42.family.model.Partnership;
 import com.github.jadamon42.family.model.Person;
 import com.github.jadamon42.family.model.PersonRequest;
 import com.github.jadamon42.family.repository.PartnershipRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,6 +40,9 @@ public class PersonService {
         Person person = personRepository.save(Person.fromRequest(request).withId(UUID.randomUUID()));
         if (request.getParentsPartnershipId() != null && request.getParentsPartnershipId().isPresent()) {
             createParentPartnershipLink(request.getParentsPartnershipId().get(), person.getId());
+            deletePlaceholdersNodes(person.getId());
+        } else {
+            createPlaceholderNodes(person.getId());
         }
         return person;
     }
@@ -50,6 +55,7 @@ public class PersonService {
             existingPerson = personRepository.save(person);
             if (request.getParentsPartnershipId() != null && request.getParentsPartnershipId().isPresent()) {
                 createParentPartnershipLink(request.getParentsPartnershipId().get(), existingPerson.getId());
+                deletePlaceholdersNodes(existingPerson.getId());
             }
         }
         return Optional.ofNullable(existingPerson);
@@ -58,6 +64,7 @@ public class PersonService {
     public void deletePerson(UUID id) {
         Optional<Person> person = personRepository.findById(id);
         if (person.isPresent()) {
+            deletePlaceholdersNodes(id);
             personRepository.deleteById(id);
             partnershipRepository.deleteDanglingPartnerships();
         }
@@ -78,6 +85,30 @@ public class PersonService {
         boolean linked = partnershipRepository.linkChildToPartnership(parentsPartnershipId, childId);
         if (!linked) {
             throw new PartnershipNotFoundException(parentsPartnershipId);
+        }
+    }
+
+    private void createPlaceholderNodes(UUID personId) {
+        Partnership placeholderPartnership = partnershipRepository.save(
+                Partnership.builder()
+                           .id(UUID.randomUUID())
+                           .type("PLACEHOLDER")
+                           .partners(
+                                   List.of(
+                                           Person.builder().id(UUID.randomUUID()).build(),
+                                           Person.builder().id(UUID.randomUUID()).build())).build());
+        createParentPartnershipLink(placeholderPartnership.getId(), personId);
+    }
+
+    private void deletePlaceholdersNodes(UUID personId) {
+        Collection<Partnership> parentsPartnership = partnershipRepository.findParentPartnerships(personId);
+        for (Partnership partnership : parentsPartnership) {
+            if (partnership.getType().equals("PLACEHOLDER")) {
+                partnershipRepository.deleteById(partnership.getId());
+                for (Person partner : partnership.getPartners()) {
+                    personRepository.deleteById(partner.getId());
+                }
+            }
         }
     }
 }

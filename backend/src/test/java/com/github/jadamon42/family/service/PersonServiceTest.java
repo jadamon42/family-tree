@@ -95,6 +95,7 @@ public class PersonServiceTest {
     void savePerson() {
         PersonRequest request = PersonRequest.builder()
                                              .firstName(Optional.of("John"))
+                                             .middleName(Optional.of("B"))
                                              .lastName(Optional.of("Doe"))
                                              .build();
 
@@ -102,6 +103,7 @@ public class PersonServiceTest {
 
         assertThat(savedPerson.getId()).isNotNull();
         assertThat(savedPerson.getFirstName()).isEqualTo("John");
+        assertThat(savedPerson.getMiddleName()).isEqualTo("B");
         assertThat(savedPerson.getLastName()).isEqualTo("Doe");
     }
 
@@ -215,6 +217,55 @@ public class PersonServiceTest {
         personService.deletePerson(personInDanglingPartnershipId);
 
         assertThat(partnershipRepository.findById(danglingPartnershipId)).isEmpty();
+    }
+
+    @Test
+    void createPersonCreatesTwoParentPlaceholderNodesAndOnePlaceholderPartnershipNode() {
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
+
+        Person savedPerson = personService.createPerson(request);
+        Collection<Partnership> partnerships = partnershipRepository.findParentPartnerships(savedPerson.getId());
+
+        assertThat(partnerships).hasSize(1);
+        assertThat(partnerships.iterator().next().getType()).isEqualTo("PLACEHOLDER");
+        assertThat(partnerships.iterator().next().getPartners()).hasSize(2);
+        assertThat(partnerships.iterator().next().getChildren()).hasSize(1);
+    }
+
+    @Test
+    void updatePersonWithParentPartnershipDeletesPlaceholderNodes() {
+        PersonRequest request = PersonRequest.builder()
+                                             .lastName(Optional.of("Doe"))
+                                             .parentsPartnershipId(Optional.of(partnershipId))
+                                             .build();
+
+        Person updatedPerson = personService.updatePerson(personId, request).orElseThrow();
+        Collection<Partnership> partnerships = partnershipRepository.findParentPartnerships(updatedPerson.getId());
+
+        assertThat(partnerships).hasSize(1);
+        assertThat(partnerships.iterator().next().getType()).isEqualTo("marriage");
+    }
+
+    @Test
+    void deletePersonDeletesPlaceholderNodes() {
+        PersonRequest request = PersonRequest.builder()
+                                             .firstName(Optional.of("John"))
+                                             .lastName(Optional.of("Doe"))
+                                             .build();
+
+        Person savedPerson = personService.createPerson(request);
+        Collection<Partnership> partnerships = partnershipRepository.findParentPartnerships(savedPerson.getId());
+        personService.deletePerson(savedPerson.getId());
+        Optional<Partnership> partnership = partnershipRepository.findById(partnerships.iterator().next().getId());
+        Optional<Person> parent1 = personService.getPerson(partnerships.iterator().next().getPartners().get(0).getId());
+        Optional<Person> parent2 = personService.getPerson(partnerships.iterator().next().getPartners().get(1).getId());
+
+        assertThat(partnership).isEmpty();
+        assertThat(parent1).isEmpty();
+        assertThat(parent2).isEmpty();
     }
 
     private static Neo4j embeddedDatabaseServer;

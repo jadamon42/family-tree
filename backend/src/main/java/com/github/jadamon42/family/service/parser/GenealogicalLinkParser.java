@@ -33,6 +33,8 @@ public abstract class GenealogicalLinkParser {
         boolean isSpouse = customCypherQueryExecutor.isSpouse(link.getPersonFromId(), link.getPersonToId());
         if (isSpouse) {
             return getSpouseLabel(link);
+        } else if (link.getCommonAncestorIds().size() == 1) {
+            return "Half-%s-in-Law".formatted(getSiblingLabel(link));
         }
         return "%s-in-Law".formatted(getSiblingLabel(link));
     }

@@ -27,6 +27,7 @@ public class Person {
     @ConvertWith(converter = UUIDStringConverter.class)
     UUID id;
     String firstName;
+    String middleName;
     String lastName;
     LocalDate birthDate;
     LocalDate deathDate;
@@ -37,6 +38,7 @@ public class Person {
     public static Person fromRequest(PersonRequest request) {
         Person.PersonBuilder builder = Person.builder();
         set(builder, PersonBuilder::firstName, request.getFirstName());
+        set(builder, PersonBuilder::middleName, request.getMiddleName());
         set(builder, PersonBuilder::lastName, request.getLastName());
         set(builder, PersonBuilder::sex, request.getSex());
         set(builder, PersonBuilder::birthDate, request.getBirthDate());
